@@ -3108,7 +3108,7 @@ textarea {
 }
 
 .room-card__divider--home-next {
-  margin: 18px 0 16px;
+  margin: 12px 0 16px;
 }
 
 .room-card__desc--home-next {
@@ -3123,6 +3123,7 @@ textarea {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 18px;
+  margin-bottom: 10px;
 }
 
 .room-card__tags--home-next span {
@@ -3136,6 +3137,8 @@ textarea {
   font-weight: 600;
 }
 
+
+
 .room-card__price-range {
   display: flex;
   align-items: baseline;
@@ -3144,6 +3147,10 @@ textarea {
   margin-top: auto;
   padding-top: 18px;
   border-top: 1px solid rgba(82, 110, 98, 0.14);
+}
+
+.room-card__body--home-next .room-card__price-range {
+  margin-top: 12px;
 }
 
 .room-card__price-range-value {
@@ -4932,6 +4939,11 @@ body.site-lightbox-open {
     font-size: 22px;
   }
 }
+
+
+
+
+
 
 
 
