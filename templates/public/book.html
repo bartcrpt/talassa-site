@@ -1,0 +1,240 @@
+{% extends "public/base_public.html" %}
+
+{% block content %}
+{% set hero = blocks.get('hero') %}
+{% set cta = blocks.get('cta') %}
+{% set steps = blocks.get('steps') %}
+{% set info = blocks.get('info') %}
+{% set rooms_cta = blocks.get('rooms_cta') %}
+
+<section class="page-hero" style="background-image: linear-gradient(rgba(49, 78, 111, 0.72), rgba(49, 78, 111, 0.76)), url('{{ hero.image_url if hero and hero.image_url else '/static/site/images/gallery/photo_1.jpg' }}');">
+    <div class="site-container page-hero__content">
+        <p class="hero__eyebrow">{{ hero.payload.get('eyebrow') if hero and hero.payload and hero.payload.get('eyebrow') else 'Бронирование' }}</p>
+        <h1>{{ hero.title if hero and hero.title else 'Забронировать отдых' }}</h1>
+        <p>{{ hero.subtitle if hero and hero.subtitle else '' }}</p>
+    </div>
+</section>
+
+<section class="section section--light section--tight-top booking-search-section">
+    <div class="site-container">
+        <div class="search-panel search-panel--book">
+            <div class="search-panel__heading search-panel__heading--book">
+                <p>Укажите даты и состав гостей, а мы покажем доступные номера прямо на этой странице.</p>
+            </div>
+            <form action="{{ url_for('book_landing_page') }}" method="GET" class="rooms-search-form rooms-search-form--book">
+                <label>
+                    <span>Заезд</span>
+                    <input type="date" name="check_in" value="{{ check_in }}">
+                </label>
+                <label>
+                    <span>Выезд</span>
+                    <input type="date" name="check_out" value="{{ check_out }}">
+                </label>
+                <label>
+                    <span>Взрослые</span>
+                    <input type="number" name="adults" min="1" max="10" value="{{ adults }}">
+                </label>
+                <label>
+                    <span>Дети</span>
+                    <input type="number" name="children" min="0" max="10" value="{{ children }}">
+                </label>
+                <label>
+                    <span>Категория</span>
+                    <select name="category_id">
+                        <option value="">Все категории</option>
+                        {% for category in booking_categories %}
+                            <option value="{{ category.id }}" {{ 'selected' if selected_category_id == category.id else '' }}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <button type="submit" class="site-btn site-btn--gold">Показать номера</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+{% if search_requested %}
+<section class="section section--tight-top booking-results-section">
+    <div class="site-container">
+        <div class="booking-results-head">
+            <div class="booking-results-head__copy">
+                <h2>Подходящие номера</h2>
+                <p>
+                    {% if selected_range %}
+                        Период: {{ selected_range }}.
+                    {% endif %}
+                    Гости: {{ adults }} взр.{% if children %}, {{ children }} дет.{% endif %}
+                    {% if selected_category_name %}
+                        Категория: {{ selected_category_name }}.
+                    {% endif %}
+                </p>
+            </div>
+            <div class="booking-results-head__count">
+                {{ booking_results_count }} вариантов
+            </div>
+        </div>
+
+        {% if search_error %}
+            <div class="empty-state-card centered-copy centered-copy--compact booking-results-empty">
+                <h2>{{ search_error }}</h2>
+            </div>
+        {% elif booking_results %}
+            <div class="booking-results-grid">
+                {% for room in booking_results %}
+                    <article class="booking-result-card">
+                        <div class="booking-result-card__image">
+                            <img src="{{ room.photo_url }}" alt="{{ room.name }}">
+                        </div>
+                        <div class="booking-result-card__body">
+                            <div class="booking-result-card__top">
+                                <div>
+                                    <p class="booking-result-card__category">{{ room.category_name }}</p>
+                                    <h3>{{ room.name }}</h3>
+                                </div>
+                                <span class="booking-result-card__room-number">№ {{ room.number }}</span>
+                            </div>
+
+                            <div class="booking-result-card__meta">
+                                <span>Базовое размещение: {{ room.capacity }}</span>
+                                <span>Максимум: {{ room.max_capacity }}</span>
+                                {% if room.nights %}
+                                    <span>{{ room.nights }} ноч.</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="booking-result-card__price">
+                                <strong>{{ '%.0f'|format(room.total_price) }} ₽</strong>
+                                <span>{{ room.price_caption }}</span>
+                            </div>
+
+                            {% if room.extra_price %}
+                                <p class="booking-result-card__note">Включая доплату за дополнительные места: {{ '%.0f'|format(room.extra_price) }} ₽</p>
+                            {% endif %}
+
+                            <div class="booking-result-card__actions">
+                                {% if current_user.is_authenticated %}
+                                    <a href="{{ room.book_url }}" class="site-btn site-btn--gold">Забронировать</a>
+                                {% else %}
+                                    <a href="{{ url_for('login') }}" class="site-btn site-btn--gold">Войти для брони</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% elif booking_combination_results %}
+            <div class="booking-results-grid booking-results-grid--combinations">
+                {% for combination in booking_combination_results %}
+                    <article class="booking-combination-card">
+                        <div class="booking-combination-card__top">
+                            <div>
+                                <p class="booking-result-card__category">Комбинация номеров</p>
+                                <h3>2 номера для {{ combination.total_guests }} гостей</h3>
+                            </div>
+                            <span class="booking-result-card__room-number">2 номера</span>
+                        </div>
+
+                        <div class="booking-result-card__meta">
+                            <span>Вместимость: до {{ combination.total_capacity }}</span>
+                            {% if combination.nights %}
+                                <span>{{ combination.nights }} ноч.</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="booking-combination-card__rooms">
+                            {% for room in combination.rooms %}
+                                <div class="booking-combination-card__room">
+                                    <img src="{{ room.photo_url }}" alt="{{ room.name }}">
+                                    <div class="booking-combination-card__room-copy">
+                                        <p class="booking-result-card__category">{{ room.category_name }}</p>
+                                        <h4>{{ room.name }}</h4>
+                                        <p>{{ room.guests_caption }}</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="booking-result-card__price booking-result-card__price--combination">
+                            <strong>{{ '%.0f'|format(combination.total_price) }} ₽</strong>
+                            <span>{{ combination.price_caption }}</span>
+                        </div>
+
+                        {% if combination.extra_price %}
+                            <p class="booking-result-card__note">Включая доплату за дополнительные места: {{ '%.0f'|format(combination.extra_price) }} ₽</p>
+                        {% endif %}
+
+                        <div class="booking-combination-card__actions">
+                            {% if current_user.is_authenticated %}
+                                <a href="{{ combination.booking_url }}" class="site-btn site-btn--gold">Оформить две брони</a>
+                            {% else %}
+                                <a href="{{ url_for('login', next=combination.booking_url) }}" class="site-btn site-btn--gold">Войти для брони</a>
+                            {% endif %}
+                        </div>
+
+                        <p class="booking-combination-card__hint">Система откроет один общий экран подтверждения и затем создаст две отдельные брони.</p>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state-card centered-copy centered-copy--compact booking-results-empty">
+                <h2>По выбранным параметрам ничего не найдено</h2>
+                <p>Попробуйте изменить даты, количество гостей или категорию. Если нужно, напишите нам напрямую и мы подберём вариант вручную.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+<section class="section">
+    <div class="site-container booking-cta-wrap">
+        <div class="booking-cta-card centered-copy centered-copy--compact">
+            <h2>{{ cta.title if cta and cta.title else 'Свяжитесь с нами' }}</h2>
+            <p>{{ cta.subtitle if cta and cta.subtitle else '' }}</p>
+            <div class="booking-cta-actions">
+                {% for item in (cta.payload.get('items') if cta and cta.payload and cta.payload.get('items') else []) %}
+                    <a href="{{ item.href }}" {% if item.href.startswith('http') %}target="_blank" rel="noreferrer"{% endif %} class="site-btn {{ 'site-btn--gold' if item.variant == 'gold' else 'site-btn--secondary' }} booking-cta-button">{{ item.label }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section section--light">
+    <div class="site-container">
+        <div class="section-heading section-heading--center">
+            <h2>{{ steps.title if steps and steps.title else 'Как забронировать' }}</h2>
+            <p>{{ steps.subtitle if steps and steps.subtitle else '' }}</p>
+        </div>
+        <div class="steps-grid">
+            {% for item in (steps.payload.get('items') if steps and steps.payload and steps.payload.get('items') else []) %}
+                <article class="feature-card step-card">
+                    <span class="step-card__number">{{ item.number }}</span>
+                    <h3>{{ item.title }}</h3>
+                    <p>{{ item.description }}</p>
+                </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="site-container info-grid">
+        {% for item in (info.payload.get('items') if info and info.payload and info.payload.get('items') else []) %}
+            <article class="feature-card info-card">
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.description }}</p>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="section section--overlay" style="background-image: linear-gradient(rgba(49, 78, 111, 0.88), rgba(49, 78, 111, 0.66)), url('{{ rooms_cta.image_url if rooms_cta and rooms_cta.image_url else '/static/site/images/gallery/photo_9.jpg' }}');">
+    <div class="site-container centered-copy narrow-copy--light">
+        <h2>{{ rooms_cta.title if rooms_cta and rooms_cta.title else 'Ещё не выбрали номер?' }}</h2>
+        <p>{{ rooms_cta.body if rooms_cta and rooms_cta.body else '' }}</p>
+        <a href="{{ rooms_cta.button_url if rooms_cta and rooms_cta.button_url else '/rooms' }}" class="site-btn site-btn--gold">{{ rooms_cta.button_label if rooms_cta and rooms_cta.button_label else 'Смотреть номера' }}</a>
+    </div>
+</section>
+{% endblock %}
+
+

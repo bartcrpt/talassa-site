@@ -1,0 +1,131 @@
+---
+- name: Сбор и вывод фактов о сервере
+  hosts: all_servers
+  gather_facts: yes
+  become: yes
+                  # большинство задач от root
+  vars:
+    app_dir: /opt/talassahotel-flask-webapp
+    venv_dir: "{{ app_dir }}/venv"
+    app_user: www-data
+    app_group: www-data
+    service_name: webapp
+    check_url: http://localhost:80
+    check_retries: 5
+    check_delay: 2
+    python_interpreter: "{{ venv_dir }}/bin/python3"
+    pip_interpreter: "{{ venv_dir }}/bin/pip"
+
+  tasks:
+    # # ---------- 1. СБОР ФАКТОВ ----------
+    # - name: Собираем факты
+    #   setup:
+    #   register: facts_result
+
+    # - name: Сохраняем факты в локальный файл для артефактов
+    #   local_action:
+    #     module: copy
+    #     content: "{{ facts_result.ansible_facts | to_nice_json }}"
+    #     dest: "{{ lookup('env', 'CI_PROJECT_DIR') }}/facts_output.json"
+    #     mode: '0644'
+
+    # ---------- 2. ОБНОВЛЕНИЕ КОДА ИЗ GIT ----------
+    - name: Убедиться, что репозиторий находится на ветке main и обновлён
+      shell:
+        cmd: |
+          set -e
+          git checkout main
+          git pull origin main
+        chdir: "{{ app_dir }}"
+      register: git_result
+      changed_when: '"Already up to date" not in git_result.stdout'
+      failed_when: false
+      tags: git
+
+    - name: Вывести результат git pull
+      debug:
+        var: git_result.stdout_lines
+      when: git_result.stdout_lines is defined
+
+    # ---------- 4. НАСТРОЙКА ВИРТУАЛЬНОГО ОКРУЖЕНИЯ ----------
+    - name: Проверить наличие виртуального окружения
+      stat:
+        path: "{{ venv_dir }}/bin/activate"
+      register: venv_check
+
+    - name: Создать виртуальное окружение, если не существует
+      command:
+        cmd: python3 -m venv "{{ venv_dir }}"
+      # become_user: "{{ app_user }}"
+      when: not venv_check.stat.exists
+      tags: venv
+
+    - name: Установить/обновить зависимости из requirements.txt
+      pip:
+        requirements: "{{ app_dir }}/requirements.txt"
+        virtualenv: "{{ venv_dir }}"
+        virtualenv_python: python3
+        state: present
+      # become_user: "{{ app_user }}"
+      register: pip_result
+      when: venv_check.stat.exists or pip_result is changed
+      tags: venv, pip
+
+    # ---------- 5. МИГРАЦИИ ALEMBIC ----------
+    - name: Проверить наличие alembic.ini
+      stat:
+        path: "{{ app_dir }}/alembic.ini"
+      register: alembic_ini
+
+    - name: Выполнить миграции Alembic (в виртуальном окружении)
+      shell:
+        cmd: |
+          cd {{ app_dir }}
+          {{ venv_dir }}/bin/alembic upgrade head
+      become: yes
+      # become_user: "{{ app_user }}"
+      when: alembic_ini.stat.exists
+      register: alembic_result
+      changed_when: '"No migrations to apply" not in alembic_result.stderr'
+      tags: alembic
+
+    - name: Результат миграций
+      debug:
+        msg: "Миграции выполнены: {{ alembic_result.stdout_lines | default(['нет изменений']) }}"
+      when: alembic_result is changed
+
+    # ---------- 3. ПРАВА ДОСТУПА ----------
+    - name: Рекурсивно назначить владельца www-data:www-data
+      file:
+        path: "{{ app_dir }}"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        recurse: yes
+        state: directory
+      tags: permissions
+
+    # ---------- 6. ПЕРЕЗАПУСК СЕРВИСА ----------
+    - name: Перезапустить сервис webapp
+      systemd:
+        name: "{{ service_name }}"
+        state: restarted
+        daemon_reload: yes
+      register: service_restart
+      tags: service
+
+    # ---------- 7. ПРОВЕРКА РАБОТОСПОСОБНОСТИ ----------
+    - name: Ожидать запуска сервиса и проверить 5 раз
+      uri:
+        url: "{{ check_url }}"
+        method: GET
+        status_code: 200
+        validate_certs: no
+      register: health_check
+      until: health_check.status == 200
+      retries: "{{ check_retries }}"
+      delay: "{{ check_delay }}"
+      tags: health
+
+    - name: Успешная проверка
+      debug:
+        msg: "✅ Сервис {{ service_name }} отвечает на {{ check_url }} (статус {{ health_check.status }})"

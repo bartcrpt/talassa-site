@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Add Category - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="bi bi-gear"></i> Admin Panel</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('admin_rooms') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-door-open"></i> Rooms
+                    </a>
+                    <a href="{{ url_for('admin_categories') }}" class="list-group-item list-group-item-action active">
+                        <i class="bi bi-tags"></i> Categories
+                    </a>
+                    <a href="{{ url_for('admin_bookings') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-calendar-check"></i> Bookings
+                    </a>
+                    <a href="{{ url_for('admin_users') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-people"></i> Users
+                    </a>
+                    <a href="{{ url_for('admin_news') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-newspaper"></i> Новости
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Добавить новую категорию</h1>
+                <a href="{{ url_for('admin_categories') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Назад к категориям
+                </a>
+            </div>
+            
+            <!-- Форма добавления категории -->
+            <div class="row justify-content-center">
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <form method="POST">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Название категории *</label>
+                                    <input type="text" class="form-control" id="name" name="name" 
+                                           placeholder="например, Стандарт, Делюкс, Люкс" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Описание</label>
+                                    <textarea class="form-control wysiwyg-editor" id="description" name="description" 
+                                              rows="4" placeholder="Опишите эту категорию номеров..."></textarea>
+                                </div>
+                                
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <a href="{{ url_for('admin_categories') }}" class="btn btn-outline-secondary me-md-2">
+                                        Отмена
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-plus-circle"></i> Добавить категорию
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- TinyMCE WYSIWYG Editor -->
+<script src="{{ url_for('static', filename='js/tinymce/tinymce.min.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize TinyMCE
+    tinymce.init({
+        selector: '.wysiwyg-editor',
+        license_key: 'gpl',
+        height: 300,
+        menubar: false,
+        plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'charmap', 'preview',
+            'searchreplace', 'visualblocks', 'code', 'fullscreen',
+            'insertdatetime', 'help', 'wordcount'
+        ],
+        toolbar: 'undo redo | blocks | ' +
+            'bold italic forecolor | alignleft aligncenter ' +
+            'alignright alignjustify | bullist numlist outdent indent | ' +
+            'removeformat | help',
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; }',
+        language: 'ru',
+        branding: false,
+        promotion: false
+    });
+});
+</script>
+{% endblock %}

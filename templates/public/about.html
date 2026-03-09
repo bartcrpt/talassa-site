@@ -1,0 +1,117 @@
+{% extends "public/base_public.html" %}
+
+{% block content %}
+{% set hero = blocks.get('hero') %}
+{% set story = blocks.get('story') %}
+{% set pillars = blocks.get('pillars') %}
+{% set location = blocks.get('location') %}
+{% set values = blocks.get('values') %}
+{% set restaurant = blocks.get('restaurant') %}
+{% set cta = blocks.get('cta') %}
+
+<section class="page-hero" style="background-image: linear-gradient(rgba(49, 78, 111, 0.62), rgba(49, 78, 111, 0.72)), url('{{ hero.image_url if hero and hero.image_url else '/static/site/images/gallery/photo_3.jpg' }}');">
+    <div class="site-container page-hero__content">
+        <p class="hero__eyebrow">{{ hero.payload.get('eyebrow') if hero and hero.payload and hero.payload.get('eyebrow') else 'О нас' }}</p>
+        <h1>{{ hero.title if hero and hero.title else 'Философия Таласса' }}</h1>
+        <p>{{ hero.subtitle if hero and hero.subtitle else '' }}</p>
+    </div>
+</section>
+
+<section class="section section--pattern">
+    <div class="site-container split-grid split-grid--top">
+        <div>
+            <div class="paper-card">
+                <div class="section-copy">
+                    <p class="section-copy__eyebrow">История</p>
+                    <h2>{{ story.title if story and story.title else 'Наша история' }}</h2>
+                    {% for paragraph in story_paragraphs %}
+                        <p>{{ paragraph }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="section-image section-image--tall">
+            <img src="{{ story.image_url if story and story.image_url else '/static/site/images/gallery/photo_7.jpg' }}" alt="Вид на Чёрное море">
+        </div>
+    </div>
+</section>
+
+<section class="section section--light">
+    <div class="site-container">
+        <div class="section-heading section-heading--center">
+            <p class="section-copy__eyebrow">Философия</p>
+            <h2>{{ pillars.title if pillars and pillars.title else 'Четыре столпа Таласса' }}</h2>
+            <p>{{ pillars.subtitle if pillars and pillars.subtitle else '' }}</p>
+        </div>
+        <div class="pillars-grid">
+            {% for item in (pillars.payload.get('items') if pillars and pillars.payload and pillars.payload.get('items') else []) %}
+                <article class="feature-card feature-card--icon">
+                    <span class="feature-card__icon">{{ item.icon }}</span>
+                    <h3>{{ item.title }}</h3>
+                    <p>{{ item.description }}</p>
+                </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="section section--overlay" style="background-image: linear-gradient(rgba(49, 78, 111, 0.82), rgba(49, 78, 111, 0.74)), url('{{ location.image_url if location and location.image_url else '/static/site/images/gallery/photo_5.jpg' }}');">
+    <div class="site-container">
+        <div class="narrow-copy narrow-copy--light">
+            <p class="section-copy__eyebrow">Локация</p>
+            <h2>{{ location.title if location and location.title else 'Гагра, Абхазия' }}</h2>
+            {% for paragraph in location_paragraphs %}
+                <p>{{ paragraph }}</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="site-container split-grid values-layout">
+        <div class="section-image">
+            <img src="{{ values.image_url if values and values.image_url else '/static/site/images/gallery/photo_9.jpg' }}" alt="Интерьер отеля Таласса">
+        </div>
+        <div>
+            <div class="section-copy">
+                <p class="section-copy__eyebrow">Подход</p>
+                <h2>{{ values.title if values and values.title else 'Наши ценности' }}</h2>
+                <div class="values-list">
+                    {% for item in (values.payload.get('items') if values and values.payload and values.payload.get('items') else []) %}
+                        <div class="values-list__item">
+                            <span class="values-list__index">{{ '%02d'|format(loop.index) }}</span>
+                            <div>
+                                <h3>{{ item.title }}</h3>
+                                <p>{{ item.description }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="site-container">
+        <div class="restaurant-panel">
+            <p class="section-copy__eyebrow">{{ restaurant.payload.get('eyebrow') if restaurant and restaurant.payload and restaurant.payload.get('eyebrow') else 'Ресторан' }}</p>
+            <h2>{{ restaurant.title if restaurant and restaurant.title else 'Старик и море' }}</h2>
+            <p>{{ restaurant.body if restaurant and restaurant.body else '' }}</p>
+            <p class="restaurant-panel__meta">{{ restaurant.payload.get('meta') if restaurant and restaurant.payload and restaurant.payload.get('meta') else '' }}</p>
+        </div>
+    </div>
+</section>
+
+<section class="section section--light">
+    <div class="site-container centered-copy centered-copy--compact">
+        <p class="section-copy__eyebrow">Бронирование</p>
+        <h2>{{ cta.title if cta and cta.title else 'Приезжайте к морю' }}</h2>
+        <p>{{ cta.body if cta and cta.body else '' }}</p>
+        <div class="hero__actions">
+            <a href="{{ cta.button_url if cta and cta.button_url else '/book' }}" class="site-btn site-btn--gold">{{ cta.button_label if cta and cta.button_label else 'Забронировать' }}</a>
+            <a href="{{ cta.payload.get('secondary_button_url') if cta and cta.payload and cta.payload.get('secondary_button_url') else '/rooms' }}" class="site-btn site-btn--secondary">{{ cta.payload.get('secondary_button_label') if cta and cta.payload and cta.payload.get('secondary_button_label') else 'Смотреть номера' }}</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Контент сайта - Админ панель{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-md-3 col-lg-2">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="bi bi-gear"></i> Админ панель</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-speedometer2"></i> Главная
+                    </a>
+                    <a href="{{ url_for('admin_rooms') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-door-open"></i> Номера
+                    </a>
+                    <a href="{{ url_for('admin_categories') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-tags"></i> Категории
+                    </a>
+                    <a href="{{ url_for('admin_bookings') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-calendar-check"></i> Бронирования
+                    </a>
+                    <a href="{{ url_for('admin_users') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-people"></i> Пользователи
+                    </a>
+                    <a href="{{ url_for('admin_news') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-newspaper"></i> Новости
+                    </a>
+                    <a href="{{ url_for('admin_site_content') }}" class="list-group-item list-group-item-action active">
+                        <i class="bi bi-layout-text-window"></i> Контент сайта
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9 col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="mb-1">Контент сайта</h1>
+                    <p class="text-muted mb-0">Редактируемые страницы и блоки нового публичного сайта.</p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Страница</th>
+                                    <th>Slug</th>
+                                    <th>Блоков</th>
+                                    <th>SEO</th>
+                                    <th>Статус</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for page in pages %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ page.name }}</strong>
+                                        </td>
+                                        <td><code>{{ page.slug }}</code></td>
+                                        <td>{{ page.blocks|length }}</td>
+                                        <td>
+                                            {% if page.meta_title or page.meta_description %}
+                                                <span class="badge bg-success">Настроено</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Пусто</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if page.is_enabled else 'secondary' }}">
+                                                {{ 'Включена' if page.is_enabled else 'Скрыта' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm flex-wrap">
+                                                <a href="{{ url_for('admin_site_page_content', page_slug=page.slug) }}" class="btn btn-outline-primary">
+                                                    <i class="bi bi-collection"></i> Блоки
+                                                </a>
+                                                <a href="{{ url_for('admin_edit_site_page', page_slug=page.slug) }}" class="btn btn-outline-secondary">
+                                                    <i class="bi bi-sliders"></i> Настройки
+                                                </a>
+                                                {% if preview_urls.get(page.slug) %}
+                                                    <a href="{{ preview_urls.get(page.slug) }}" class="btn btn-outline-success" target="_blank" rel="noreferrer">
+                                                        <i class="bi bi-box-arrow-up-right"></i> Открыть
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

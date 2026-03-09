@@ -1,0 +1,72 @@
+{% extends "public/base_public.html" %}
+
+{% block content %}
+{% set hero = blocks.get('hero') %}
+
+<section class="page-hero page-hero--image">
+    <div class="page-hero__media">
+        <img src="{{ hero.image_url if hero and hero.image_url else '/static/site/images/gallery/photo_7.jpg' }}" alt="{{ hero.title if hero and hero.title else 'Журнал Таласса' }}">
+    </div>
+    <div class="page-hero__overlay"></div>
+    <div class="site-container page-hero__content page-hero__content--compact page-hero__content--light">
+        <p class="hero__eyebrow">{{ hero.payload.get('eyebrow') if hero and hero.payload else 'Журнал' }}</p>
+        <h1>{{ hero.title if hero and hero.title else 'Истории о море' }}</h1>
+        <p>{{ hero.subtitle if hero and hero.subtitle else '' }}</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="site-container">
+        <div class="section-heading section-heading--journal">
+            <h2>Статьи</h2>
+            <p>Полезные материалы о здоровье, море и отдыхе</p>
+        </div>
+
+        {% if news_articles.items %}
+            <div class="article-grid article-grid--journal-next">
+                {% for article in news_articles.items %}
+                    <article class="article-card article-card--journal-next">
+                        <a href="{{ url_for('journal_article_page', news_id=article.id) }}" class="article-card__link article-card__link--journal-next">
+                            <div class="article-card__media article-card__media--journal-next">
+                                <img src="{{ url_for('static', filename='uploads/' + article.photos[0].filename) if article.photos else '/static/site/images/gallery/photo_7.jpg' }}" alt="{{ article.title }}">
+                                {% if article.category %}
+                                    <span class="article-meta-badge article-meta-badge--overlay">{{ article.category }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="article-card__body article-card__body--journal-next">
+                                <h2>{{ article.title }}</h2>
+                                <p>{{ article.summary or (article.content|striptags|truncate(220, True, '...')) }}</p>
+                            </div>
+                        </a>
+                    </article>
+                {% endfor %}
+            </div>
+
+            {% if news_articles.pages > 1 %}
+                <nav class="pagination-nav" aria-label="Навигация по статьям">
+                    {% if news_articles.has_prev %}
+                        <a href="{{ url_for('journal_page', page=news_articles.prev_num) }}" class="site-btn site-btn--secondary">Предыдущая</a>
+                    {% endif %}
+                    <div class="pagination-nav__pages">
+                        {% for page_num in news_articles.iter_pages() %}
+                            {% if page_num %}
+                                <a href="{{ url_for('journal_page', page=page_num) }}" class="pagination-nav__page {{ 'is-active' if page_num == news_articles.page else '' }}">{{ page_num }}</a>
+                            {% else %}
+                                <span class="pagination-nav__ellipsis">...</span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% if news_articles.has_next %}
+                        <a href="{{ url_for('journal_page', page=news_articles.next_num) }}" class="site-btn site-btn--secondary">Следующая</a>
+                    {% endif %}
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="empty-state-card centered-copy centered-copy--compact">
+                <h2>Статьи скоро появятся</h2>
+                <p>Мы готовим материалы о талассотерапии, отдыхе у моря и жизни в Таласса.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,3553 @@
+import json
+import logging
+from audioop import minmax
+
+#from Tools.scripts.make_ctype import method
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, abort, send_from_directory
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from sqlalchemy import case, cast, Integer
+# from sqlalchemy.testing.util import total_size
+from werkzeug.utils import secure_filename
+from datetime import datetime, date, timedelta
+import os
+import uuid
+from PIL import Image
+import re
+import random
+import string
+import pytz
+from dotenv import load_dotenv
+
+from send_msg import send_tg_message, send_sms_message
+from services.rooms import LegacyRoomService
+
+load_dotenv()  # This loads variables from .env into os.environ
+
+SECRET_KEY = os.getenv('SECRET_KEY')
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_NAME = os.getenv('DB_NAME')
+DB_HOST = os.getenv('DB_HOST')
+DB_PORT = os.getenv('DB_PORT', '5432')
+UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(BASE_DIR)
+NEXT_PUBLIC_DIR = os.path.join(PROJECT_ROOT, 'public')
+NEXT_ROOMS_DATA_PATH = os.path.join(BASE_DIR, 'data', 'next_rooms.json')
+NEXT_ROOMS_CACHE = None
+NEXT_ROOM_NUMBER_BY_SLUG = {
+    'standart-plus-sea-view': 'NX01',
+    'standart-sea-view-no-balcony': 'NX02',
+    'standart-balcony-sea-view': 'NX03',
+    'standart-first-floor': 'NX04',
+    'deluxe-terrace-sea-view': 'NX05',
+    'deluxe-big-terrace-sea-view': 'NX06',
+    'apartment-balcony-sea-view': 'NX07',
+    'apartment-accessible': 'NX08',
+}
+NEXT_ROOM_SLUG_BY_NUMBER = {value: key for key, value in NEXT_ROOM_NUMBER_BY_SLUG.items()}
+
+# Загрузка токена и ID группы из .env
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+TELEGRAM_GROUP_ID = os.getenv('TELEGRAM_GROUP_ID')
+
+SMS_API_GATEWAY = os.getenv('SMS_API_GATEWAY')
+SMS_API_KEY = os.getenv('SMS_API_KEY')
+
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = SECRET_KEY
+app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+# Create upload folder if it doesn't exist
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+db = SQLAlchemy(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+CMS_DEFAULT_PAGES = [
+    {'slug': 'home', 'name': 'Главная', 'sort_order': 10},
+    {'slug': 'about', 'name': 'О нас', 'sort_order': 20},
+    {'slug': 'wellness', 'name': 'Оздоровление', 'sort_order': 30},
+    {'slug': 'rooms', 'name': 'Номера', 'sort_order': 40},
+    {'slug': 'gallery', 'name': 'Галерея', 'sort_order': 50},
+    {'slug': 'accessibility', 'name': 'Доступность', 'sort_order': 60},
+    {'slug': 'journal', 'name': 'Журнал', 'sort_order': 70},
+    {'slug': 'contact', 'name': 'Контакты', 'sort_order': 80},
+    {'slug': 'book', 'name': 'Бронирование', 'sort_order': 90},
+]
+
+HOME_PAGE_DEFAULT_BLOCKS = {
+    'hero': {
+        'name': 'Hero',
+        'title': 'Таласса Hotel & Spa',
+        'subtitle': 'Талассотерапия у Чёрного моря',
+        'body': 'Где море лечит',
+        'image_url': '/static/site/images/gallery/photo_7.jpg',
+        'button_label': 'Забронировать',
+        'button_url': '/book',
+        'payload': {
+            'eyebrow': 'Абхазия • Чёрное море',
+            'secondary_button_label': 'Смотреть номера',
+            'secondary_button_url': '/rooms'
+        },
+        'sort_order': 10,
+    },
+    'philosophy': {
+        'name': 'Философия',
+        'title': 'Философия Таласса',
+        'body': 'Отель «Таласса» располагается на первой линии побережья Чёрного моря и обладает собственным пляжем. Из окон каждого номера открывается вид на море: только в части номеров это морская панорама, где даже принимая ванну, вы можете любоваться прибоем, а в других номерах из окон видны ещё и горы.\n\nВ наших номерах вас ожидает особая атмосфера уюта. Начиная с ортопедического матраса, мягких пуфов и дизайнерской мебели, заканчивая красивой ванной комнатой, оформленной в современном стиле и оборудованной тропическим душем, феном и мягкими душевыми и пляжными полотенцами. Мы старались продумать каждую деталь нашего отеля, чтобы ваше пребывание на побережье было комфортным. И, конечно, не забыли про лифт, чтобы вы, утомлённые солнцем, поднимались в свой номер легко.\n\nНаш галечный немноголюдный пляж с кристально чистой водой и удобным заходом в море создает идеальные условия для спокойного отдыха.\n\nОтель идеально подходит самым ленивым любителям морских закатов. Для всех остальных у нас есть прокат Supzero (sup board и принадлежности).\n\nДля тех, кто любит совмещать полезное с полезным, в нашем отеле находится оздоровительный центр. Здесь вы сможете пройти комплекс талассотерапевтических процедур: от фитобочки до гидромассажных купелей на морской воде (после предварительной консультации у специалиста). Также мы не забыли о людях с ограниченными возможностями передвижения: пандус, оборудованные номера для инвалидов, программы оздоровительного центра.',
+        'image_url': '/static/site/images/gallery/photo_3.jpg',
+        'button_label': 'О талассотерапии',
+        'button_url': '/wellness',
+        'sort_order': 20,
+    },
+    'highlights': {
+        'name': 'Почему Таласса',
+        'title': 'Почему Таласса',
+        'subtitle': 'Уникальное сочетание моря, гор и заботы о здоровье',
+        'payload': {
+            'items': [
+                {'title': 'Галечный пляж', 'desc': 'Кристально чистая вода и удобный заход в море. Немноголюдный пляж в 30 метрах от отеля.'},
+                {'title': 'Талассотерапия', 'desc': 'Оздоровительные процедуры на морской воде: гидромассажные купели, фитобочка.'},
+                {'title': 'Доступность', 'desc': 'Пандусы, оборудованные номера для МГН.'},
+                {'title': 'Ресторан', 'desc': '«Старик и море» - приморский ресторан с завтраками по системе шведского стола.'},
+                {'title': 'Комфорт на месте', 'items': ['Свой пляж', 'Своя территория с парковкой', 'Шустрый WiFi', 'Белоснежное постельное белье, мягкие полотенца']},
+                {'title': 'Вид из номера', 'desc': 'Из каждого номера открывается вид на море: в части номеров это морская панорама, а в других из окон видны ещё и горы.'}
+            ]
+        },
+        'sort_order': 30,
+    },
+    'rooms_preview': {
+        'name': 'Превью номеров',
+        'title': 'Номера',
+        'subtitle': 'Комфорт у моря для каждого гостя',
+        'button_label': 'Все номера',
+        'button_url': '/rooms',
+        'sort_order': 40,
+    },
+    'wellness': {
+        'name': 'Оздоровление',
+        'title': 'Талассотерапия',
+        'body': 'Морская вода Чёрного моря обладает уникальным составом минералов. Наши процедуры на основе талассотерапии помогают восстановить силы, улучшить здоровье и обрести гармонию.',
+        'image_url': '/static/site/images/gallery/photo_5.jpg',
+        'button_label': 'Узнать о процедурах',
+        'button_url': '/wellness',
+        'payload': {'eyebrow': 'Оздоровление'},
+        'sort_order': 50,
+    },
+    'gallery': {
+        'name': 'Галерея',
+        'title': 'Атмосфера',
+        'subtitle': 'Море, горы и тишина в фотографиях',
+        'button_label': 'Вся галерея',
+        'button_url': '/gallery',
+        'payload': {
+            'images': [
+                '/static/site/images/gallery/photo_1.jpg',
+                '/static/site/images/gallery/photo_2.jpg',
+                '/static/site/images/gallery/photo_3.jpg',
+                '/static/site/images/gallery/photo_4.jpg',
+                '/static/site/images/gallery/photo_5.jpg',
+                '/static/site/images/gallery/photo_6.jpg'
+            ]
+        },
+        'sort_order': 60,
+    },
+    'cta': {
+        'name': 'Финальный CTA',
+        'title': 'Начните свой отдых',
+        'body': 'Забронируйте номер и откройте для себя силу моря, тишину гор и заботу, которую вы заслуживаете.',
+        'button_label': 'Забронировать отдых',
+        'button_url': '/book',
+        'sort_order': 70,
+    },
+}
+
+
+ABOUT_PAGE_DEFAULT_BLOCKS = {
+    'hero': {
+        'name': 'Hero',
+        'title': 'Философия Таласса',
+        'subtitle': 'Пространство для восстановления и контакта с природой на побережье Чёрного моря',
+        'image_url': '/static/site/images/gallery/photo_3.jpg',
+        'payload': {'eyebrow': 'О нас'},
+        'sort_order': 10,
+    },
+    'story': {
+        'name': 'Наша история',
+        'title': 'Наша история',
+        'body': 'Таласса - это пространство для спокойного отдыха у моря, где Чёрное море, мягкий климат и ритм без суеты помогают восстановить силы.\n\nНаше название происходит от древнегреческого «θάλασσα» - море. Талассотерапия - лечение морской водой, воздухом и климатом - лежит в основе нашего подхода к оздоровлению.\n\nОтель расположен в Гагре, в окружении гор и субтропической зелени. До галечного пляжа - несколько шагов, а из большинства номеров открывается вид на Чёрное море.',
+        'image_url': '/static/site/images/gallery/photo_7.jpg',
+        'sort_order': 20,
+    },
+    'pillars': {
+        'name': 'Столпы философии',
+        'title': 'Четыре столпа Таласса',
+        'subtitle': 'Наша философия основана на гармонии моря, природы, тишины и заботы',
+        'payload': {
+            'items': [
+                {'title': 'Море как терапия', 'description': 'Вода Чёрного моря - источник восстановления на клеточном уровне. Уникальный минеральный состав с йодом, бромом, магнием и кальцием помогает организму восстановиться естественным путём.', 'icon': '🌊'},
+                {'title': 'Замедление и тишина', 'description': 'Отсутствие суеты, шума и давления. Пространство для осознанного отдыха, где время замедляется, а каждый момент наполняется присутствием.', 'icon': '🕊️'},
+                {'title': 'Природа Абхазии', 'description': 'Уникальное сочетание моря и гор, субтропического климата и чистого воздуха. Кавказские горы защищают побережье, создавая мягкий целительный микроклимат.', 'icon': '🏔️'},
+                {'title': 'Забота о каждом', 'description': 'Доступность для людей с ограниченными возможностями - не формальность, а часть нашей философии. Пандусы, оборудованные номера и продуманные условия для комфортного отдыха.', 'icon': '♿'}
+            ]
+        },
+        'sort_order': 30,
+    },
+    'location': {
+        'name': 'Локация',
+        'title': 'Гагра, Абхазия',
+        'body': 'Гагра - курортная жемчужина абхазского побережья. Город, основанный как курорт ещё в начале XX века, сочетает историческую элегантность с дикой красотой природы.\n\nКавказские горы подступают к самому берегу, создавая уникальный микроклимат: мягкие зимы, длинное тёплое лето, чистый горный воздух, насыщенный фитонцидами и морскими аэрозолями.\n\nГалечный пляж в шаговой доступности от отеля - немноголюдный, с кристально чистой водой и удобным заходом в море.',
+        'image_url': '/static/site/images/gallery/photo_5.jpg',
+        'sort_order': 40,
+    },
+    'values': {
+        'name': 'Ценности',
+        'title': 'Наши ценности',
+        'image_url': '/static/site/images/gallery/photo_9.jpg',
+        'payload': {
+            'items': [
+                {'title': 'Осознанный подход', 'description': 'Каждая деталь продумана для вашего комфорта - от выбора материалов до организации пространства.'},
+                {'title': 'Экологичность', 'description': 'Бережное отношение к природе Абхазии. Мы стремимся минимизировать воздействие на окружающую среду.'},
+                {'title': 'Гостеприимство', 'description': 'Тёплый приём и внимание к каждому гостю. Мы создаём атмосферу, в которую хочется возвращаться.'}
+            ]
+        },
+        'sort_order': 50,
+    },
+    'restaurant': {
+        'name': 'Ресторан',
+        'title': 'Старик и море',
+        'body': 'Приморский ресторан с авторской кухней и завтраками по системе шведского стола. Свежие морепродукты, блюда абхазской и европейской кухни.',
+        'payload': {'eyebrow': 'Ресторан', 'meta': 'Открытие - Июнь 2026'},
+        'sort_order': 60,
+    },
+    'cta': {
+        'name': 'CTA',
+        'title': 'Приезжайте к морю',
+        'body': 'Мы будем рады видеть вас в Таласса и разделить с вами целительную силу Чёрного моря.',
+        'button_label': 'Забронировать',
+        'button_url': '/book',
+        'payload': {'secondary_button_label': 'Смотреть номера', 'secondary_button_url': '/rooms'},
+        'sort_order': 70,
+    },
+}
+
+WELLNESS_PAGE_DEFAULT_BLOCKS = {
+    'hero': {
+        'name': 'Hero',
+        'title': 'Талассотерапия',
+        'subtitle': 'Восстановление через целительную силу Чёрного моря',
+        'image_url': '/static/site/images/gallery/photo_6.jpg',
+        'payload': {'eyebrow': 'Оздоровление'},
+        'sort_order': 10,
+    },
+    'intro': {
+        'name': 'Что такое талассотерапия',
+        'title': 'Что такое талассотерапия',
+        'body': 'Талассотерапия (от греч. «θάλασσα» - море, «θεραπεία» - лечение) - это комплекс оздоровительных процедур с использованием морской воды, водорослей, морского климата и целебных грязей.\n\nМетод известен с античных времён: ещё Гиппократ рекомендовал морскую воду для лечения ран и болезней кожи. Сегодня талассотерапия признана одним из самых эффективных методов натурального оздоровления.\n\nВ отеле Таласса мы используем уникальные свойства черноморской воды - её минеральный состав идеально подходит для восстановления здоровья и жизненных сил.',
+        'image_url': '/static/site/images/gallery/photo_8.jpg',
+        'sort_order': 20,
+    },
+    'minerals': {
+        'name': 'Минералы',
+        'title': 'Сила черноморской воды',
+        'subtitle': 'Уникальный минеральный состав для здоровья всего организма',
+        'payload': {
+            'items': [
+                {'name': 'Йод', 'effect': 'Щитовидная железа, обмен веществ'},
+                {'name': 'Бром', 'effect': 'Нервная система, сон'},
+                {'name': 'Магний', 'effect': 'Мышцы, сердце, стресс'},
+                {'name': 'Кальций', 'effect': 'Кости, зубы, кожа'},
+                {'name': 'Калий', 'effect': 'Водный баланс, давление'},
+                {'name': 'Натрий', 'effect': 'Электролитный баланс'},
+            ]
+        },
+        'sort_order': 30,
+    },
+    'procedures': {
+        'name': 'Процедуры',
+        'title': 'Наши процедуры',
+        'subtitle': 'Индивидуальный подход к восстановлению каждого гостя',
+        'payload': {
+            'items': [
+                {
+                    'title': 'Гидромассажные купели',
+                    'description': 'Купели на морской воде для глубокого расслабления мышц, восстановления суставов и улучшения кровообращения. Температура и интенсивность подбираются индивидуально.',
+                    'benefits': ['Снятие мышечного напряжения', 'Улучшение кровообращения', 'Восстановление суставов'],
+                    'icon': '💧'
+                },
+                {
+                    'title': 'Фитобочка',
+                    'description': 'Паровые процедуры с целебными травами Абхазии для глубокой детоксикации, укрепления иммунитета и релаксации. Воздействие пара и фитонцидов на весь организм.',
+                    'benefits': ['Детоксикация организма', 'Укрепление иммунитета', 'Улучшение состояния кожи'],
+                    'icon': '🌿'
+                },
+                {
+                    'title': 'Оздоровительные программы',
+                    'description': 'Индивидуальные программы восстановления с использованием морской воды и климатотерапии. Специальные программы для людей с ограниченными возможностями здоровья.',
+                    'benefits': ['Индивидуальный подход', 'Программы для людей с ОВЗ', 'Комплексное восстановление'],
+                    'icon': '🤲'
+                },
+                {
+                    'title': 'Климатотерапия',
+                    'description': 'Использование уникального микроклимата Гагры - сочетание горного и морского воздуха, насыщенного аэроионами, фитонцидами и минеральными солями.',
+                    'benefits': ['Укрепление дыхательной системы', 'Нормализация давления', 'Повышение жизненного тонуса'],
+                    'icon': '🌤️'
+                },
+            ],
+            'journal_button_label': 'Читать статьи в журнале',
+            'journal_button_url': '/journal',
+            'journal_text': 'Хотите подробнее узнать о процедурах и их эффекте?',
+        },
+        'sort_order': 40,
+    },
+    'beach': {
+        'name': 'Пляж',
+        'title': 'Галечный пляж',
+        'body': 'Галечный пляж в шаговой доступности - одно из главных преимуществ Таласса. Кристально чистая вода, удобный заход в море, немноголюдная прибрежная полоса.\n\nМорская галька - природный массажёр для стоп, который стимулирует рефлекторные зоны и улучшает кровообращение. Прогулка босиком по пляжу - уже процедура талассотерапии.',
+        'image_url': '/static/site/images/gallery/photo_2.jpg',
+        'payload': {'eyebrow': 'Пляж'},
+        'sort_order': 50,
+    },
+    'cta': {
+        'name': 'CTA',
+        'title': 'Начните восстановление',
+        'body': 'Забронируйте отдых в Таласса и ощутите целительную силу Чёрного моря на себе.',
+        'button_label': 'Забронировать',
+        'button_url': '/book',
+        'payload': {'secondary_button_label': 'Номера с видом на море', 'secondary_button_url': '/rooms'},
+        'sort_order': 60,
+    },
+}
+
+ACCESSIBILITY_PAGE_DEFAULT_BLOCKS = {
+    'hero': {
+        'name': 'Hero',
+        'title': 'Отдых для всех',
+        'subtitle': 'Таласса - отель, где каждый гость чувствует себя комфортно',
+        'image_url': '/static/site/images/gallery/photo_6.jpg',
+        'payload': {'eyebrow': 'Доступность'},
+        'sort_order': 10,
+    },
+    'intro': {
+        'name': 'Наш подход',
+        'title': 'Наш подход',
+        'subtitle': 'Доступность - не формальность, а часть философии заботы',
+        'body': 'Мы верим, что каждый человек заслуживает комфортного отдыха у моря. Поэтому Таласса с самого начала проектировалась с учётом потребностей гостей с различными физическими возможностями.\n\nНаша цель - не просто соответствовать стандартам доступности, а создать среду, в которой каждый гость чувствует себя свободно и может в полной мере наслаждаться отдыхом и процедурами талассотерапии.',
+        'sort_order': 20,
+    },
+    'features': {
+        'name': 'Особенности доступности',
+        'title': 'Что мы предлагаем',
+        'payload': {
+            'items': [
+                {
+                    'title': 'Безбарьерная среда',
+                    'description': 'Пандусы на всей территории отеля, широкие дверные проёмы, доступные общественные зоны. Свободное перемещение по всем этажам и территории.',
+                    'details': ['Пандусы у всех входов', 'Широкие коридоры и двери', 'Доступный лифт', 'Адаптированные общественные зоны'],
+                    'icon': '🏗️'
+                },
+                {
+                    'title': 'Оборудованные номера',
+                    'description': 'Специально адаптированные апартаменты на первом этаже для маломобильных гостей. Поручни, широкие проходы, адаптированная ванная комната.',
+                    'details': ['Номера на первом этаже', 'Поручни в ванной', 'Душ без порога', 'Широкие дверные проёмы (90+ см)'],
+                    'icon': '🛏️'
+                },
+                {
+                    'title': 'Доступный пляж',
+                    'description': 'Удобный подход к морю с оборудованными дорожками. Пляжная инфраструктура адаптирована для комфортного отдыха всех гостей.',
+                    'details': ['Оборудованные дорожки к пляжу', 'Теневые навесы', 'Помощь персонала', 'Удобные шезлонги'],
+                    'icon': '🏖️'
+                },
+                {
+                    'title': 'Оздоровительные программы',
+                    'description': 'Индивидуальные программы восстановления с использованием талассотерапии. Гидромассажные купели, фитобочка, климатотерапия под наблюдением специалистов.',
+                    'details': ['Индивидуальные программы', 'Талассотерапия', 'Сопровождение специалиста', 'Гидромассажные купели'],
+                    'icon': '💪'
+                },
+            ]
+        },
+        'sort_order': 30,
+    },
+    'rooms': {
+        'name': 'Адаптированные номера',
+        'title': 'Адаптированные номера',
+        'body': 'На первом этаже предусмотрены номера для маломобильных гостей. Мы продумали планировку, удобные проходы и оснащение ванной комнаты так, чтобы отдых у моря был по-настоящему комфортным.',
+        'image_url': '/static/site/images/gallery/photo_6.jpg',
+        'button_label': 'Посмотреть номера',
+        'button_url': '/rooms',
+        'payload': {'eyebrow': 'Номера'},
+        'sort_order': 40,
+    },
+    'cta': {
+        'name': 'CTA',
+        'title': 'Планируете поездку?',
+        'body': 'Свяжитесь с нами, и мы подскажем, какой номер подойдёт лучше всего и как организовать комфортное размещение.',
+        'button_label': 'Связаться с нами',
+        'button_url': '/contact',
+        'payload': {'secondary_button_label': 'Забронировать', 'secondary_button_url': '/book'},
+        'sort_order': 50,
+    },
+}
+
+
+CONTACT_PAGE_DEFAULT_BLOCKS = {
+    'hero': {
+        'name': 'Hero',
+        'title': 'Свяжитесь с нами',
+        'subtitle': 'Мы всегда рады помочь с бронированием и ответить на ваши вопросы',
+        'image_url': '/static/site/images/gallery/photo_4.jpg',
+        'payload': {'eyebrow': 'Контакты'},
+        'sort_order': 10,
+    },
+    'contacts': {
+        'name': 'Контактные карточки',
+        'title': 'Как связаться',
+        'payload': {
+            'items': [
+                {'label': 'Телефон', 'value': '+7 (938) 555-15-63', 'href': 'tel:+79385551563', 'external': False, 'icon': '📞'},
+                {'label': 'Дополнительный телефон', 'value': '+7 (940) 733-43-35', 'href': 'tel:+79407334335', 'external': False, 'icon': '☎️'},
+                {'label': 'Telegram', 'value': '@thalassa_hotelAbkhazia', 'href': 'https://t.me/thalassa_hotelAbkhazia', 'external': True, 'icon': '✈️'},
+                {'label': 'MAX', 'value': 'Написать в MAX', 'href': 'https://max.ru/u/f9LHodD0cOJk0WwFc0iNJM6hu3I6j2BOihuIdOIh1O-s3kw1cqCVfHDEuO8', 'external': True, 'icon': '✉️'},
+                {'label': 'ВКонтакте', 'value': 'vk.com/talassa_abkhazia', 'href': 'https://vk.com/talassa_abkhazia', 'external': True, 'icon': 'VK'},
+                {'label': 'Email', 'value': 'talassahotelspa@gmail.com', 'href': 'mailto:talassahotelspa@gmail.com', 'external': False, 'icon': '✉️'},
+                {'label': 'Адрес', 'value': 'ул. Железнодорожная, 5, пос. Цандрыпш, Гагрский район, Республика Абхазия', 'href': 'https://yandex.ru/maps/?ll=43.372693,40.091779&pt=43.372693,40.091779,pm2rdm&z=17', 'external': True, 'icon': '📍'},
+            ],
+            'map_embed_url': 'https://yandex.ru/map-widget/v1/?ll=43.372693,40.091779&pt=43.372693,40.091779,pm2rdm&z=19&l=map',
+            'telegram_button_label': 'Написать в Telegram',
+            'telegram_button_url': 'https://t.me/thalassa_hotelAbkhazia',
+        },
+        'sort_order': 20,
+    },
+    'schedule': {
+        'name': 'Режим работы',
+        'title': 'Режим работы',
+        'subtitle': 'Ключевая информация по заселению и работе служб',
+        'payload': {
+            'items': [
+                {'label': 'Стойка регистрации', 'value': 'Круглосуточно'},
+                {'label': 'Заезд', 'value': 'с 14:00'},
+                {'label': 'Выезд', 'value': 'до 12:00'},
+                {'label': 'Ресторан', 'value': '07:00 - 23:00'},
+                {'label': 'Спа-центр', 'value': '09:00 - 22:00'},
+            ]
+        },
+        'sort_order': 30,
+    },
+    'directions': {
+        'name': 'Как добраться',
+        'title': 'Как добраться',
+        'subtitle': 'Выберите удобный маршрут до отеля в Цандрыпше',
+        'payload': {
+            'items': [
+                {'title': 'От аэропорта Сочи', 'points': ['Автобус или такси до границы с Абхазией (1 час)', 'Переход границы пешком (30 мин)', 'Такси или маршрутка до Цандрыпша (20 мин)']},
+                {'title': 'Из Сухума', 'points': ['Автобус или маршрутка до Гагры (1.5 часа)', 'Пересадка на местный транспорт (15 мин)', 'Прибытие в Цандрыпш']},
+                {'title': 'Железнодорожная станция', 'points': ['Станция Цандрыпш (3 мин пешком)', 'Поезда из России и Абхазии', 'Прямое сообщение с Москвой (летом)']},
+                {'title': 'Парковка', 'points': ['Открытая парковка отеля (бесплатно)', 'Вход с ул. Железнодорожная, 5', '30 парковочных мест']},
+            ]
+        },
+        'sort_order': 40,
+    },
+}
+
+BOOK_PAGE_DEFAULT_BLOCKS = {
+    'hero': {
+        'name': 'Hero',
+        'title': 'Забронировать отдых',
+        'subtitle': 'Свяжитесь с нами напрямую - мы подберём идеальный номер для вашего отдыха',
+        'image_url': '/static/site/images/gallery/photo_1.jpg',
+        'payload': {'eyebrow': 'Бронирование'},
+        'sort_order': 10,
+    },
+    'cta': {
+        'name': 'Каналы бронирования',
+        'title': 'Свяжитесь с нами',
+        'subtitle': 'Мы работаем без посредников - бронируйте напрямую по лучшей цене',
+        'payload': {
+            'items': [
+                {'label': 'Написать в Telegram', 'href': 'https://t.me/thalassa_hotelAbkhazia', 'variant': 'gold'},
+                {'label': 'Позвонить: +7 (938) 555-15-63', 'href': 'tel:+79385551563', 'variant': 'secondary'},
+                {'label': 'Написать на email', 'href': 'mailto:talassahotelspa@gmail.com?subject=%D0%91%D1%80%D0%BE%D0%BD%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5%20%D0%BD%D0%BE%D0%BC%D0%B5%D1%80%D0%B0', 'variant': 'secondary'},
+                {'label': 'Написать во ВКонтакте', 'href': 'https://vk.com/talassa_abkhazia', 'variant': 'secondary'},
+                {'label': 'Написать в MAX', 'href': 'https://max.ru/u/f9LHodD0cOJk0WwFc0iNJM6hu3I6j2BOihuIdOIh1O-s3kw1cqCVfHDEuO8', 'variant': 'secondary'},
+            ]
+        },
+        'sort_order': 20,
+    },
+    'steps': {
+        'name': 'Шаги бронирования',
+        'title': 'Как забронировать',
+        'subtitle': 'Четыре простых шага до вашего отдыха',
+        'payload': {
+            'items': [
+                {'number': '01', 'title': 'Свяжитесь с нами', 'description': 'Напишите в Telegram, ВКонтакте или позвоните - мы ответим на все вопросы о номерах и датах.'},
+                {'number': '02', 'title': 'Выберите номер', 'description': 'Мы подберём идеальный вариант под ваши даты, бюджет и пожелания.'},
+                {'number': '03', 'title': 'Подтверждение', 'description': 'Внесите предоплату за сутки проживания для подтверждения бронирования. Остаток - при заезде.'},
+                {'number': '04', 'title': 'Добро пожаловать!', 'description': 'Мы встретим вас и поможем с трансфером от границы или аэропорта Сочи.'},
+            ]
+        },
+        'sort_order': 30,
+    },
+    'info': {
+        'name': 'Условия',
+        'payload': {
+            'items': [
+                {'title': 'Оплата', 'description': 'Предоплата за сутки проживания при бронировании. Остаток оплачивается при заселении. Принимаем наличные и переводы.'},
+                {'title': 'Заезд / Выезд', 'description': 'Заезд с 14:00, выезд до 12:00. Ранний заезд и поздний выезд - по согласованию и при наличии свободных номеров.'},
+                {'title': 'Отмена', 'description': 'Бесплатная отмена за 14 дней до заезда. При отмене менее чем за 14 дней - предоплата удерживается.'},
+            ]
+        },
+        'sort_order': 40,
+    },
+    'rooms_cta': {
+        'name': 'CTA к номерам',
+        'title': 'Ещё не выбрали номер?',
+        'body': 'Посмотрите все категории номеров - от уютных стандартов до просторных апартаментов с видом на море.',
+        'image_url': '/static/site/images/gallery/photo_9.jpg',
+        'button_label': 'Смотреть номера',
+        'button_url': '/rooms',
+        'sort_order': 50,
+    },
+}
+
+
+ROOMS_PAGE_DEFAULT_BLOCKS = {
+    'hero': {
+        'name': 'Hero',
+        'title': 'Номера',
+        'subtitle': 'От уютных стандартов до просторных апартаментов с видом на море',
+        'payload': {'eyebrow': 'Проживание'},
+        'sort_order': 10,
+    },
+    'highlights': {
+        'name': 'Короткий список преимуществ',
+        'payload': {
+            'items': [
+                'Отель в 30 метрах от моря с собственным пляжем (шезлонги, зонтики и пляжные полотенца входят в стоимость номера)',
+                'Шустрый WiFi',
+                'Подогреваемый бассейн',
+                'Оздоровительные процедуры',
+                'Приморский ресторанчик с русской, европейской и национальной кухнями. Завтраки включены с июня по октябрь',
+                'Своя территория с парковкой',
+                'Стильные уютные интерьеры не только для фото, а для комфортного отдыха',
+            ]
+        },
+        'sort_order': 20,
+    },
+}
+
+JOURNAL_PAGE_DEFAULT_BLOCKS = {
+    'hero': {
+        'name': 'Hero',
+        'title': 'Истории о море',
+        'subtitle': 'О талассотерапии, здоровом отдыхе и красоте Абхазии',
+        'image_url': '/static/site/images/gallery/photo_7.jpg',
+        'payload': {'eyebrow': 'Журнал'},
+        'sort_order': 10,
+    },
+}
+
+GALLERY_PAGE_DEFAULT_BLOCKS = {
+    'hero': {
+        'name': 'Hero',
+        'title': 'Галерея',
+        'subtitle': 'Атмосфера Таласса в фотографиях - море, горы, номера и территория отеля',
+        'payload': {'eyebrow': 'Галерея'},
+        'sort_order': 10,
+    },
+}
+
+
+PAGE_DEFAULT_BLOCKS = {
+    'home': HOME_PAGE_DEFAULT_BLOCKS,
+    'about': ABOUT_PAGE_DEFAULT_BLOCKS,
+    'wellness': WELLNESS_PAGE_DEFAULT_BLOCKS,
+    'accessibility': ACCESSIBILITY_PAGE_DEFAULT_BLOCKS,
+    'contact': CONTACT_PAGE_DEFAULT_BLOCKS,
+    'book': BOOK_PAGE_DEFAULT_BLOCKS,
+    'rooms': ROOMS_PAGE_DEFAULT_BLOCKS,
+    'journal': JOURNAL_PAGE_DEFAULT_BLOCKS,
+    'gallery': GALLERY_PAGE_DEFAULT_BLOCKS,
+}
+
+PAGE_PREVIEW_ENDPOINTS = {
+    'home': 'index',
+    'about': 'about_page',
+    'wellness': 'wellness_page',
+    'rooms': 'rooms',
+    'gallery': 'gallery',
+    'accessibility': 'accessibility_page',
+    'journal': 'journal_page',
+    'contact': 'contact_page',
+    'book': 'book_landing_page',
+}
+
+CMS_BLOCK_GUIDES = {
+    'home': {
+        'hero': {'description': 'Первый экран главной: подпись, заголовок, подзаголовок, фоновое изображение и две кнопки.', 'payload_example': {'eyebrow': 'Абхазия • Чёрное море', 'secondary_button_label': 'Смотреть номера', 'secondary_button_url': '/rooms'}},
+        'philosophy': {'description': 'Блок Философия Таласса. Основной текст лучше разделять пустой строкой на абзацы.'},
+        'highlights': {'description': 'Карточки Почему Таласса. В payload хранится список элементов, у которых может быть desc или items.', 'payload_example': {'items': [{'title': 'Галечный пляж', 'desc': 'Краткое описание'}, {'title': 'Комфорт на месте', 'items': ['Свой пляж', 'Шустрый WiFi']}]}},
+        'rooms_preview': {'description': 'Вводный блок перед превью номеров на главной.'},
+        'wellness': {'description': 'Короткий блок про оздоровление на главной.', 'payload_example': {'eyebrow': 'Оздоровление'}},
+        'gallery': {'description': 'Превью галереи на главной. В payload можно перечислить изображения для сетки.', 'payload_example': {'images': ['/static/site/images/gallery/photo_1.jpg', '/static/site/images/gallery/photo_2.jpg']}},
+        'cta': {'description': 'Финальный призыв к действию внизу главной страницы.'},
+    },
+    'about': {
+        'hero': {'description': 'Первый экран страницы О нас.'},
+        'story': {'description': 'История отеля. Основной текст разбивается на абзацы пустой строкой.'},
+        'pillars': {'description': 'Карточки с основными принципами отеля.', 'payload_example': {'items': [{'title': 'Море как терапия', 'description': 'Описание', 'icon': '🌊'}]}},
+        'location': {'description': 'Блок о расположении и природе вокруг отеля.'},
+        'values': {'description': 'Список ценностей и подходов отеля.', 'payload_example': {'items': [{'title': 'Осознанный подход', 'description': 'Описание'}]}},
+        'restaurant': {'description': 'Ресторанный блок. В payload можно добавить короткую служебную подпись.', 'payload_example': {'eyebrow': 'Ресторан', 'meta': 'Открытие - Июнь 2026'}},
+        'cta': {'description': 'Финальный CTA с двумя кнопками.', 'payload_example': {'secondary_button_label': 'Смотреть номера', 'secondary_button_url': '/rooms'}},
+    },
+    'wellness': {
+        'hero': {'description': 'Первый экран страницы оздоровления.'},
+        'intro': {'description': 'Вводный текст о талассотерапии. Разделяй абзацы пустой строкой.'},
+        'minerals': {'description': 'Карточки минералов и их эффекта.', 'payload_example': {'items': [{'name': 'Йод', 'effect': 'Щитовидная железа, обмен веществ'}]}},
+        'procedures': {'description': 'Список процедур оздоровительного центра.', 'payload_example': {'items': [{'title': 'Гидромассажные купели', 'description': 'Описание процедуры'}]}},
+        'beach': {'description': 'Блок про пляж и атмосферу побережья.'},
+        'cta': {'description': 'Финальный CTA с записью или переходом к бронированию.'},
+    },
+    'accessibility': {
+        'hero': {'description': 'Первый экран страницы доступности.'},
+        'intro': {'description': 'Вводный текст о комфортном отдыхе для МГН.'},
+        'features': {'description': 'Карточки доступности и условий на территории.', 'payload_example': {'items': [{'title': 'Пандусы', 'description': 'Описание'}]}},
+        'room': {'description': 'Блок про адаптированные номера.'},
+        'wellness': {'description': 'Блок про доступность оздоровительных программ.'},
+        'cta': {'description': 'Финальный CTA.'},
+    },
+    'contact': {
+        'hero': {'description': 'Первый экран страницы контактов.'},
+        'contacts': {'description': 'Основные способы связи. В payload хранится список карточек.', 'payload_example': {'items': [{'title': 'Телефон', 'value': '+7 (938) 555-15-63', 'href': 'tel:+79385551563'}]}},
+        'schedule': {'description': 'Режим работы. В payload хранится список строк расписания.', 'payload_example': {'items': [{'label': 'Ресепшен', 'value': '24/7'}]}},
+        'directions': {'description': 'Как добраться. В payload идут карточки со списками шагов.', 'payload_example': {'items': [{'title': 'От аэропорта Сочи', 'points': ['Шаг 1', 'Шаг 2']}]}}
+    },
+    'book': {
+        'hero': {'description': 'Первый экран страницы бронирования.'},
+        'cta': {'description': 'Список каналов бронирования.', 'payload_example': {'items': [{'label': 'Написать в Telegram', 'href': 'https://t.me/...', 'variant': 'gold'}]}},
+        'steps': {'description': 'Пошаговый сценарий бронирования.', 'payload_example': {'items': [{'number': '01', 'title': 'Свяжитесь с нами', 'description': 'Описание шага'}]}},
+        'info': {'description': 'Оплата, заезд/выезд и условия отмены.', 'payload_example': {'items': [{'title': 'Оплата', 'description': 'Описание'}]}},
+        'rooms_cta': {'description': 'Призыв перейти к каталогу номеров.'},
+    },
+    'rooms': {
+        'hero': {'description': 'Верхний заголовок страницы номеров.'},
+        'highlights': {'description': 'Короткий список преимуществ над каталогом.', 'payload_example': {'items': ['Шустрый WiFi', 'Подогреваемый бассейн', 'Своя территория с парковкой']}},
+    },
+    'journal': {
+        'hero': {'description': 'Первый экран раздела журнала.'},
+    },
+    'gallery': {
+        'hero': {'description': 'Верхний блок страницы галереи.'},
+    },
+}
+
+PUBLIC_PAGE_SEO_DEFAULTS = {
+    'home': {
+        'title': 'Таласса Hotel & Spa',
+        'description': 'Спа-отель на первой линии Чёрного моря в Абхазии: собственный пляж, номера с видом на море, талассотерапия и спокойный отдых у побережья.',
+        'image_url': '/static/site/images/gallery/photo_1.jpg',
+    },
+    'about': {
+        'title': 'О Таласса Hotel & Spa',
+        'description': 'История, философия и атмосфера Таласса Hotel & Spa на побережье Чёрного моря в Абхазии.',
+        'image_url': '/static/site/images/gallery/photo_3.jpg',
+    },
+    'wellness': {
+        'title': 'Оздоровление и талассотерапия',
+        'description': 'Талассотерапия, гидромассажные купели, фитобочка и оздоровительные процедуры на морской воде в Таласса Hotel & Spa.',
+        'image_url': '/static/site/images/gallery/photo_5.jpg',
+    },
+    'rooms': {
+        'title': 'Номера Таласса Hotel & Spa',
+        'description': 'Каталог номеров Таласса Hotel & Spa: стандарты, deluxe и апартаменты с видом на море у побережья Чёрного моря.',
+        'image_url': '/static/site/images/gallery/photo_2.jpg',
+    },
+    'gallery': {
+        'title': 'Галерея Таласса Hotel & Spa',
+        'description': 'Фотографии отеля, номеров, пляжа и атмосферы отдыха в Таласса Hotel & Spa.',
+        'image_url': '/static/site/images/gallery/photo_7.jpg',
+    },
+    'accessibility': {
+        'title': 'Доступность в Таласса Hotel & Spa',
+        'description': 'Пандусы, оборудованные номера и комфортные условия отдыха для гостей с ограниченными возможностями передвижения.',
+        'image_url': '/static/site/images/gallery/photo_8.jpg',
+    },
+    'journal': {
+        'title': 'Журнал Таласса Hotel & Spa',
+        'description': 'Статьи о талассотерапии, здоровье, морском отдыхе и атмосфере Абхазии.',
+        'image_url': '/static/site/images/gallery/photo_7.jpg',
+    },
+    'contact': {
+        'title': 'Контакты Таласса Hotel & Spa',
+        'description': 'Контакты, адрес, режим работы и как добраться до Таласса Hotel & Spa в Цандрыпше.',
+        'image_url': '/static/site/images/gallery/photo_6.jpg',
+    },
+    'book': {
+        'title': 'Бронирование Таласса Hotel & Spa',
+        'description': 'Свяжитесь с нами напрямую, чтобы забронировать отдых в Таласса Hotel & Spa без посредников.',
+        'image_url': '/static/site/images/gallery/photo_1.jpg',
+    },
+}
+
+# Add custom filter for phone formatting
+@app.template_filter('format_phone')
+def format_phone_filter(phone):
+    return format_phone_for_display(phone)
+
+
+# Models
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    phone = db.Column(db.String(20), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=True)
+    first_name = db.Column(db.String(50), nullable=False)
+    last_name = db.Column(db.String(50), nullable=False)
+    sms_code = db.Column(db.String(6))
+    sms_code_expires = db.Column(db.DateTime)
+    is_verified = db.Column(db.Boolean, default=False)
+    is_admin = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    bookings = db.relationship('Booking', backref='user', lazy=True)
+
+
+class Category(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    rooms = db.relationship('Room', backref='category', lazy=True)
+
+
+class Room(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    number = db.Column(db.String(10), unique=True, nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
+    price_per_night = db.Column(db.JSON, nullable=False)
+    capacity = db.Column(db.Integer, nullable=False)
+    has_small_sofa = db.Column(db.Boolean, nullable=False)
+    has_large_sofa = db.Column(db.Boolean, nullable=False)
+    description = db.Column(db.Text)
+    amenities = db.Column(db.Text)  # JSON string
+    is_available = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    photos = db.relationship('RoomPhoto', backref='room', lazy=True, cascade='all, delete-orphan')
+    bookings = db.relationship('Booking', backref='room', lazy=True)
+
+
+class RoomPhoto(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey('room.id'), nullable=False)
+    filename = db.Column(db.String(255), nullable=False)
+    original_filename = db.Column(db.String(255), nullable=False)
+    is_main = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Booking(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    room_id = db.Column(db.Integer, db.ForeignKey('room.id'), nullable=False)
+    check_in = db.Column(db.Date, nullable=False)
+    check_out = db.Column(db.Date, nullable=False)
+    guests = db.Column(db.Integer, nullable=False)
+    adults = db.Column(db.Integer, nullable=False, server_default='0')
+    children = db.Column(db.Integer, nullable=False, server_default='0')
+    children_under_five = db.Column(db.Integer, nullable=False, server_default='0')
+    total_price = db.Column(db.Float, nullable=False)
+    status = db.Column(db.String(20), default='confirmed')  # confirmed, cancelled, completed
+    special_requests = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class News(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    summary = db.Column(db.Text)
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    is_published = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    author = db.relationship('User', backref='news_articles')
+    photos = db.relationship('NewsPhoto', backref='news', lazy=True, cascade='all, delete-orphan')
+
+
+class NewsPhoto(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    news_id = db.Column(db.Integer, db.ForeignKey('news.id'), nullable=False)
+    filename = db.Column(db.String(255), nullable=False)
+    original_filename = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class SitePage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    slug = db.Column(db.String(100), unique=True, nullable=False)
+    name = db.Column(db.String(150), nullable=False)
+    meta_title = db.Column(db.String(255))
+    meta_description = db.Column(db.Text)
+    sort_order = db.Column(db.Integer, default=0)
+    is_enabled = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    blocks = db.relationship('SiteBlock', backref='page', lazy=True, cascade='all, delete-orphan', order_by='SiteBlock.sort_order')
+
+
+class SiteBlock(db.Model):
+    __table_args__ = (db.UniqueConstraint('page_id', 'block_key', name='uq_site_block_page_key'),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    page_id = db.Column(db.Integer, db.ForeignKey('site_page.id'), nullable=False)
+    block_key = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.String(150), nullable=False)
+    title = db.Column(db.String(255))
+    subtitle = db.Column(db.Text)
+    body = db.Column(db.Text)
+    image_url = db.Column(db.String(255))
+    button_label = db.Column(db.String(120))
+    button_url = db.Column(db.String(255))
+    payload = db.Column(db.JSON)
+    sort_order = db.Column(db.Integer, default=0)
+    is_enabled = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+
+# Helper functions
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
+
+
+def resize_image(image_path, max_size=(800, 600)):
+    with Image.open(image_path) as img:
+        img.thumbnail(max_size, Image.Resampling.LANCZOS)
+        img.save(image_path, optimize=True, quality=85)
+
+
+def validate_russian_phone(phone):
+    """Валидация российского номера телефона"""
+    if not phone:
+        return False  # Телефон обязателен
+
+    # Удаляем все символы кроме цифр
+    digits_only = re.sub(r'\D', '', phone)
+
+    # Проверяем длину (должно быть 11 цифр для российского номера)
+    if len(digits_only) != 11:
+        return False
+
+    # Проверяем, что начинается с 7
+    if not digits_only.startswith('7'):
+        return False
+
+    # Проверяем код оператора (3 цифры после 7)
+    operator_code = digits_only[1:4]
+    valid_codes = [
+        '900', '901', '902', '903', '904', '905', '906', '908', '909',
+        '910', '911', '912', '913', '914', '915', '916', '917', '918', '919',
+        '920', '921', '922', '923', '924', '925', '926', '927', '928', '929',
+        '930', '931', '932', '933', '934', '936', '937', '938', '939',
+        '950', '951', '952', '953', '954', '955', '956', '958', '960',
+        '961', '962', '963', '964', '965', '966', '967', '968', '969',
+        '970', '971', '977', '978', '980', '981', '982', '983', '984',
+        '985', '986', '987', '988', '989', '991', '992', '993', '994',
+        '995', '996', '997', '999'
+    ]
+
+    return operator_code in valid_codes
+
+
+def format_phone_for_storage(phone):
+    """Форматирует телефон для сохранения в базе данных в чистом виде"""
+    if not phone:
+        return None
+
+    # Удаляем все символы кроме цифр
+    digits_only = re.sub(r'\D', '', phone)
+
+    # Заменяем 8 на 7 если номер начинается с 8
+    if digits_only.startswith('8') and len(digits_only) == 11:
+        digits_only = '7' + digits_only[1:]
+
+    # Сохраняем в чистом виде +79991234567
+    if len(digits_only) == 11 and digits_only.startswith('7'):
+        return f"+{digits_only}"
+
+    return phone  # Возвращаем как есть, если не удалось отформатировать
+
+
+def is_room_available(room_id, check_in, check_out):
+    conflicting_bookings = Booking.query.filter(
+        Booking.room_id == room_id,
+        Booking.status == 'confirmed',
+        db.or_(
+            db.and_(Booking.check_in <= check_in, Booking.check_out > check_in),
+            db.and_(Booking.check_in < check_out, Booking.check_out >= check_out),
+            db.and_(Booking.check_in >= check_in, Booking.check_out <= check_out)
+        )
+    ).first()
+    return conflicting_bookings is None
+
+
+def format_phone_for_display(phone):
+    """Форматирует телефон для отображения в шаблонах"""
+    if not phone:
+        return 'Не указан'
+
+    # Удаляем все символы кроме цифр
+    digits_only = re.sub(r'\D', '', phone)
+
+    # Если это российский номер (11 цифр, начинается с 7)
+    if len(digits_only) == 11 and digits_only.startswith('7'):
+        return f"+7 ({digits_only[1:4]}) {digits_only[4:7]}-{digits_only[7:9]}-{digits_only[9:11]}"
+
+    return phone  # Возвращаем как есть, если не российский формат
+
+
+def get_moscow_time():
+    """Получить текущее московское время"""
+    moscow_tz = pytz.timezone('Europe/Moscow')
+    return datetime.now(moscow_tz)
+
+
+def get_moscow_date():
+    """Получить текущую московскую дату"""
+    return get_moscow_time().date()
+
+
+def generate_sms_code():
+    """Генерирует 6-значный SMS код"""
+    return ''.join(random.choices(string.digits, k=6))
+
+
+def send_code(phone, code, api_key=SMS_API_KEY, sms_api_gateway=SMS_API_GATEWAY):
+    sms_login, sms_passwd = api_key.split(':')
+    text_for_sms = f'Welcome to Talassa Hotel & SPA \nAccept your code: { code }'
+    text_for_send_sms = (
+        f'=== SMS КОД ===\nТелефон: {phone}\n'
+        f'Код: {code}\n'
+        f'Время: {datetime.now().strftime("%H:%M:%S")}\n'
+        f'==============='
+    )
+    sms_json = {
+        "security": {
+            "login": sms_login,
+            "password": sms_passwd
+        }, "type": "sms", "message": [
+            {
+                "type": "sms",
+                "sender": "Talassa_SPA",
+                "text": text_for_sms,
+                "translite": "1",
+                "abonent": [
+                    {
+                        "phone": phone
+                    }
+                ]
+            }
+        ]
+    }
+
+
+    """Отправляет SMS код (пока выводит в консоль)"""
+    app.logger.info(text_for_send_sms)
+    send_tg_message(text_for_send_sms, TELEGRAM_GROUP_ID)
+    send_sms_message(phone, sms_json, sms_api_gateway=sms_api_gateway)
+
+
+
+def ensure_home_page_blocks_exist():
+    ensure_site_pages_exist()
+    home_page = SitePage.query.filter_by(slug='home').first()
+    if not home_page:
+        return
+
+    created = False
+    for block_key, block_data in HOME_PAGE_DEFAULT_BLOCKS.items():
+        existing_block = SiteBlock.query.filter_by(page_id=home_page.id, block_key=block_key).first()
+        if existing_block:
+            continue
+
+        block = SiteBlock(
+            page_id=home_page.id,
+            block_key=block_key,
+            name=block_data.get('name', block_key),
+            title=block_data.get('title'),
+            subtitle=block_data.get('subtitle'),
+            body=block_data.get('body'),
+            image_url=block_data.get('image_url'),
+            button_label=block_data.get('button_label'),
+            button_url=block_data.get('button_url'),
+            payload=block_data.get('payload'),
+            sort_order=block_data.get('sort_order', 0),
+            is_enabled=True,
+        )
+        db.session.add(block)
+        created = True
+
+    if created:
+        db.session.commit()
+
+
+
+def ensure_about_page_blocks_exist():
+    ensure_site_pages_exist()
+    about_page = SitePage.query.filter_by(slug='about').first()
+    if not about_page:
+        return
+
+    created = False
+    for block_key, block_data in ABOUT_PAGE_DEFAULT_BLOCKS.items():
+        existing_block = SiteBlock.query.filter_by(page_id=about_page.id, block_key=block_key).first()
+        if existing_block:
+            continue
+
+        block = SiteBlock(
+            page_id=about_page.id,
+            block_key=block_key,
+            name=block_data.get('name', block_key),
+            title=block_data.get('title'),
+            subtitle=block_data.get('subtitle'),
+            body=block_data.get('body'),
+            image_url=block_data.get('image_url'),
+            button_label=block_data.get('button_label'),
+            button_url=block_data.get('button_url'),
+            payload=block_data.get('payload'),
+            sort_order=block_data.get('sort_order', 0),
+            is_enabled=True,
+        )
+        db.session.add(block)
+        created = True
+
+    if created:
+        db.session.commit()
+
+
+def normalize_block_payload(payload):
+    if isinstance(payload, dict):
+        return payload
+    if isinstance(payload, str):
+        raw = payload.strip()
+        if not raw:
+            return {}
+        try:
+            parsed = json.loads(raw)
+            return parsed if isinstance(parsed, dict) else {}
+        except json.JSONDecodeError:
+            return {}
+    return {}
+
+
+def get_site_page_with_blocks(page_slug):
+    ensure_default_blocks_for_page(page_slug)
+
+    page = SitePage.query.filter_by(slug=page_slug).first()
+    if not page:
+        return None, {}
+
+    blocks = SiteBlock.query.filter_by(page_id=page.id).order_by(SiteBlock.sort_order.asc(), SiteBlock.id.asc()).all()
+    block_map = {}
+    for block in blocks:
+        if not block.is_enabled:
+            continue
+        block.payload = normalize_block_payload(block.payload)
+        block_map[block.block_key] = block
+    return page, block_map
+
+def split_block_body(block):
+    if not block or not block.body:
+        return []
+    return [paragraph.strip() for paragraph in block.body.split('\n\n') if paragraph.strip()]
+
+
+def ensure_wellness_page_blocks_exist():
+    ensure_site_pages_exist()
+    wellness_page = SitePage.query.filter_by(slug='wellness').first()
+    if not wellness_page:
+        return
+
+    created = False
+    for block_key, block_data in WELLNESS_PAGE_DEFAULT_BLOCKS.items():
+        existing_block = SiteBlock.query.filter_by(page_id=wellness_page.id, block_key=block_key).first()
+        if existing_block:
+            continue
+
+        block = SiteBlock(
+            page_id=wellness_page.id,
+            block_key=block_key,
+            name=block_data.get('name', block_key),
+            title=block_data.get('title'),
+            subtitle=block_data.get('subtitle'),
+            body=block_data.get('body'),
+            image_url=block_data.get('image_url'),
+            button_label=block_data.get('button_label'),
+            button_url=block_data.get('button_url'),
+            payload=block_data.get('payload'),
+            sort_order=block_data.get('sort_order', 0),
+            is_enabled=True,
+        )
+        db.session.add(block)
+        created = True
+
+    if created:
+        db.session.commit()
+
+
+def ensure_accessibility_page_blocks_exist():
+    ensure_site_pages_exist()
+    accessibility_page = SitePage.query.filter_by(slug='accessibility').first()
+    if not accessibility_page:
+        return
+
+    created = False
+    for block_key, block_data in ACCESSIBILITY_PAGE_DEFAULT_BLOCKS.items():
+        existing_block = SiteBlock.query.filter_by(page_id=accessibility_page.id, block_key=block_key).first()
+        if existing_block:
+            continue
+
+        block = SiteBlock(
+            page_id=accessibility_page.id,
+            block_key=block_key,
+            name=block_data.get('name', block_key),
+            title=block_data.get('title'),
+            subtitle=block_data.get('subtitle'),
+            body=block_data.get('body'),
+            image_url=block_data.get('image_url'),
+            button_label=block_data.get('button_label'),
+            button_url=block_data.get('button_url'),
+            payload=block_data.get('payload'),
+            sort_order=block_data.get('sort_order', 0),
+            is_enabled=True,
+        )
+        db.session.add(block)
+        created = True
+
+    if created:
+        db.session.commit()
+
+
+def ensure_contact_page_blocks_exist():
+    ensure_site_pages_exist()
+    contact_page = SitePage.query.filter_by(slug='contact').first()
+    if not contact_page:
+        return
+
+    created = False
+    for block_key, block_data in CONTACT_PAGE_DEFAULT_BLOCKS.items():
+        existing_block = SiteBlock.query.filter_by(page_id=contact_page.id, block_key=block_key).first()
+        if existing_block:
+            continue
+
+        block = SiteBlock(
+            page_id=contact_page.id,
+            block_key=block_key,
+            name=block_data.get('name', block_key),
+            title=block_data.get('title'),
+            subtitle=block_data.get('subtitle'),
+            body=block_data.get('body'),
+            image_url=block_data.get('image_url'),
+            button_label=block_data.get('button_label'),
+            button_url=block_data.get('button_url'),
+            payload=block_data.get('payload'),
+            sort_order=block_data.get('sort_order', 0),
+            is_enabled=True,
+        )
+        db.session.add(block)
+        created = True
+
+    if created:
+        db.session.commit()
+
+
+def ensure_book_page_blocks_exist():
+    ensure_site_pages_exist()
+    book_page = SitePage.query.filter_by(slug='book').first()
+    if not book_page:
+        return
+
+    created = False
+    for block_key, block_data in BOOK_PAGE_DEFAULT_BLOCKS.items():
+        existing_block = SiteBlock.query.filter_by(page_id=book_page.id, block_key=block_key).first()
+        if existing_block:
+            continue
+
+        block = SiteBlock(
+            page_id=book_page.id,
+            block_key=block_key,
+            name=block_data.get('name', block_key),
+            title=block_data.get('title'),
+            subtitle=block_data.get('subtitle'),
+            body=block_data.get('body'),
+            image_url=block_data.get('image_url'),
+            button_label=block_data.get('button_label'),
+            button_url=block_data.get('button_url'),
+            payload=block_data.get('payload'),
+            sort_order=block_data.get('sort_order', 0),
+            is_enabled=True,
+        )
+        db.session.add(block)
+        created = True
+
+    if created:
+        db.session.commit()
+
+
+
+def ensure_journal_page_blocks_exist():
+    ensure_site_pages_exist()
+    journal_page = SitePage.query.filter_by(slug='journal').first()
+    if not journal_page:
+        return
+
+    created = False
+    for block_key, block_data in JOURNAL_PAGE_DEFAULT_BLOCKS.items():
+        existing_block = SiteBlock.query.filter_by(page_id=journal_page.id, block_key=block_key).first()
+        if existing_block:
+            continue
+
+        block = SiteBlock(
+            page_id=journal_page.id,
+            block_key=block_key,
+            name=block_data.get('name', block_key),
+            title=block_data.get('title'),
+            subtitle=block_data.get('subtitle'),
+            body=block_data.get('body'),
+            image_url=block_data.get('image_url'),
+            button_label=block_data.get('button_label'),
+            button_url=block_data.get('button_url'),
+            payload=block_data.get('payload'),
+            sort_order=block_data.get('sort_order', 0),
+            is_enabled=True,
+        )
+        db.session.add(block)
+        created = True
+
+    if created:
+        db.session.commit()
+
+
+def ensure_gallery_page_blocks_exist():
+    ensure_site_pages_exist()
+    gallery_page = SitePage.query.filter_by(slug='gallery').first()
+    if not gallery_page:
+        return
+
+    created = False
+    for block_key, block_data in GALLERY_PAGE_DEFAULT_BLOCKS.items():
+        existing_block = SiteBlock.query.filter_by(page_id=gallery_page.id, block_key=block_key).first()
+        if existing_block:
+            continue
+
+        block = SiteBlock(
+            page_id=gallery_page.id,
+            block_key=block_key,
+            name=block_data.get('name', block_key),
+            title=block_data.get('title'),
+            subtitle=block_data.get('subtitle'),
+            body=block_data.get('body'),
+            image_url=block_data.get('image_url'),
+            button_label=block_data.get('button_label'),
+            button_url=block_data.get('button_url'),
+            payload=block_data.get('payload'),
+            sort_order=block_data.get('sort_order', 0),
+            is_enabled=True,
+        )
+        db.session.add(block)
+        created = True
+
+    if created:
+        db.session.commit()
+
+def ensure_rooms_page_blocks_exist():
+    ensure_site_pages_exist()
+    rooms_page = SitePage.query.filter_by(slug='rooms').first()
+    if not rooms_page:
+        return
+
+    created = False
+    for block_key, block_data in ROOMS_PAGE_DEFAULT_BLOCKS.items():
+        existing_block = SiteBlock.query.filter_by(page_id=rooms_page.id, block_key=block_key).first()
+        if existing_block:
+            continue
+
+        block = SiteBlock(
+            page_id=rooms_page.id,
+            block_key=block_key,
+            name=block_data.get('name', block_key),
+            title=block_data.get('title'),
+            subtitle=block_data.get('subtitle'),
+            body=block_data.get('body'),
+            image_url=block_data.get('image_url'),
+            button_label=block_data.get('button_label'),
+            button_url=block_data.get('button_url'),
+            payload=block_data.get('payload'),
+            sort_order=block_data.get('sort_order', 0),
+            is_enabled=True,
+        )
+        db.session.add(block)
+        created = True
+
+    if created:
+        db.session.commit()
+
+
+def get_room_main_photo(room):
+    if not room.photos:
+        return '/static/site/images/gallery/photo_2.jpg'
+
+    main_photo = next((photo for photo in room.photos if photo.is_main), None)
+    chosen_photo = main_photo or room.photos[0]
+    return url_for('static', filename='uploads/' + chosen_photo.filename)
+
+
+def get_room_price_for_month(room, month_name=None):
+    return legacy_room_service.get_room_price_for_month(room, month_name=month_name)
+
+
+
+def get_room_max_capacity(room):
+    return legacy_room_service.get_room_max_capacity(room)
+
+
+
+def get_room_prices(room):
+    return legacy_room_service.get_room_prices(room)
+
+
+
+def get_plain_text(value):
+    return legacy_room_service.get_plain_text(value)
+
+
+
+def load_next_rooms_data():
+    return legacy_room_service.load_next_rooms_data()
+
+
+
+def get_next_room_by_slug(slug):
+    return legacy_room_service.get_next_room_by_slug(slug)
+
+
+
+def get_next_room_by_number(number):
+    return legacy_room_service.get_next_room_by_number(number)
+
+
+
+def get_next_room_feature_labels(room):
+    return legacy_room_service.get_next_room_feature_labels(room)
+
+
+
+def get_next_room_price_bands(room):
+    return legacy_room_service.get_next_room_price_bands(room)
+
+
+
+def build_next_room_card_data(room):
+    detail_url = url_for('room_detail_by_slug', slug=room.get('slug'))
+    return legacy_room_service.build_next_room_card_data(room, detail_url=detail_url)
+
+
+
+def get_next_room_monthly_price_items(room):
+    return legacy_room_service.get_next_room_monthly_price_items(room)
+
+
+MONTH_LABELS_RU = [
+    ('January', 'Январь'),
+    ('February', 'Февраль'),
+    ('March', 'Март'),
+    ('April', 'Апрель'),
+    ('May', 'Май'),
+    ('June', 'Июнь'),
+    ('July', 'Июль'),
+    ('August', 'Август'),
+    ('September', 'Сентябрь'),
+    ('October', 'Октябрь'),
+    ('November', 'Ноябрь'),
+    ('December', 'Декабрь'),
+]
+HIGH_SEASON_MONTH_KEYS = {'June', 'July', 'August', 'September'}
+
+legacy_room_service = LegacyRoomService(
+    next_rooms_path=NEXT_ROOMS_DATA_PATH,
+    next_room_slug_by_number=NEXT_ROOM_SLUG_BY_NUMBER,
+    month_labels_ru=MONTH_LABELS_RU,
+    high_season_month_keys=HIGH_SEASON_MONTH_KEYS,
+)
+
+
+
+def get_room_category_group_from_name(name):
+    return legacy_room_service.get_room_category_group_from_name(name)
+
+
+
+def get_room_display_name(room):
+    return legacy_room_service.get_room_display_name(room)
+
+
+
+def get_room_display_category(room):
+    return legacy_room_service.get_room_display_category(room)
+
+
+
+def get_room_detail_url(room):
+    next_room = get_next_room_by_number(room.number)
+    if next_room and next_room.get('slug'):
+        return url_for('room_detail_by_slug', slug=next_room['slug'])
+    return url_for('room_detail', room_id=room.id)
+
+
+
+def infer_room_area(room):
+    return legacy_room_service.infer_room_area(room)
+
+
+
+def get_room_short_description(room):
+    return legacy_room_service.get_room_short_description(room)
+
+
+
+def get_room_amenities_list(room):
+    return legacy_room_service.get_room_amenities_list(room)
+
+
+
+def get_room_feature_labels(room):
+    return legacy_room_service.get_room_feature_labels(room)
+
+
+
+def get_room_extra_bed_label(room):
+    return legacy_room_service.get_room_extra_bed_label(room)
+
+
+
+def get_room_price_bands(room):
+    return legacy_room_service.get_room_price_bands(room)
+
+
+
+def build_room_card_data(room, check_in='', check_out='', adults=2, children=0):
+    detail_params = {}
+    if check_in:
+        detail_params['check_in'] = check_in
+    if check_out:
+        detail_params['check_out'] = check_out
+    detail_params['num_of_adults'] = adults
+    detail_params['num_of_children'] = children
+
+    detail_url = url_for('room_detail', room_id=room.id, **detail_params)
+    photo_url = get_room_main_photo(room)
+    return legacy_room_service.build_legacy_room_card_data(room, detail_url=detail_url, photo_url=photo_url)
+
+
+
+def get_monthly_price_items(room):
+    return legacy_room_service.get_monthly_price_items(room)
+
+
+
+def calculate_room_total_price(room, check_in, check_out, adults, children):
+    return legacy_room_service.calculate_room_total_price(
+        room,
+        check_in,
+        check_out,
+        adults,
+        children,
+        is_high_season=is_high_season,
+    )
+
+
+
+def normalize_rooms_highlights(items=None):
+    return legacy_room_service.normalize_rooms_highlights(items)
+
+
+def build_booking_result_data(room, total_info, book_url):
+    return legacy_room_service.build_booking_result_data(
+        room,
+        total_info=total_info,
+        photo_url=get_room_main_photo(room),
+        book_url=book_url,
+    )
+
+
+def find_two_room_guest_split(room_a, room_b, adults, children):
+    max_capacity_a = get_room_max_capacity(room_a)
+    max_capacity_b = get_room_max_capacity(room_b)
+    best_split = None
+    best_score = None
+
+    for adults_a in range(adults + 1):
+        adults_b = adults - adults_a
+        if adults >= 2 and (adults_a == 0 or adults_b == 0):
+            continue
+        if adults_a > max_capacity_a or adults_b > max_capacity_b:
+            continue
+
+        min_children_a = max(0, children - max(0, max_capacity_b - adults_b))
+        max_children_a = min(children, max(0, max_capacity_a - adults_a))
+
+        for children_a in range(min_children_a, max_children_a + 1):
+            children_b = children - children_a
+            guests_a = adults_a + children_a
+            guests_b = adults_b + children_b
+
+            if guests_a == 0 or guests_b == 0:
+                continue
+            if guests_a > max_capacity_a or guests_b > max_capacity_b:
+                continue
+
+            score = (
+                (max_capacity_a + max_capacity_b) - (guests_a + guests_b),
+                abs(guests_a - guests_b),
+            )
+            if best_score is None or score < best_score:
+                best_score = score
+                best_split = ((adults_a, children_a), (adults_b, children_b))
+
+    return best_split
+
+
+def build_booking_combination_data(room_a, room_b, parsed_check_in, parsed_check_out, adults, children, check_in, check_out):
+    guest_split = find_two_room_guest_split(room_a, room_b, adults, children)
+    if not guest_split:
+        return None
+
+    (adults_a, children_a), (adults_b, children_b) = guest_split
+
+    total_info_a = None
+    total_info_b = None
+    if parsed_check_in and parsed_check_out:
+        total_info_a = calculate_room_total_price(room_a, parsed_check_in, parsed_check_out, adults_a, children_a)
+        total_info_b = calculate_room_total_price(room_b, parsed_check_in, parsed_check_out, adults_b, children_b)
+
+    room_result_a = build_booking_result_data(room_a, total_info_a, book_url='')
+    room_result_b = build_booking_result_data(room_b, total_info_b, book_url='')
+    room_result_a['guests_caption'] = f'{adults_a} взр.' + (f', {children_a} дет.' if children_a else '')
+    room_result_b['guests_caption'] = f'{adults_b} взр.' + (f', {children_b} дет.' if children_b else '')
+
+    combo_booking_url = url_for(
+        'book_room_combination',
+        room_a_id=room_a.id,
+        room_b_id=room_b.id,
+        check_in=check_in,
+        check_out=check_out,
+        adults_a=adults_a,
+        children_a=children_a,
+        adults_b=adults_b,
+        children_b=children_b,
+    )
+
+    nights = total_info_a['nights'] if total_info_a else None
+    return {
+        'rooms': [room_result_a, room_result_b],
+        'booking_url': combo_booking_url,
+        'total_guests': adults + children,
+        'total_capacity': room_result_a['max_capacity'] + room_result_b['max_capacity'],
+        'nights': nights,
+        'total_price': room_result_a['total_price'] + room_result_b['total_price'],
+        'extra_price': (room_result_a['extra_price'] or 0) + (room_result_b['extra_price'] or 0),
+        'price_caption': f'за {nights} ноч.' if nights else 'за ночь в текущем месяце',
+    }
+
+
+def get_news_cover_photo(article):
+    if article.photos:
+        first_photo = article.photos[0]
+        return url_for('static', filename='uploads/' + first_photo.filename)
+    return '/static/site/images/gallery/photo_7.jpg'
+
+
+def get_public_gallery_images():
+    gallery_dir = os.path.join(app.static_folder, 'site', 'images', 'gallery')
+    if not os.path.isdir(gallery_dir):
+        return []
+
+    def sort_key(filename):
+        match = re.search(r'(\d+)', filename)
+        return (int(match.group(1)) if match else 9999, filename)
+
+    items = []
+    allowed_extensions = {'.jpg', '.jpeg', '.png', '.webp'}
+    for index, filename in enumerate(sorted(os.listdir(gallery_dir), key=sort_key), start=1):
+        suffix = os.path.splitext(filename)[1].lower()
+        if suffix not in allowed_extensions:
+            continue
+        items.append({
+            'src': url_for('static', filename=f'site/images/gallery/{filename}'),
+            'alt': f'Таласса Hotel & Spa - фото {index}',
+            'filename': filename,
+        })
+    return items
+
+
+def ensure_site_pages_exist():
+    created = False
+
+    for page_data in CMS_DEFAULT_PAGES:
+        page = SitePage.query.filter_by(slug=page_data['slug']).first()
+        if not page:
+            page = SitePage(
+                slug=page_data['slug'],
+                name=page_data['name'],
+                sort_order=page_data['sort_order'],
+                is_enabled=True,
+            )
+            db.session.add(page)
+            created = True
+
+    if created:
+        db.session.commit()
+
+
+def ensure_default_blocks_for_page(page_slug):
+    ensure_site_pages_exist()
+    page = SitePage.query.filter_by(slug=page_slug).first()
+    default_blocks = PAGE_DEFAULT_BLOCKS.get(page_slug)
+    if not page or not default_blocks:
+        return
+
+    created = False
+    for block_key, block_data in default_blocks.items():
+        existing_block = SiteBlock.query.filter_by(page_id=page.id, block_key=block_key).first()
+        if existing_block:
+            continue
+
+        block = SiteBlock(
+            page_id=page.id,
+            block_key=block_key,
+            name=block_data.get('name', block_key),
+            title=block_data.get('title'),
+            subtitle=block_data.get('subtitle'),
+            body=block_data.get('body'),
+            image_url=block_data.get('image_url'),
+            button_label=block_data.get('button_label'),
+            button_url=block_data.get('button_url'),
+            payload=block_data.get('payload'),
+            sort_order=block_data.get('sort_order', 0),
+            is_enabled=True,
+        )
+        db.session.add(block)
+        created = True
+
+    if created:
+        db.session.commit()
+
+
+def ensure_all_default_site_blocks():
+    for page_slug in PAGE_DEFAULT_BLOCKS:
+        ensure_default_blocks_for_page(page_slug)
+
+
+def get_page_block_guides(page_slug):
+    return CMS_BLOCK_GUIDES.get(page_slug, {})
+
+
+def get_default_block_template(page_slug, block_key):
+    if not block_key:
+        return None
+    return PAGE_DEFAULT_BLOCKS.get(page_slug, {}).get(block_key)
+
+
+def get_page_preview_url(page_slug):
+    endpoint = PAGE_PREVIEW_ENDPOINTS.get(page_slug)
+    if not endpoint:
+        return None
+    return url_for(endpoint)
+
+
+def absolute_public_url(path_or_url):
+    if not path_or_url:
+        return request.url_root.rstrip('/') + url_for('static', filename='site/images/logo.png')
+    if path_or_url.startswith('http://') or path_or_url.startswith('https://'):
+        return path_or_url
+    base_url = request.url_root.rstrip('/')
+    if path_or_url.startswith('/'):
+        return base_url + path_or_url
+    return base_url + '/' + path_or_url.lstrip('/')
+
+
+def build_public_seo(page=None, blocks=None, seo_override=None):
+    seo_override = seo_override or {}
+    page_slug = seo_override.get('page_slug') or (page.slug if page else None)
+    defaults = PUBLIC_PAGE_SEO_DEFAULTS.get(page_slug, {})
+
+    hero_block = blocks.get('hero') if blocks else None
+    fallback_image = hero_block.image_url if hero_block and hero_block.image_url else defaults.get('image_url')
+    title = seo_override.get('title') or (page.meta_title if page and page.meta_title else defaults.get('title')) or 'Таласса Hotel & Spa'
+    description = seo_override.get('description') or (page.meta_description if page and page.meta_description else defaults.get('description')) or 'Спа-отель у Чёрного моря с видом на море, оздоровлением и спокойным отдыхом.'
+    canonical_url = seo_override.get('canonical_url') or (request.url if request.query_string else request.base_url)
+
+    return {
+        'title': title,
+        'description': description,
+        'canonical_url': canonical_url,
+        'image_url': absolute_public_url(seo_override.get('image_url') or fallback_image),
+        'og_type': seo_override.get('og_type', 'website'),
+        'site_name': 'Таласса Hotel & Spa',
+        'noindex': seo_override.get('noindex', False),
+    }
+
+
+def render_public_template(template_name, page=None, blocks=None, seo_override=None, status_code=200, **context):
+    seo = build_public_seo(page=page, blocks=blocks, seo_override=seo_override)
+    return render_template(template_name, page=page, blocks=blocks or {}, seo=seo, **context), status_code
+
+
+def serialize_site_payload(payload):
+    if not payload:
+        return ''
+    return json.dumps(payload, ensure_ascii=False, indent=2)
+
+
+def parse_site_payload(raw_payload):
+    raw_payload = (raw_payload or '').strip()
+    if not raw_payload:
+        return None
+
+    try:
+        return json.loads(raw_payload)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f'Некорректный JSON в payload: {exc.msg}') from exc
+
+# Routes
+@app.route('/')
+def index():
+    page, blocks = get_site_page_with_blocks('home')
+    hero_block = blocks.get('hero')
+    if hero_block:
+        hero_block.image_url = '/static/site/images/gallery/photo_7.jpg'
+
+    wellness_block = blocks.get('wellness')
+    if wellness_block:
+        wellness_block.image_url = '/static/site/images/gallery/photo_6.jpg'
+
+    featured_room_categories = ['Стандарт', 'Deluxe', 'Апартаменты']
+    featured_rooms = []
+    next_rooms = load_next_rooms_data()
+    for category in featured_room_categories:
+        room = next((item for item in next_rooms if item.get('category') == category), None)
+        if room:
+            featured_rooms.append(room)
+
+    room_cards = [build_next_room_card_data(room) for room in featured_rooms]
+
+    philosophy_block = blocks.get('philosophy')
+    if philosophy_block and philosophy_block.button_url == '/about':
+        philosophy_block.button_url = '/wellness'
+        if philosophy_block.button_label == 'Узнать историю':
+            philosophy_block.button_label = 'О талассотерапии'
+
+    philosophy_paragraphs = []
+    if philosophy_block and philosophy_block.body:
+        philosophy_paragraphs = [paragraph.strip() for paragraph in philosophy_block.body.split('\n\n') if paragraph.strip()]
+
+    return render_public_template(
+        'public/index.html',
+        page=page,
+        blocks=blocks,
+        room_cards=room_cards,
+        philosophy_paragraphs=philosophy_paragraphs,
+    )
+
+@app.route('/about')
+def about_page():
+    abort(404)
+
+
+@app.route('/wellness')
+def wellness_page():
+    page, blocks = get_site_page_with_blocks('wellness')
+    hero_block = blocks.get('hero')
+    if hero_block:
+        hero_block.image_url = '/static/site/images/gallery/photo_6.jpg'
+
+    intro_paragraphs = split_block_body(blocks.get('intro'))
+    beach_paragraphs = split_block_body(blocks.get('beach'))
+
+    return render_public_template(
+        'public/wellness.html',
+        page=page,
+        blocks=blocks,
+        intro_paragraphs=intro_paragraphs,
+        beach_paragraphs=beach_paragraphs,
+    )
+
+
+@app.route('/accessibility')
+def accessibility_page():
+    page, blocks = get_site_page_with_blocks('accessibility')
+    intro_paragraphs = split_block_body(blocks.get('intro'))
+
+    return render_public_template(
+        'public/accessibility.html',
+        page=page,
+        blocks=blocks,
+        intro_paragraphs=intro_paragraphs,
+    )
+
+
+@app.route('/contact')
+def contact_page():
+    page, blocks = get_site_page_with_blocks('contact')
+    map_lat = 43.372693
+    map_lng = 40.091779
+    map_point = f'{map_lng},{map_lat}'
+    map_embed_url = f'https://yandex.ru/map-widget/v1/?ll={map_point}&pt={map_point},pm2rdm&z=19&l=map'
+
+    contacts_block = blocks.get('contacts')
+    if contacts_block:
+        payload = contacts_block.payload or {}
+        if not isinstance(payload, dict):
+            payload = {}
+        payload['map_embed_url'] = map_embed_url
+
+        items = payload.get('items') or []
+        if isinstance(items, list):
+            for item in items:
+                if isinstance(item, dict) and item.get('label') == 'Адрес':
+                    item['href'] = f'https://yandex.ru/maps/?ll={map_point}&pt={map_point},pm2rdm&z=17'
+        contacts_block.payload = payload
+
+    return render_public_template(
+        'public/contact.html',
+        page=page,
+        blocks=blocks,
+        map_embed_url=map_embed_url,
+    )
+
+
+@app.route('/journal')
+def journal_page():
+    page_config, blocks = get_site_page_with_blocks('journal')
+    page_number = request.args.get('page', 1, type=int)
+    per_page = 10
+
+    news_articles = (
+        News.query.filter_by(is_published=True)
+        .order_by(News.created_at.desc())
+        .paginate(page=page_number, per_page=per_page, error_out=False)
+    )
+
+    return render_public_template(
+        'public/journal.html',
+        page=page_config,
+        blocks=blocks,
+        news_articles=news_articles,
+    )
+
+
+@app.route('/news')
+def news():
+    return journal_page()
+
+
+@app.route('/book')
+def book_landing_page():
+    page, blocks = get_site_page_with_blocks('book')
+    categories = Category.query.order_by(Category.name.asc()).all()
+
+    check_in = request.args.get('check_in', '')
+    check_out = request.args.get('check_out', '')
+    adults = request.args.get('adults', 2, type=int)
+    children = request.args.get('children', 0, type=int)
+    selected_category_id = request.args.get('category_id', type=int)
+    search_requested = len(request.args) > 0
+    search_error = None
+    selected_range = None
+    booking_results = []
+    booking_combination_results = []
+
+    selected_category = None
+    if selected_category_id:
+        selected_category = Category.query.get(selected_category_id)
+
+    if search_requested:
+        capacity = max(1, adults) + max(0, children)
+        query = Room.query.filter_by(is_available=True)
+        if selected_category_id:
+            query = query.filter_by(category_id=selected_category_id)
+        candidate_rooms = query.order_by(Room.category_id.asc(), Room.number.asc()).all()
+
+        available_rooms = candidate_rooms
+        parsed_check_in = None
+        parsed_check_out = None
+
+        if check_in and check_out:
+            try:
+                parsed_check_in = datetime.strptime(check_in, '%Y-%m-%d').date()
+                parsed_check_out = datetime.strptime(check_out, '%Y-%m-%d').date()
+                if parsed_check_out <= parsed_check_in:
+                    search_error = 'Дата выезда должна быть позже даты заезда.'
+                else:
+                    selected_range = f'{check_in} - {check_out}'
+                    available_rooms = [
+                        room for room in candidate_rooms if is_room_available(room.id, parsed_check_in, parsed_check_out)
+                    ]
+            except ValueError:
+                search_error = 'Пожалуйста, укажите корректные даты.'
+        elif check_in or check_out:
+            search_error = 'Чтобы проверить доступность, укажите и дату заезда, и дату выезда.'
+
+        if not search_error:
+            single_room_results = [room for room in available_rooms if get_room_max_capacity(room) >= capacity]
+
+            for room in single_room_results:
+                total_info = None
+                if parsed_check_in and parsed_check_out:
+                    total_info = calculate_room_total_price(room, parsed_check_in, parsed_check_out, adults, children)
+
+                book_url = url_for(
+                    'book_room',
+                    room_id=room.id,
+                    got_check_in=check_in,
+                    got_check_out=check_out,
+                    got_adults=adults,
+                    got_children=children,
+                )
+                booking_results.append(build_booking_result_data(room, total_info, book_url))
+
+            if not booking_results and len(available_rooms) >= 2:
+                for index, room_a in enumerate(available_rooms):
+                    for room_b in available_rooms[index + 1:]:
+                        if get_room_max_capacity(room_a) + get_room_max_capacity(room_b) < capacity:
+                            continue
+                        combination = build_booking_combination_data(
+                            room_a,
+                            room_b,
+                            parsed_check_in,
+                            parsed_check_out,
+                            adults,
+                            children,
+                            check_in,
+                            check_out,
+                        )
+                        if combination:
+                            booking_combination_results.append(combination)
+
+                booking_combination_results.sort(key=lambda item: (item['total_price'], item['total_capacity']))
+                booking_combination_results = booking_combination_results[:6]
+
+    return render_public_template(
+        'public/book.html',
+        page=page,
+        blocks=blocks,
+        booking_categories=categories,
+        check_in=check_in,
+        check_out=check_out,
+        adults=adults,
+        children=children,
+        selected_category_id=selected_category_id,
+        selected_category_name=selected_category.name if selected_category else None,
+        search_requested=search_requested,
+        search_error=search_error,
+        selected_range=selected_range,
+        booking_results=booking_results,
+        booking_combination_results=booking_combination_results,
+        booking_results_count=len(booking_results) if booking_results else len(booking_combination_results),
+    )
+
+@app.route('/rooms', methods=['GET', 'POST'])
+def rooms():
+    page, blocks = get_site_page_with_blocks('rooms')
+    room_cards = [build_next_room_card_data(room) for room in load_next_rooms_data()]
+
+    highlights_block = blocks.get('highlights')
+    room_highlights = normalize_rooms_highlights(
+        highlights_block.payload.get('items') if highlights_block and highlights_block.payload else None
+    )
+
+    return render_public_template(
+        'public/rooms.html',
+        page=page,
+        blocks=blocks,
+        room_cards=room_cards,
+        room_highlights=room_highlights,
+        total_rooms=len(room_cards),
+        initial_category='Все',
+    )
+@app.route('/journal/<int:news_id>')
+def journal_article_page(news_id):
+    page_config, blocks = get_site_page_with_blocks('journal')
+    article = News.query.filter_by(id=news_id, is_published=True).first_or_404()
+    article_photos = [
+        {
+            'url': url_for('static', filename='uploads/' + photo.filename),
+            'alt': photo.original_filename or article.title,
+        }
+        for photo in article.photos
+    ]
+    cover_photo_url = article_photos[0]['url'] if article_photos else get_news_cover_photo(article)
+
+    return render_public_template(
+        'public/journal_detail.html',
+        page=page_config,
+        blocks=blocks,
+        article=article,
+        article_photos=article_photos,
+        cover_photo_url=cover_photo_url,
+        seo_override={
+            'title': article.title,
+            'description': article.summary or get_plain_text(article.content)[:160],
+            'image_url': cover_photo_url,
+            'og_type': 'article',
+            'canonical_url': url_for('journal_article_page', news_id=article.id, _external=True),
+            'page_slug': 'journal',
+        },
+    )
+
+
+@app.route('/news/<int:news_id>')
+def news_detail(news_id):
+    return journal_article_page(news_id)
+
+
+@app.route('/contacts')
+def contacts():
+    return contact_page()
+
+@app.route('/next-assets/<path:filename>')
+def next_assets(filename):
+    return send_from_directory(NEXT_PUBLIC_DIR, filename)
+
+
+@app.route('/gallery')
+def gallery():
+    page_config, blocks = get_site_page_with_blocks('gallery')
+    gallery_images = get_public_gallery_images()
+    return render_public_template(
+        'public/gallery.html',
+        page=page_config,
+        blocks=blocks,
+        gallery_images=gallery_images,
+    )
+
+@app.route('/rooms/<slug>')
+def room_detail_by_slug(slug):
+    room = get_next_room_by_slug(slug)
+    if not room:
+        abort(404)
+
+    photo_items = [
+        {
+            'url': image,
+            'alt': f"{room['name']} - фото {index + 1}",
+        }
+        for index, image in enumerate(room.get('images', []))
+    ]
+    if not photo_items and room.get('heroImage'):
+        photo_items = [{'url': room['heroImage'], 'alt': room['name']}]
+
+    current_month_label = MONTH_LABELS_RU[datetime.now().month - 1][1]
+    current_price = next(
+        (item['price'] for item in room.get('prices', []) if item.get('month') == current_month_label),
+        room.get('minPrice', 0),
+    )
+    max_capacity = room.get('capacity', {}).get('max', 0)
+    extra_guests_max = room.get('extraGuestsMax', 0)
+
+    return render_public_template(
+        'public/room_detail.html',
+        seo_override={
+            'title': room.get('name'),
+            'description': room.get('description', '')[:160] or 'Номер в Таласса Hotel & Spa у Чёрного моря.',
+            'image_url': photo_items[0]['url'] if photo_items else '/static/site/images/gallery/photo_2.jpg',
+            'canonical_url': url_for('room_detail_by_slug', slug=room.get('slug'), _external=True),
+            'page_slug': 'rooms',
+        },
+        room=room,
+        room_name=room.get('name'),
+        room_category_group=room.get('category'),
+        room_description=room.get('description'),
+        feature_labels=get_next_room_feature_labels(room),
+        area=room.get('area'),
+        area_label=f"{room.get('area')} м²" if room.get('area') else None,
+        max_capacity=max_capacity,
+        extra_bed=room.get('extraBed'),
+        extra_guests_max=extra_guests_max,
+        extra_guests_word='гостя' if extra_guests_max == 1 else 'гостей',
+        meals_text=room.get('meals'),
+        photo_items=photo_items,
+        current_price=current_price,
+        monthly_prices=get_next_room_monthly_price_items(room),
+        amenities_list=room.get('amenities', []),
+        book_url=url_for('book_landing_page'),
+    )
+
+
+@app.route('/room/<int:room_id>')
+def room_detail(room_id):
+    return redirect(url_for('rooms'))
+@app.route('/book/<int:room_id>', methods=['GET', 'POST'])
+@login_required
+def book_room(room_id, got_check_in=None, got_check_out=None, got_adults=2, got_children=0):
+
+    got_adults = request.args.get('got_adults', 2, type=int)
+    got_children = request.args.get('got_children', 0, type=int)
+
+    room = Room.query.get_or_404(room_id)
+
+    current_month = datetime.now().strftime("%B")
+
+    if request.method == 'POST':
+        check_in = datetime.strptime(request.form['check_in'], '%Y-%m-%d').date()
+        check_out = datetime.strptime(request.form['check_out'], '%Y-%m-%d').date()
+        adults = int(request.form['adults'])
+        children = int(request.form['children'])
+        children_under_five = int(request.form['children_under_five'])
+        special_requests = request.form.get('special_requests', '')
+
+        total_guests = adults + children
+
+        if check_in <= get_moscow_date():
+            flash('Check-in date must be in the future', 'error')
+            return render_template('booking.html', room=room)
+
+        if check_out <= check_in:
+            flash('Check-out date must be after check-in date', 'error')
+            return render_template('booking.html', room=room)
+
+        stay_days = (check_out - check_in).days
+        if stay_days > 31:
+            abort(404)
+
+        max_capacity = get_room_max_capacity(room)
+        if total_guests > max_capacity:
+            flash(f'Maximum capacity is {max_capacity} guests', 'error')
+            room.price_per_night = get_room_price_for_month(room, current_month)
+            return render_template('booking.html', room=room)
+
+        if not is_room_available(room_id, check_in, check_out):
+            flash('Room is not available for selected dates', 'error')
+            room.price_per_night = get_room_price_for_month(room, current_month)
+            return render_template('booking.html', room=room)
+
+        total_info = calculate_room_total_price(room, check_in, check_out, adults, children)
+        total_price = total_info['total']
+
+        booking = Booking(
+            user_id=current_user.id,
+            room_id=room_id,
+            check_in=check_in,
+            check_out=check_out,
+            guests=total_guests,
+            adults=adults,
+            children=children,
+            children_under_five=children_under_five,
+            total_price=total_price,
+            special_requests=special_requests
+        )
+
+        db.session.add(booking)
+        db.session.commit()
+
+        flash('Booking confirmed successfully!', 'success')
+        return redirect(url_for('thanks'))
+
+    room.price_per_night = get_room_price_for_month(room, current_month)
+
+    return render_template('booking.html', room=room, check_in=got_check_in,
+                           check_out=got_check_out, num_of_adults=got_adults, num_of_children=got_children)
+
+@app.route('/book/combination', methods=['GET', 'POST'])
+@login_required
+def book_room_combination():
+    room_a_id = request.values.get('room_a_id', type=int)
+    room_b_id = request.values.get('room_b_id', type=int)
+    room_a = Room.query.get_or_404(room_a_id)
+    room_b = Room.query.get_or_404(room_b_id)
+
+    check_in_str = request.values.get('check_in', '')
+    check_out_str = request.values.get('check_out', '')
+    adults_a = request.values.get('adults_a', 0, type=int)
+    children_a = request.values.get('children_a', 0, type=int)
+    adults_b = request.values.get('adults_b', 0, type=int)
+    children_b = request.values.get('children_b', 0, type=int)
+    children_under_five = request.values.get('children_under_five', 0, type=int)
+    special_requests = request.values.get('special_requests', '')
+
+    if not room_a_id or not room_b_id or not check_in_str or not check_out_str:
+        abort(404)
+
+    try:
+        check_in = datetime.strptime(check_in_str, '%Y-%m-%d').date()
+        check_out = datetime.strptime(check_out_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash('Пожалуйста, укажите корректные даты.', 'error')
+        return redirect(url_for('book_landing_page'))
+
+    if check_in <= get_moscow_date():
+        flash('Дата заезда должна быть в будущем.', 'error')
+        return redirect(url_for('book_landing_page', check_in=check_in_str, check_out=check_out_str))
+
+    if check_out <= check_in:
+        flash('Дата выезда должна быть позже даты заезда.', 'error')
+        return redirect(url_for('book_landing_page', check_in=check_in_str, check_out=check_out_str))
+
+    stay_days = (check_out - check_in).days
+    if stay_days > 31:
+        abort(404)
+
+    guests_a = adults_a + children_a
+    guests_b = adults_b + children_b
+    if guests_a <= 0 or guests_b <= 0:
+        abort(404)
+
+    if guests_a > get_room_max_capacity(room_a) or guests_b > get_room_max_capacity(room_b):
+        flash('Один из выбранных номеров не вмещает указанное количество гостей.', 'error')
+        return redirect(url_for('book_landing_page', check_in=check_in_str, check_out=check_out_str, adults=adults_a + adults_b, children=children_a + children_b))
+
+    if not is_room_available(room_a.id, check_in, check_out) or not is_room_available(room_b.id, check_in, check_out):
+        flash('Один из выбранных номеров уже недоступен на эти даты.', 'error')
+        return redirect(url_for('book_landing_page', check_in=check_in_str, check_out=check_out_str, adults=adults_a + adults_b, children=children_a + children_b))
+
+    total_info_a = calculate_room_total_price(room_a, check_in, check_out, adults_a, children_a)
+    total_info_b = calculate_room_total_price(room_b, check_in, check_out, adults_b, children_b)
+    total_price = total_info_a['total'] + total_info_b['total']
+
+    room_a_summary = build_booking_result_data(room_a, total_info_a, book_url='')
+    room_b_summary = build_booking_result_data(room_b, total_info_b, book_url='')
+    room_a_summary['guests_caption'] = f'{adults_a} взр.' + (f', {children_a} дет.' if children_a else '')
+    room_b_summary['guests_caption'] = f'{adults_b} взр.' + (f', {children_b} дет.' if children_b else '')
+
+    if request.method == 'POST':
+        try:
+            booking_a = Booking(
+                user_id=current_user.id,
+                room_id=room_a.id,
+                check_in=check_in,
+                check_out=check_out,
+                guests=guests_a,
+                adults=adults_a,
+                children=children_a,
+                children_under_five=children_under_five,
+                total_price=total_info_a['total'],
+                special_requests=special_requests,
+            )
+            booking_b = Booking(
+                user_id=current_user.id,
+                room_id=room_b.id,
+                check_in=check_in,
+                check_out=check_out,
+                guests=guests_b,
+                adults=adults_b,
+                children=children_b,
+                children_under_five=0,
+                total_price=total_info_b['total'],
+                special_requests=special_requests,
+            )
+            db.session.add(booking_a)
+            db.session.add(booking_b)
+            db.session.commit()
+            flash('Комбинированное бронирование успешно оформлено.', 'success')
+            return redirect(url_for('thanks'))
+        except Exception as exc:
+            db.session.rollback()
+            app.logger.exception('Failed to create combined booking: %s', exc)
+            flash('Не удалось оформить комбинированное бронирование. Попробуйте ещё раз.', 'error')
+
+    return render_template(
+        'booking_combo.html',
+        room_a=room_a,
+        room_b=room_b,
+        room_a_summary=room_a_summary,
+        room_b_summary=room_b_summary,
+        check_in=check_in_str,
+        check_out=check_out_str,
+        stay_days=stay_days,
+        adults_a=adults_a,
+        children_a=children_a,
+        adults_b=adults_b,
+        children_b=children_b,
+        children_under_five=children_under_five,
+        total_guests=guests_a + guests_b,
+        total_price=total_price,
+        special_requests=special_requests,
+    )
+
+@app.route('/thanks')
+def thanks():
+    return render_public_template(
+        'public/thanks.html',
+        seo_override={
+            'title': 'Спасибо за бронирование',
+            'description': 'Бронирование в Таласса Hotel & Spa оформлено. Администратор свяжется с вами в ближайшее время.',
+            'image_url': '/static/site/images/gallery/photo_1.jpg',
+            'canonical_url': url_for('thanks', _external=True),
+            'noindex': True,
+        },
+    )
+
+@app.post('/calcPrice')
+def calcPrice():
+    try:
+        data = request.get_json()
+        app.logger.info("Received data for price calculation: %s", data)
+
+        if not data:
+            return jsonify({'error': 'No JSON data received'}), 400
+
+        room_id = data.get('room_id')
+        if not room_id:
+            return jsonify({'error': 'room_id is required'}), 400
+
+        room = Room.query.get(room_id)
+        if not room:
+            return jsonify({'error': 'Room not found'}), 404
+
+        check_in_str = data.get('checkIn')
+        check_out_str = data.get('checkOut')
+
+        if not check_in_str or not check_out_str:
+            return jsonify({'error': 'checkIn and checkOut are required'}), 400
+
+        check_in = datetime.strptime(check_in_str, '%Y-%m-%d').date()
+        check_out = datetime.strptime(check_out_str, '%Y-%m-%d').date()
+        adults = data.get('adults', 2)
+        children = data.get('children', 0)
+        total_guests = adults + children
+
+        app.logger.debug(f"Calculating for: {check_in} to {check_out}, guests: {adults}a/{children}c")
+
+        total_info = calculate_room_total_price(room, check_in, check_out, adults, children)
+        base_price = total_info['base_price']
+        total_price = total_info['total']
+        app.logger.debug(f"Base price: {base_price}")
+
+        extra_details = {}
+        extra_guests = max(0, total_guests - room.capacity)
+        if extra_guests > 0:
+            extra_children = min(children, extra_guests)
+            remaining_extra = extra_guests - extra_children
+            extra_adults = min(adults, remaining_extra)
+
+            extra_details = {
+                'extraPrice': total_info['extra_price'],
+                'extraAdults': extra_adults,
+                'extraChildren': extra_children,
+                'basePrice': base_price,
+                'highSeasonDays': count_high_season_days(check_in, check_out),
+                'lowSeasonDays': count_low_season_days(check_in, check_out)
+            }
+
+            app.logger.debug(f"Extra guests: {extra_adults}a/{extra_children}c, extra price: {total_info['extra_price']}")
+
+        app.logger.debug(f"Total price: {total_price}")
+
+        result = {
+            'total': total_price,
+            'basePrice': base_price,
+            **extra_details
+        }
+
+        app.logger.info("Sending result of price calculation: %s", result)
+        return jsonify(result)
+
+    except Exception as e:
+        app.logger.error("Error in calcPrice: %s", str(e))
+        return jsonify({'error': str(e)}), 500
+
+def is_high_season(date):
+    """
+    Проверяет, является ли дата высоким сезоном (1.05 - 31.10)
+    """
+    month = date.month
+    day = date.day
+
+    # Высокий сезон: с 1 мая по 31 октября
+    if month == 5 and day >= 1:  # Май с 1 числа
+        return True
+    elif 6 <= month <= 9:  # Июнь, Июль, Август, Сентябрь
+        return True
+    elif month == 10 and day <= 31:  # Октябрь до 31 числа
+        return True
+    else:
+        return False
+
+
+def count_high_season_days(check_in, check_out):
+    """Считает количество дней высокого сезона в периоде"""
+    high_season_days = 0
+    current_date = check_in
+
+    while current_date < check_out:
+        if is_high_season(current_date):
+            high_season_days += 1
+        current_date += timedelta(days=1)
+
+    return high_season_days
+
+
+def count_low_season_days(check_in, check_out):
+    """Считает количество дней низкого сезона в периоде"""
+    total_days = (check_out - check_in).days
+    high_season_days = count_high_season_days(check_in, check_out)
+    return total_days - high_season_days
+
+@app.route('/check_availability')
+def check_availability():
+    room_id = request.args.get('room_id', type=int)
+    check_in = request.args.get('check_in')
+    check_out = request.args.get('check_out')
+
+    if not all([room_id, check_in, check_out]):
+        return jsonify({'available': False, 'error': 'Missing parameters'})
+
+    try:
+        check_in_date = datetime.strptime(check_in, '%Y-%m-%d').date()
+        check_out_date = datetime.strptime(check_out, '%Y-%m-%d').date()
+
+        available = is_room_available(room_id, check_in_date, check_out_date)
+        room = Room.query.get(room_id)
+
+        if available and room:
+            nights = (check_out_date - check_in_date).days
+            total_price = nights * room.price_per_night
+            return jsonify({
+                'available': True,
+                'nights': nights,
+                'price_per_night': room.price_per_night,
+                'total_price': total_price
+            })
+        else:
+            return jsonify({'available': False})
+
+    except ValueError:
+        return jsonify({'available': False, 'error': 'Invalid date format'})
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        phone = request.form.get('phone', '')
+
+        # Валидация телефона
+        if not validate_russian_phone(phone):
+            flash('Введите корректный российский номер телефона', 'error')
+            return render_template('register.html')
+
+        # Форматирование телефона для сохранения
+        formatted_phone = format_phone_for_storage(phone)
+
+        # Проверка существования пользователя
+        if User.query.filter_by(phone=formatted_phone).first():
+            flash('Пользователь с таким номером телефона уже существует. Попробуйте войти.', 'error')
+            return render_template('register.html')
+
+        # Создание нового пользователя с минимальными данными
+        user = User(
+            first_name='Гость',  # Временное имя
+            last_name='',  # Временная фамилия
+            phone=formatted_phone
+        )
+
+        db.session.add(user)
+        db.session.commit()
+        # Генерация и отправка SMS кода для подтверждения
+        sms_code = generate_sms_code()
+        user.sms_code = sms_code
+        user.sms_code_expires = datetime.utcnow() + timedelta(minutes=5)
+        db.session.commit()
+        # Отправка SMS (пока в консоль)
+        send_code(formatted_phone, sms_code)
+        flash('SMS-код отправлен на ваш номер телефона для подтверждения регистрации', 'success')
+        return redirect(url_for('verify_sms', phone=formatted_phone))
+    return render_template('register.html')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    next_page = request.args.get('next') or request.form.get('next')
+
+    if request.method == 'POST':
+        phone = request.form['phone']
+
+        if not validate_russian_phone(phone):
+            flash('Введите корректный российский номер телефона', 'error')
+            return render_template('login.html', next_page=next_page)
+
+        formatted_phone = format_phone_for_storage(phone)
+        user = User.query.filter_by(phone=formatted_phone).first()
+
+        if not user:
+            flash('Пользователь с таким номером телефона не найден. Пожалуйста, зарегистрируйтесь.', 'error')
+            return render_template('login.html', next_page=next_page)
+
+        sms_code = generate_sms_code()
+        user.sms_code = sms_code
+        user.sms_code_expires = datetime.utcnow() + timedelta(minutes=5)
+
+        db.session.commit()
+
+        send_code(formatted_phone, sms_code)
+
+        flash('SMS-код отправлен на ваш номер телефона', 'success')
+        return redirect(url_for('verify_sms', phone=formatted_phone, next=next_page))
+
+    return render_template('login.html', next_page=next_page)
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
+
+@app.route('/verify-sms')
+def verify_sms():
+    phone = request.args.get('phone')
+    next_page = request.args.get('next')
+    if not phone:
+        flash('Неверная ссылка для подтверждения', 'error')
+        return redirect(url_for('login', next=next_page))
+
+    return render_template('verify_sms.html', phone=phone, next_page=next_page)
+
+
+@app.route('/verify-sms', methods=['POST'])
+def verify_sms_post():
+    phone = request.form.get('phone')
+    next_page = request.form.get('next') or request.args.get('next')
+    sms_code = request.form.get('sms_code', '').strip()
+
+    if not phone or not sms_code:
+        flash('Введите SMS-код', 'error')
+        return render_template('verify_sms.html', phone=phone, next_page=next_page)
+
+    # Поиск пользователя
+    user = User.query.filter_by(phone=phone).first()
+    if not user:
+        flash('Пользователь не найден', 'error')
+        return redirect(url_for('login', next=next_page))
+
+    # Проверка кода и времени действия
+    if not user.sms_code or user.sms_code != sms_code:
+        flash('Неверный SMS-код', 'error')
+        return render_template('verify_sms.html', phone=phone, next_page=next_page)
+
+    if not user.sms_code_expires or user.sms_code_expires < datetime.utcnow():
+        flash('SMS-код истек. Запросите новый код.', 'error')
+        return redirect(url_for('login', next=next_page))
+
+    # Успешная авторизация
+    user.is_verified = True
+    user.sms_code = None  # Очищаем использованный код
+    user.sms_code_expires = None
+
+    db.session.commit()
+
+    login_user(user)
+    flash('Вы успешно вошли в систему!', 'success')
+
+    return redirect(next_page) if next_page else redirect(url_for('index'))
+
+
+@app.route('/resend-sms', methods=['POST'])
+def resend_sms():
+    phone = request.form.get('phone')
+    next_page = request.form.get('next')
+
+    if not phone:
+        flash('Неверный запрос', 'error')
+        return redirect(url_for('login', next=next_page))
+
+    user = User.query.filter_by(phone=phone).first()
+    if not user:
+        flash('Пользователь не найден', 'error')
+        return redirect(url_for('login', next=next_page))
+
+    # Проверка на частые запросы (не чаще раза в минуту)
+    if user.sms_code_expires and user.sms_code_expires > datetime.utcnow() - timedelta(minutes=1):
+        flash('Подождите перед повторной отправкой SMS', 'warning')
+        return render_template('verify_sms.html', phone=phone, next_page=next_page)
+
+    # Генерация нового кода
+    sms_code = generate_sms_code()
+    user.sms_code = sms_code
+    user.sms_code_expires = datetime.utcnow() + timedelta(minutes=5)
+
+    db.session.commit()
+
+    # Отправка SMS (пока в консоль)
+    send_code(phone, sms_code)
+
+    flash('Новый SMS-код отправлен', 'success')
+    return render_template('verify_sms.html', phone=phone)
+
+
+@app.route('/my-bookings')
+@login_required
+def my_bookings():
+    bookings = Booking.query.filter_by(user_id=current_user.id).order_by(Booking.created_at.desc()).all()
+    actual_bookings = []
+    for booking in bookings:
+        if booking.status != "cancelled":
+            actual_bookings.append(booking)
+    return render_template('my_bookings.html', bookings=actual_bookings, datetime=datetime)
+
+
+@app.route('/my-bookings/delete/<int:booking_id>', methods=['POST'])
+@login_required
+def delete_booking(booking_id):
+    # Сначала получаем бронирование без проверки пользователя
+    booking = Booking.query.get_or_404(booking_id)
+
+    # Затем проверяем, принадлежит ли оно текущему пользователю
+    if booking.user_id != current_user.id:
+        flash('Это бронирование принадлежит другому пользователю', 'error')
+        return redirect(url_for('my_bookings'))
+
+    try:
+        booking.status = "cancelled"
+        db.session.commit()
+        flash('Бронирование успешно отменено!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Произошла ошибка: {str(e)}', 'danger')
+
+    return redirect(url_for('my_bookings'))
+
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    if request.method == 'POST':
+        # Получение данных из формы
+        first_name = request.form.get('first_name', '').strip()
+        last_name = request.form.get('last_name', '').strip()
+        email = request.form.get('email', '').strip()
+
+        # Валидация
+        if not first_name:
+            flash('Имя обязательно для заполнения', 'error')
+            return render_template('profile.html')
+
+        if not last_name:
+            flash('Фамилия обязательна для заполнения', 'error')
+            return render_template('profile.html')
+
+        # Проверка email на уникальность (если указан)
+        if email:
+            existing_user = User.query.filter(User.email == email, User.id != current_user.id).first()
+            if existing_user:
+                flash('Пользователь с таким email уже существует', 'error')
+                return render_template('profile.html')
+
+            # Простая валидация email
+            if '@' not in email or '.' not in email:
+                flash('Введите корректный email адрес', 'error')
+                return render_template('profile.html')
+
+        # Обновление данных пользователя
+        current_user.first_name = first_name
+        current_user.last_name = last_name
+        current_user.email = email if email else None
+
+        db.session.commit()
+
+        flash('Профиль успешно обновлен!', 'success')
+        return redirect(url_for('profile'))
+
+    return render_template('profile.html')
+
+
+# Admin routes
+@app.route('/admin')
+@login_required
+def admin_dashboard():
+    if not current_user.is_admin:
+        abort(403)
+
+    total_rooms = Room.query.count()
+    total_bookings = Booking.query.count()
+    total_users = User.query.count()
+    recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(5).all()
+
+    return render_template('admin/dashboard.html',
+                           total_rooms=total_rooms,
+                           total_bookings=total_bookings,
+                           total_users=total_users,
+                           recent_bookings=recent_bookings,
+                           datetime=datetime)
+
+
+@app.route('/admin/rooms')
+@login_required
+def admin_rooms():
+    if not current_user.is_admin:
+        abort(403)
+    rooms = Room.query.all()
+
+    current_month = datetime.now().strftime("%B")
+
+    for room in rooms:
+        room.price_per_night = get_room_price_for_month(room, current_month)
+
+    return render_template('admin/rooms.html', rooms=rooms)
+
+
+@app.route('/admin/rooms/add', methods=['GET', 'POST'])
+@login_required
+def admin_add_room():
+    if not current_user.is_admin:
+        abort(403)
+
+    if request.method == 'POST':
+        try:
+            rooms_data = []
+
+            # Обрабатываем все поля number_0, number_1, number_2, ...
+            i = 0
+            while f'number_{i}' in request.form:
+                room_number = request.form[f'number_{i}'].strip()
+                if room_number:  # Проверяем, что поле не пустое
+                    rooms_data.append(room_number)
+                i += 1
+
+            # Если нет номеров - ошибка
+            if not rooms_data:
+                flash('Необходимо указать хотя бы один номер комнаты!', 'error')
+                return redirect(url_for('admin_add_room'))
+
+            # Создаем комнаты
+            for room_number in rooms_data:
+
+                try:
+                    small_sofa = bool(request.form['has_small_sofa'])
+                except (Exception):
+                    small_sofa = 0
+
+                try:
+                    large_sofa = bool(request.form['has_large_sofa'])
+                except (Exception):
+                    large_sofa = 0
+
+                prices = {}
+                prices["January"] = float(request.form['price_per_night_january'])
+                prices["February"] = float(request.form['price_per_night_february'])
+                prices["March"] = float(request.form['price_per_night_march'])
+                prices["April"] = float(request.form['price_per_night_april'])
+                prices["May"] = float(request.form['price_per_night_may'])
+                prices["June"] = float(request.form['price_per_night_june'])
+                prices["July"] = float(request.form['price_per_night_july'])
+                prices["August"] = float(request.form['price_per_night_august'])
+                prices["September"] = float(request.form['price_per_night_september'])
+                prices["October"] = float(request.form['price_per_night_october'])
+                prices["November"] = float(request.form['price_per_night_november'])
+                prices["December"] = float(request.form['price_per_night_december'])
+
+                room = Room(
+                    number=room_number,
+                    category_id=int(request.form['category_id']),
+                    price_per_night=json.dumps(prices),
+                    capacity=int(request.form['capacity']),
+                    has_small_sofa=bool(small_sofa),
+                    has_large_sofa=bool(large_sofa),
+                    description=request.form['description'],
+                    amenities=request.form['amenities']
+                )
+                db.session.add(room)
+
+            db.session.commit()
+            flash(f'Успешно добавлено {len(rooms_data)} комнат(ы)!', 'success')
+            return redirect(url_for('admin_rooms'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ошибка при добавлении комнат: {str(e)}', 'error')
+
+    categories = Category.query.all()
+    return render_template('admin/add_room.html', categories=categories)
+
+
+@app.route('/admin/rooms/<int:room_id>/photos', methods=['GET', 'POST'])
+@login_required
+def admin_room_photos(room_id):
+    if not current_user.is_admin:
+        abort(403)
+
+    room = Room.query.get_or_404(room_id)
+
+    if request.method == 'POST':
+        files = request.files.getlist('photos')
+
+        for file in files:
+            if file and file.filename and allowed_file(file.filename):
+                # Generate unique filename
+                filename = str(uuid.uuid4()) + '_' + secure_filename(file.filename)
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+                file.save(file_path)
+                resize_image(file_path)
+
+                # Save to database
+                photo = RoomPhoto(
+                    room_id=room_id,
+                    filename=filename,
+                    original_filename=file.filename
+                )
+                db.session.add(photo)
+
+        db.session.commit()
+        flash('Photos uploaded successfully!', 'success')
+        return redirect(url_for('admin_room_photos', room_id=room_id))
+
+    return render_template('admin/room_photos.html', room=room)
+
+
+@app.route('/admin/rooms/<int:room_id>/edit', methods=['GET', 'POST'])
+@login_required
+def admin_edit_room(room_id):
+    if not current_user.is_admin:
+        abort(403)
+
+    room = Room.query.get_or_404(room_id)
+
+    if request.method == 'POST':
+
+        prices = {}
+        prices["January"] = float(request.form['price_per_night_january'])
+        prices["February"] = float(request.form['price_per_night_february'])
+        prices["March"] = float(request.form['price_per_night_march'])
+        prices["April"] = float(request.form['price_per_night_april'])
+        prices["May"] = float(request.form['price_per_night_may'])
+        prices["June"] = float(request.form['price_per_night_june'])
+        prices["July"] = float(request.form['price_per_night_july'])
+        prices["August"] = float(request.form['price_per_night_august'])
+        prices["September"] = float(request.form['price_per_night_september'])
+        prices["October"] = float(request.form['price_per_night_october'])
+        prices["November"] = float(request.form['price_per_night_november'])
+        prices["December"] = float(request.form['price_per_night_december'])
+
+        try:
+            small_sofa = bool(request.form['has_small_sofa'])
+        except (Exception):
+            small_sofa = 0
+        try:
+            large_sofa = bool(request.form['has_large_sofa'])
+        except (Exception):
+            large_sofa = 0
+
+        room.number = request.form['number']
+        room.category_id = int(request.form['category_id'])
+        room.price_per_night = json.dumps(prices)
+        room.capacity = int(request.form['capacity'])
+        room.has_small_sofa = bool(small_sofa)
+        room.has_large_sofa = bool(large_sofa)
+        room.description = request.form['description']
+        room.amenities = request.form['amenities']
+        room.is_available = 'is_available' in request.form
+
+        db.session.commit()
+        flash('Номер успешно обновлен!', 'success')
+        return redirect(url_for('admin_rooms'))
+
+    room.price_per_night = get_room_prices(room)
+
+    categories = Category.query.all()
+    return render_template('admin/edit_room.html', room=room, categories=categories)
+
+
+@app.route('/admin/rooms/<int:room_id>/delete', methods=['POST'])
+@login_required
+def admin_delete_room(room_id):
+    if not current_user.is_admin:
+        abort(403)
+
+    room = Room.query.get_or_404(room_id)
+
+    # Check if room has active bookings
+    active_bookings = Booking.query.filter(
+        Booking.room_id == room_id,
+        Booking.status == 'confirmed',
+        Booking.check_out >= date.today()
+    ).count()
+
+    if active_bookings > 0:
+        flash('Нельзя удалить номер с активными бронированиями!', 'error')
+        return redirect(url_for('admin_rooms'))
+
+    # Delete associated photos from filesystem
+    for photo in room.photos:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+    db.session.delete(room)
+    db.session.commit()
+
+    flash('Номер успешно удален!', 'success')
+    return redirect(url_for('admin_rooms'))
+
+
+@app.route('/admin/photos/<int:photo_id>/delete', methods=['POST'])
+@login_required
+def admin_delete_photo(photo_id):
+    if not current_user.is_admin:
+        abort(403)
+
+    photo = RoomPhoto.query.get_or_404(photo_id)
+
+    # Delete file from filesystem
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    room_id = photo.room_id
+    db.session.delete(photo)
+    db.session.commit()
+
+    flash('Photo deleted successfully!', 'success')
+    return redirect(url_for('admin_room_photos', room_id=room_id))
+
+
+@app.route('/admin/categories')
+@login_required
+def admin_categories():
+    if not current_user.is_admin:
+        abort(403)
+    categories = Category.query.all()
+    return render_template('admin/categories.html', categories=categories)
+
+
+@app.route('/admin/categories/add', methods=['GET', 'POST'])
+@login_required
+def admin_add_category():
+    if not current_user.is_admin:
+        abort(403)
+
+    if request.method == 'POST':
+        category = Category(
+            name=request.form['name'],
+            description=request.form['description']
+        )
+
+        db.session.add(category)
+        db.session.commit()
+
+        flash('Category added successfully!', 'success')
+        return redirect(url_for('admin_categories'))
+
+    return render_template('admin/add_category.html')
+
+
+@app.route('/admin/bookings')
+@login_required
+def admin_bookings():
+    if not current_user.is_admin:
+        abort(403)
+    bookings = Booking.query.order_by(Booking.created_at.desc()).all()
+    return render_template('admin/bookings.html', bookings=bookings)
+
+
+@app.route('/admin/users')
+@login_required
+def admin_users():
+    if not current_user.is_admin:
+        abort(403)
+    users = User.query.all()
+    return render_template('admin/users.html', users=users)
+
+
+@app.route('/admin/users/<int:user_id>/edit', methods=['GET', 'POST'])
+@login_required
+def admin_edit_user(user_id):
+    if not current_user.is_admin:
+        abort(403)
+
+    user = User.query.get_or_404(user_id)
+
+    if request.method == 'POST':
+        user.first_name = request.form['first_name']
+        user.last_name = request.form['last_name']
+        user.email = request.form['email']
+
+        # Валидация и форматирование телефона
+        # Валидация телефона
+        if not validate_russian_phone(phone):
+            flash('Введите корректный российский номер телефона', 'error')
+            return render_template('login.html')
+        if phone:
+            user.phone = None
+
+        user.is_admin = 'is_admin' in request.form
+
+        db.session.commit()
+        flash('Пользователь успешно обновлен!', 'success')
+        return redirect(url_for('admin_users'))
+
+    return render_template('admin/edit_user.html', user=user)
+
+
+@app.route('/admin/bookings/<int:booking_id>/edit', methods=['GET', 'POST'])
+@login_required
+def admin_edit_booking(booking_id):
+    if not current_user.is_admin:
+        abort(403)
+
+    booking = Booking.query.get_or_404(booking_id)
+
+    if request.method == 'POST':
+        booking.status = request.form['status']
+        booking.special_requests = request.form.get('special_requests', '')
+
+        db.session.commit()
+        flash('Бронирование успешно обновлено!', 'success')
+        return redirect(url_for('admin_bookings'))
+
+    return render_template('admin/edit_booking.html', booking=booking)
+
+
+@app.route('/admin/news')
+@login_required
+def admin_news():
+    if not current_user.is_admin:
+        abort(403)
+
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+
+    news_articles = News.query.order_by(News.created_at.desc()) \
+        .paginate(page=page, per_page=per_page, error_out=False)
+
+    return render_template('admin/news.html', news_articles=news_articles)
+
+
+@app.route('/admin/news/add', methods=['GET', 'POST'])
+@login_required
+def admin_add_news():
+    if not current_user.is_admin:
+        abort(403)
+
+    if request.method == 'POST':
+        article = News(
+            title=request.form['title'],
+            content=request.form['content'],
+            summary=request.form['summary'],
+            author_id=current_user.id,
+            is_published='is_published' in request.form
+        )
+
+        db.session.add(article)
+        db.session.commit()
+
+        # Handle photo uploads
+        files = request.files.getlist('photos')
+        for file in files:
+            if file and file.filename and allowed_file(file.filename):
+                # Generate unique filename
+                filename = str(uuid.uuid4()) + '_' + secure_filename(file.filename)
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+                file.save(file_path)
+                resize_image(file_path)
+
+                # Save to database
+                photo = NewsPhoto(
+                    news_id=article.id,
+                    filename=filename,
+                    original_filename=file.filename
+                )
+                db.session.add(photo)
+
+        db.session.commit()
+
+        flash('Новость успешно добавлена!', 'success')
+        return redirect(url_for('admin_news'))
+
+    return render_template('admin/add_news.html')
+
+
+@app.route('/admin/news/<int:news_id>/edit', methods=['GET', 'POST'])
+@login_required
+def admin_edit_news(news_id):
+    if not current_user.is_admin:
+        abort(403)
+
+    article = News.query.get_or_404(news_id)
+
+    if request.method == 'POST':
+        article.title = request.form['title']
+        article.content = request.form['content']
+        article.summary = request.form['summary']
+        article.is_published = 'is_published' in request.form
+        article.updated_at = datetime.utcnow()
+
+        # Handle photo uploads
+        files = request.files.getlist('photos')
+        for file in files:
+            if file and file.filename and allowed_file(file.filename):
+                # Generate unique filename
+                filename = str(uuid.uuid4()) + '_' + secure_filename(file.filename)
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+                file.save(file_path)
+                resize_image(file_path)
+
+                # Save to database
+                photo = NewsPhoto(
+                    news_id=article.id,
+                    filename=filename,
+                    original_filename=file.filename
+                )
+                db.session.add(photo)
+
+        db.session.commit()
+        flash('Новость успешно обновлена!', 'success')
+        return redirect(url_for('admin_news'))
+
+    return render_template('admin/edit_news.html', article=article)
+
+
+@app.route('/admin/news/<int:news_id>/delete', methods=['POST'])
+@login_required
+def admin_delete_news(news_id):
+    if not current_user.is_admin:
+        abort(403)
+
+    article = News.query.get_or_404(news_id)
+
+    # Delete associated photos from filesystem
+    for photo in article.photos:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+    db.session.delete(article)
+    db.session.commit()
+
+    flash('Новость успешно удалена!', 'success')
+    return redirect(url_for('admin_news'))
+
+
+@app.route('/admin/news/<int:news_id>/photos', methods=['GET', 'POST'])
+@login_required
+def admin_news_photos(news_id):
+    if not current_user.is_admin:
+        abort(403)
+
+    article = News.query.get_or_404(news_id)
+
+    if request.method == 'POST':
+        files = request.files.getlist('photos')
+
+        for file in files:
+            if file and file.filename and allowed_file(file.filename):
+                # Generate unique filename
+                filename = str(uuid.uuid4()) + '_' + secure_filename(file.filename)
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+                file.save(file_path)
+                resize_image(file_path)
+
+                # Save to database
+                photo = NewsPhoto(
+                    news_id=news_id,
+                    filename=filename,
+                    original_filename=file.filename
+                )
+                db.session.add(photo)
+
+        db.session.commit()
+        flash('Фотографии успешно загружены!', 'success')
+        return redirect(url_for('admin_news_photos', news_id=news_id))
+
+    return render_template('admin/news_photos.html', article=article)
+
+
+@app.route('/admin/news/photos/<int:photo_id>/delete', methods=['POST'])
+@login_required
+def admin_delete_news_photo(photo_id):
+    if not current_user.is_admin:
+        abort(403)
+
+    photo = NewsPhoto.query.get_or_404(photo_id)
+
+    # Delete file from filesystem
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    news_id = photo.news_id
+    db.session.delete(photo)
+    db.session.commit()
+
+    flash('Фотография успешно удалена!', 'success')
+    return redirect(url_for('admin_news_photos', news_id=news_id))
+
+
+@app.route('/admin/site-content')
+@login_required
+def admin_site_content():
+    if not current_user.is_admin:
+        abort(403)
+
+    ensure_all_default_site_blocks()
+    pages = SitePage.query.order_by(SitePage.sort_order.asc(), SitePage.name.asc()).all()
+    preview_urls = {page.slug: get_page_preview_url(page.slug) for page in pages}
+    return render_template('admin/site_content.html', pages=pages, preview_urls=preview_urls)
+
+
+@app.route('/admin/site-content/<string:page_slug>')
+@login_required
+def admin_site_page_content(page_slug):
+    if not current_user.is_admin:
+        abort(403)
+
+    ensure_default_blocks_for_page(page_slug)
+    page = SitePage.query.filter_by(slug=page_slug).first_or_404()
+    blocks = SiteBlock.query.filter_by(page_id=page.id).order_by(SiteBlock.sort_order.asc(), SiteBlock.id.asc()).all()
+    preview_url = get_page_preview_url(page.slug)
+    block_guides = get_page_block_guides(page.slug)
+    existing_block_keys = {block.block_key for block in blocks}
+    return render_template(
+        'admin/site_page_content.html',
+        page=page,
+        blocks=blocks,
+        preview_url=preview_url,
+        block_guides=block_guides,
+        existing_block_keys=existing_block_keys,
+    )
+
+
+@app.route('/admin/site-content/<string:page_slug>/edit', methods=['GET', 'POST'])
+@login_required
+def admin_edit_site_page(page_slug):
+    if not current_user.is_admin:
+        abort(403)
+
+    ensure_site_pages_exist()
+    page = SitePage.query.filter_by(slug=page_slug).first_or_404()
+
+    if request.method == 'POST':
+        page.name = request.form.get('name', page.name).strip() or page.name
+        page.meta_title = request.form.get('meta_title', '').strip() or None
+        page.meta_description = request.form.get('meta_description', '').strip() or None
+        page.sort_order = request.form.get('sort_order', page.sort_order, type=int)
+        page.is_enabled = 'is_enabled' in request.form
+
+        db.session.commit()
+        flash('Настройки страницы сохранены.', 'success')
+        return redirect(url_for('admin_site_page_content', page_slug=page.slug))
+
+    return render_template('admin/site_page_form.html', page=page)
+
+
+@app.route('/admin/site-content/<string:page_slug>/blocks/add', methods=['GET', 'POST'])
+@login_required
+def admin_add_site_block(page_slug):
+    if not current_user.is_admin:
+        abort(403)
+
+    ensure_default_blocks_for_page(page_slug)
+    page = SitePage.query.filter_by(slug=page_slug).first_or_404()
+    block_guides = get_page_block_guides(page.slug)
+    template_key = request.args.get('template', '').strip()
+    default_template = get_default_block_template(page.slug, template_key)
+
+    if request.method == 'POST':
+        block_key = request.form.get('block_key', '').strip()
+        name = request.form.get('name', '').strip()
+
+        if not block_key or not name:
+            flash('Укажите системный ключ и название блока.', 'error')
+            return render_template(
+                'admin/site_block_form.html',
+                page=page,
+                block=None,
+                payload_json=request.form.get('payload', ''),
+                block_guides=block_guides,
+                selected_block_key=request.form.get('block_key', '').strip(),
+                preview_url=get_page_preview_url(page.slug),
+            )
+
+        existing_block = SiteBlock.query.filter_by(page_id=page.id, block_key=block_key).first()
+        if existing_block:
+            flash('Блок с таким системным ключом уже существует на этой странице.', 'error')
+            return render_template(
+                'admin/site_block_form.html',
+                page=page,
+                block=None,
+                payload_json=request.form.get('payload', ''),
+                block_guides=block_guides,
+                selected_block_key=request.form.get('block_key', '').strip(),
+                preview_url=get_page_preview_url(page.slug),
+            )
+
+        try:
+            payload = parse_site_payload(request.form.get('payload', ''))
+        except ValueError as exc:
+            flash(str(exc), 'error')
+            return render_template(
+                'admin/site_block_form.html',
+                page=page,
+                block=None,
+                payload_json=request.form.get('payload', ''),
+                block_guides=block_guides,
+                selected_block_key=request.form.get('block_key', '').strip(),
+                preview_url=get_page_preview_url(page.slug),
+            )
+
+        block = SiteBlock(
+            page_id=page.id,
+            block_key=block_key,
+            name=name,
+            title=request.form.get('title', '').strip() or None,
+            subtitle=request.form.get('subtitle', '').strip() or None,
+            body=request.form.get('body', '').strip() or None,
+            image_url=request.form.get('image_url', '').strip() or None,
+            button_label=request.form.get('button_label', '').strip() or None,
+            button_url=request.form.get('button_url', '').strip() or None,
+            payload=payload,
+            sort_order=request.form.get('sort_order', 0, type=int),
+            is_enabled='is_enabled' in request.form,
+        )
+
+        db.session.add(block)
+        db.session.commit()
+        flash('Блок добавлен.', 'success')
+        return redirect(url_for('admin_site_page_content', page_slug=page.slug))
+
+    payload_json = serialize_site_payload(default_template.get('payload')) if default_template and default_template.get('payload') else ''
+    return render_template(
+        'admin/site_block_form.html',
+        page=page,
+        block=None,
+        payload_json=payload_json,
+        block_guides=block_guides,
+        selected_block_key=template_key,
+        preview_url=get_page_preview_url(page.slug),
+        initial_name=default_template.get('name') if default_template else '',
+        initial_title=default_template.get('title') if default_template else '',
+        initial_subtitle=default_template.get('subtitle') if default_template else '',
+        initial_body=default_template.get('body') if default_template else '',
+        initial_image_url=default_template.get('image_url') if default_template else '',
+        initial_button_label=default_template.get('button_label') if default_template else '',
+        initial_button_url=default_template.get('button_url') if default_template else '',
+        initial_sort_order=default_template.get('sort_order') if default_template else 0,
+    )
+
+
+@app.route('/admin/site-content/blocks/<int:block_id>/edit', methods=['GET', 'POST'])
+@login_required
+def admin_edit_site_block(block_id):
+    if not current_user.is_admin:
+        abort(403)
+
+    block = SiteBlock.query.get_or_404(block_id)
+    page = block.page
+    block_guides = get_page_block_guides(page.slug)
+
+    if request.method == 'POST':
+        new_block_key = request.form.get('block_key', '').strip()
+        name = request.form.get('name', '').strip()
+
+        if not new_block_key or not name:
+            flash('Укажите системный ключ и название блока.', 'error')
+            return render_template(
+                'admin/site_block_form.html',
+                page=page,
+                block=block,
+                payload_json=request.form.get('payload', ''),
+                block_guides=block_guides,
+                selected_block_key=request.form.get('block_key', '').strip() or block.block_key,
+                preview_url=get_page_preview_url(page.slug),
+            )
+
+        existing_block = SiteBlock.query.filter(
+            SiteBlock.page_id == page.id,
+            SiteBlock.block_key == new_block_key,
+            SiteBlock.id != block.id,
+        ).first()
+        if existing_block:
+            flash('На странице уже есть другой блок с таким системным ключом.', 'error')
+            return render_template(
+                'admin/site_block_form.html',
+                page=page,
+                block=block,
+                payload_json=request.form.get('payload', ''),
+                block_guides=block_guides,
+                selected_block_key=request.form.get('block_key', '').strip() or block.block_key,
+                preview_url=get_page_preview_url(page.slug),
+            )
+
+        try:
+            payload = parse_site_payload(request.form.get('payload', ''))
+        except ValueError as exc:
+            flash(str(exc), 'error')
+            return render_template(
+                'admin/site_block_form.html',
+                page=page,
+                block=block,
+                payload_json=request.form.get('payload', ''),
+                block_guides=block_guides,
+                selected_block_key=request.form.get('block_key', '').strip() or block.block_key,
+                preview_url=get_page_preview_url(page.slug),
+            )
+
+        block.block_key = new_block_key
+        block.name = name
+        block.title = request.form.get('title', '').strip() or None
+        block.subtitle = request.form.get('subtitle', '').strip() or None
+        block.body = request.form.get('body', '').strip() or None
+        block.image_url = request.form.get('image_url', '').strip() or None
+        block.button_label = request.form.get('button_label', '').strip() or None
+        block.button_url = request.form.get('button_url', '').strip() or None
+        block.payload = payload
+        block.sort_order = request.form.get('sort_order', 0, type=int)
+        block.is_enabled = 'is_enabled' in request.form
+
+        db.session.commit()
+        flash('Блок сохранён.', 'success')
+        return redirect(url_for('admin_site_page_content', page_slug=page.slug))
+
+    return render_template(
+        'admin/site_block_form.html',
+        page=page,
+        block=block,
+        payload_json=serialize_site_payload(block.payload),
+        block_guides=block_guides,
+        selected_block_key=block.block_key,
+        preview_url=get_page_preview_url(page.slug),
+    )
+
+
+@app.route('/admin/site-content/blocks/<int:block_id>/delete', methods=['POST'])
+@login_required
+def admin_delete_site_block(block_id):
+    if not current_user.is_admin:
+        abort(403)
+
+    block = SiteBlock.query.get_or_404(block_id)
+    page_slug = block.page.slug
+    db.session.delete(block)
+    db.session.commit()
+
+    flash('Блок удалён.', 'success')
+    return redirect(url_for('admin_site_page_content', page_slug=page_slug))
+
+
+@app.route('/404')
+def not_found_page():
+    return render_public_template(
+        'public/not_found.html',
+        seo_override={
+            'title': 'Страница не найдена',
+            'description': 'Запрошенная страница не найдена на сайте Таласса Hotel & Spa.',
+            'image_url': '/static/site/images/gallery/photo_1.jpg',
+            'canonical_url': request.base_url,
+            'noindex': True,
+        },
+        status_code=404,
+        missing_path=request.path,
+    )
+
+
+@app.errorhandler(404)
+def handle_not_found(error):
+    return render_public_template(
+        'public/not_found.html',
+        seo_override={
+            'title': 'Страница не найдена',
+            'description': 'Запрошенная страница не найдена на сайте Таласса Hotel & Spa.',
+            'image_url': '/static/site/images/gallery/photo_1.jpg',
+            'canonical_url': request.base_url,
+            'noindex': True,
+        },
+        status_code=404,
+        missing_path=request.path,
+    )
+
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+    app.run(debug=False, host='0.0.0.0', port=5000)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

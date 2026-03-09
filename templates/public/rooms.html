@@ -1,0 +1,87 @@
+{% extends "public/base_public.html" %}
+
+{% block content %}
+{% set hero = blocks.get('hero') %}
+
+<section class="page-hero page-hero--soft page-hero--rooms-next">
+    <div class="site-container page-hero__content page-hero__content--compact">
+        <h1>{{ hero.title if hero and hero.title else 'Номера' }}</h1>
+        <p class="page-hero__lead">{{ hero.subtitle if hero and hero.subtitle else 'Все важное об отдыхе в Таласса - в коротком списке:' }}</p>
+        <ul class="rooms-highlights-list rooms-highlights-list--next">
+            {% for item in room_highlights %}
+                <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+<section class="section section--tight-top rooms-section-next">
+    <div class="site-container">
+        <div class="rooms-filter" data-rooms-filter data-initial-category="{{ initial_category }}">
+            <div class="rooms-toolbar">
+                <div class="rooms-toolbar__group rooms-toolbar__group--sort">
+                    <span class="rooms-toolbar__label">Сортировка:</span>
+                    <button type="button" class="rooms-sort-button is-active" data-room-sort="price">По стоимости</button>
+                    <button type="button" class="rooms-sort-button" data-room-sort="area">По площади</button>
+                </div>
+                <div class="rooms-toolbar__group rooms-toolbar__group--categories">
+                    {% for category in ['Все', 'Стандарт', 'Deluxe', 'Апартаменты'] %}
+                        <button
+                            type="button"
+                            class="rooms-pill {{ 'is-active' if category == initial_category else '' }}"
+                            data-room-category="{{ category }}"
+                        >
+                            {{ category }}
+                        </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="rooms-grid rooms-grid--next" data-rooms-grid>
+                {% for room in room_cards %}
+                    <article
+                        class="room-card room-card--next"
+                        data-room-card
+                        data-category="{{ room.category_group }}"
+                        data-area="{{ room.area }}"
+                        data-price="{{ room.price_sort }}"
+                    >
+                        <a href="{{ room.detail_url }}" class="room-card__image room-card__image--next">
+                            <img src="{{ room.photo_url }}" alt="{{ room.name }}">
+                            <span class="room-card__badge room-card__badge--next">{{ room.category_group }}</span>
+                        </a>
+                        <div class="room-card__body room-card__body--next">
+                            <h2><a href="{{ room.detail_url }}">{{ room.name }}</a></h2>
+                            <div class="room-card__divider"></div>
+                            <p class="room-card__desc room-card__desc--next">{{ room.short_description }}</p>
+
+                            <div class="room-card__tags room-card__tags--next">
+                                {% for tag in room.feature_labels %}
+                                    <span>{{ tag }}</span>
+                                {% endfor %}
+                                {% if room.area_label %}
+                                    <span>{{ room.area_label }}</span>
+                                {% endif %}
+                                <span>до {{ room.max_capacity }} гостей</span>
+                            </div>
+
+                            <div class="room-card__price-panel room-card__price-panel--next">
+                                <div class="room-card__price-row">
+                                    <span>Высокий сезон (июн-сен)</span>
+                                    <strong class="is-gold">от {{ '%.0f'|format(room.high_season_price) }} ₽</strong>
+                                </div>
+                                <div class="room-card__price-row">
+                                    <span>Низкий сезон</span>
+                                    <strong>от {{ '%.0f'|format(room.low_season_price) }} ₽</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+
+            <p class="rooms-count"><span data-visible-count>{{ room_cards|length }}</span> из {{ total_rooms }} номеров</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

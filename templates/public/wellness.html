@@ -1,0 +1,102 @@
+{% extends "public/base_public.html" %}
+
+{% block content %}
+{% set hero = blocks.get('hero') %}
+{% set intro = blocks.get('intro') %}
+{% set minerals = blocks.get('minerals') %}
+{% set procedures = blocks.get('procedures') %}
+{% set beach = blocks.get('beach') %}
+{% set cta = blocks.get('cta') %}
+
+<section class="page-hero" style="background-image: linear-gradient(rgba(82, 110, 98, 0.72), rgba(49, 78, 111, 0.76)), url('{{ hero.image_url if hero and hero.image_url else '/static/site/images/gallery/photo_6.jpg' }}');">
+    <div class="site-container page-hero__content">
+        <p class="hero__eyebrow">{{ hero.payload.get('eyebrow') if hero and hero.payload and hero.payload.get('eyebrow') else 'Оздоровление' }}</p>
+        <h1>{{ hero.title if hero and hero.title else 'Талассотерапия' }}</h1>
+        <p>{{ hero.subtitle if hero and hero.subtitle else '' }}</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="site-container split-grid split-grid--top">
+        <div>
+            <div class="section-copy">
+                <h2>{{ intro.title if intro and intro.title else 'Что такое талассотерапия' }}</h2>
+                {% for paragraph in intro_paragraphs %}
+                    <p>{{ paragraph }}</p>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="section-image section-image--tall">
+            <img src="{{ intro.image_url if intro and intro.image_url else '/static/site/images/gallery/photo_8.jpg' }}" alt="Черноморская вода">
+        </div>
+    </div>
+</section>
+
+<section class="section section--light">
+    <div class="site-container">
+        <div class="section-heading section-heading--center">
+            <h2>{{ minerals.title if minerals and minerals.title else 'Сила черноморской воды' }}</h2>
+            <p>{{ minerals.subtitle if minerals and minerals.subtitle else '' }}</p>
+        </div>
+        <div class="minerals-grid">
+            {% for item in (minerals.payload.get('items') if minerals and minerals.payload and minerals.payload.get('items') else []) %}
+                <article class="feature-card mineral-card">
+                    <h3>{{ item.name }}</h3>
+                    <p>{{ item.effect }}</p>
+                </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="site-container">
+        <div class="section-heading section-heading--center">
+            <h2>{{ procedures.title if procedures and procedures.title else 'Наши процедуры' }}</h2>
+            <p>{{ procedures.subtitle if procedures and procedures.subtitle else '' }}</p>
+        </div>
+        <div class="procedures-grid">
+            {% for item in (procedures.payload.get('items') if procedures and procedures.payload and procedures.payload.get('items') else []) %}
+                <article class="feature-card feature-card--icon procedure-card">
+                    <span class="feature-card__icon">{{ item.icon }}</span>
+                    <h3>{{ item.title }}</h3>
+                    <p>{{ item.description }}</p>
+                    <ul>
+                        {% for benefit in item.benefits %}
+                            <li>{{ benefit }}</li>
+                        {% endfor %}
+                    </ul>
+                </article>
+            {% endfor %}
+        </div>
+        <div class="section-cta-note">
+            <p>{{ procedures.payload.get('journal_text') if procedures and procedures.payload else '' }}</p>
+            <a href="{{ procedures.payload.get('journal_button_url') if procedures and procedures.payload else '/journal' }}" class="site-btn site-btn--secondary">{{ procedures.payload.get('journal_button_label') if procedures and procedures.payload else 'Читать статьи в журнале' }}</a>
+        </div>
+    </div>
+</section>
+
+<section class="section section--overlay" style="background-image: linear-gradient(rgba(49, 78, 111, 0.86), rgba(49, 78, 111, 0.70)), url('{{ beach.image_url if beach and beach.image_url else '/static/site/images/gallery/photo_2.jpg' }}');">
+    <div class="site-container">
+        <div class="narrow-copy narrow-copy--light">
+            <p class="section-copy__eyebrow">{{ beach.payload.get('eyebrow') if beach and beach.payload and beach.payload.get('eyebrow') else 'Пляж' }}</p>
+            <h2>{{ beach.title if beach and beach.title else 'Галечный пляж' }}</h2>
+            {% for paragraph in beach_paragraphs %}
+                <p>{{ paragraph }}</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="section section--light">
+    <div class="site-container centered-copy centered-copy--compact">
+        <h2>{{ cta.title if cta and cta.title else 'Начните восстановление' }}</h2>
+        <p>{{ cta.body if cta and cta.body else '' }}</p>
+        <div class="hero__actions">
+            <a href="{{ cta.button_url if cta and cta.button_url else '/book' }}" class="site-btn site-btn--gold">{{ cta.button_label if cta and cta.button_label else 'Забронировать' }}</a>
+            <a href="{{ cta.payload.get('secondary_button_url') if cta and cta.payload else '/rooms' }}" class="site-btn site-btn--secondary">{{ cta.payload.get('secondary_button_label') if cta and cta.payload else 'Номера с видом на море' }}</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

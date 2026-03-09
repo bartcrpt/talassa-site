@@ -1,0 +1,38 @@
+stages:
+  - deploy
+
+variables:
+  ANSIBLE_HOST_KEY_CHECKING: "false"
+  ANSIBLE_FORCE_COLOR: "true"
+  HOST_IP: "172.16.0.206"
+
+# Кэширование
+cache:
+  key: "${CI_COMMIT_REF_SLUG}"
+  paths:
+    - .cache/pip
+
+image: python:3.11-slim
+
+before_script:
+  - apt-get update -qq && apt-get install -y -qq openssh-client sshpass # python3 python3-pip
+  - pip install --no-cache-dir ansible jmespath
+  - mkdir -p ~/.ssh
+  - echo "$SSH_PRIVATE_KEY_B64" | base64 -d | tr -d '\r' > ~/.ssh/id_rsa
+  - chmod 600 ~/.ssh/id_rsa
+  - cat ~/.ssh/id_rsa | wc -m
+  - cat ansible/inventory/host.ini
+
+facts_job:
+  stage: deploy
+  script:
+    # - echo "🎯 Начинаем сбор фактов о сервере..."
+    - |
+      ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook -i ansible/inventory/host.ini ansible/playbooks/deploy_pb.yml -u "${SSH_USER:-root}" --private-key ~/.ssh/id_rsa -e ansible_user="${SSH_USER}" -b
+    
+  # after_script:
+  #   - 
+  
+  only:
+    - main
+#     - master

@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Мои бронирования - Система бронирования отеля{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Мои бронирования</h1>
+    
+    {% if bookings %}
+        <div class="row">
+            {% for booking in bookings %}
+                <div class="col-lg-6 mb-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">Бронирование #{{ booking.id }}</h6>
+                            <span class="badge bg-{{ 'success' if booking.status == 'confirmed' else 'secondary' }}">
+                                {% if booking.status == 'confirmed' %}Подтверждено{% else %}{{ booking.status }}{% endif %}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    {% if booking.room.photos %}
+                                        <img src="{{ url_for('static', filename='uploads/' + booking.room.photos[0].filename) }}" 
+                                             class="img-fluid rounded" alt="Room {{ booking.room.number }}">
+                                    {% else %}
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 120px;">
+                                            <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-8">
+                                    <h5 class="card-title">Номер {{ booking.room.number }}</h5>
+                                    <p class="card-text text-muted">{{ booking.room.category.name }}</p>
+                                    
+                                    <div class="mb-2">
+                                        <small class="text-muted">
+                                            <i class="bi bi-calendar-range"></i> 
+                                            {{ booking.check_in.strftime('%d.%m.%Y') }} - 
+                                            {{ booking.check_out.strftime('%d.%m.%Y') }}
+                                        </small>
+                                    </div>
+                                    
+                                    <div class="mb-2">
+                                        <small class="text-muted">
+                                            <i class="bi bi-people"></i> {{ booking.guests }} 
+                                            {% if booking.guests == 1 %}гость{% elif booking.guests < 5 %}гостя{% else %}гостей{% endif %}
+                                            {% if booking.children_under_five > 0 %}; детей до 5 лет: {{ booking.children_under_five }}{% endif %}
+                                        </small>
+                                    </div>
+                                    
+                                    <div class="mb-2">
+                                        <strong class="text-primary">{{ "%.0f"|format(booking.total_price) }} ₽</strong>
+                                    </div>
+                                    
+                                    {% if booking.special_requests %}
+                                        <div class="mb-2">
+                                            <small class="text-muted">
+                                                <strong>Особые пожелания:</strong> {{ booking.special_requests }}
+                                            </small>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div class="text-end">
+                                        <small class="text-muted">
+                                            Забронировано {{ booking.created_at.strftime('%d.%m.%Y в %H:%M') }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    {% set days_until = (booking.check_in - datetime.now().date()).days %}
+                                    {% if days_until > 0 %}
+                                        {{ days_until }} 
+                                        {% if days_until == 1 %}день{% elif days_until < 5 %}дня{% else %}дней{% endif %} до заезда
+                                    {% elif days_until == 0 %}
+                                        Заезд сегодня!
+                                    {% else %}
+                                        {% set days_since = (datetime.now().date() - booking.check_out).days %}
+                                        {% if days_since > 0 %}
+                                            Завершено {{ days_since }} 
+                                            {% if days_since == 1 %}день{% elif days_since < 5 %}дня{% else %}дней{% endif %} назад
+                                        {% else %}
+                                            Сейчас проживаете
+                                        {% endif %}
+                                    {% endif %}
+                                </small>
+                                
+                                <a href="{{ url_for('room_detail', room_id=booking.room.id) }}" 
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-eye"></i> Посмотреть номер
+                                </a>
+
+                                <form action="{{ url_for('delete_booking', booking_id=booking.id) }}"
+                                      method="POST"
+                                      onsubmit="return confirm('Вы уверены, что хотите отменить это бронирование?');"
+                                      style="display: inline;">
+
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-trash"></i> Удалить
+                                    </button>
+                                </form>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-calendar-x text-muted" style="font-size: 4rem;"></i>
+            <h4 class="mt-3">Пока нет бронирований</h4>
+            <p class="text-muted">Забронируйте свой первый номер, чтобы увидеть резервации здесь.</p>
+            <a href="{{ url_for('rooms') }}" class="btn btn-primary">
+                <i class="bi bi-search"></i> Посмотреть номера
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Import date for template context
+document.addEventListener('DOMContentLoaded', function() {
+    // Add any additional JavaScript functionality here
+});
+</script>
+{% endblock %}

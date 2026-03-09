@@ -1,0 +1,26 @@
+{% extends "public/base_public.html" %}
+
+{% block content %}
+<section class="page-hero page-hero--soft">
+    <div class="site-container page-hero__content page-hero__content--compact centered-copy">
+        <p class="hero__eyebrow">Бронирование</p>
+        <h1>Спасибо за заявку</h1>
+        <p>Бронирование оформлено. Администратор Таласса свяжется с вами в ближайшее время, чтобы подтвердить детали отдыха.</p>
+    </div>
+</section>
+
+<section class="section section--light section--tight-top">
+    <div class="site-container">
+        <div class="success-card centered-copy centered-copy--compact">
+            <p class="section-copy__eyebrow">Готово</p>
+            <h2>Ваш запрос уже у нас</h2>
+            <p>Пока вы ждёте подтверждение, можно вернуться к номерам, открыть журнал или посмотреть свои бронирования в личном кабинете.</p>
+            <div class="article-detail__actions article-detail__actions--centered">
+                <a href="{{ url_for('my_bookings') }}" class="site-btn site-btn--gold">Мои бронирования</a>
+                <a href="{{ url_for('rooms') }}" class="site-btn site-btn--secondary">Номера</a>
+                <a href="{{ url_for('journal_page') }}" class="site-btn site-btn--secondary">Журнал</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

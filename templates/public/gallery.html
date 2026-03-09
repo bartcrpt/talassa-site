@@ -1,0 +1,47 @@
+{% extends "public/base_public.html" %}
+
+{% block content %}
+{% set hero = blocks.get('hero') %}
+
+<section class="page-hero page-hero--soft page-hero--gallery-next">
+    <div class="site-container page-hero__content page-hero__content--compact">
+        <p class="hero__eyebrow">{{ hero.payload.get('eyebrow') if hero and hero.payload else 'Галерея' }}</p>
+        <h1>{{ hero.title if hero and hero.title else 'Галерея' }}</h1>
+        <p>{{ hero.subtitle if hero and hero.subtitle else 'Атмосфера Таласса в фотографиях - море, горы, номера и территория отеля' }}</p>
+    </div>
+</section>
+
+<section class="section section--light section--tight-top gallery-section-next">
+    <div class="site-container">
+        {% if gallery_images %}
+            <div
+                class="gallery-masonry"
+                data-lightbox-gallery-id="public-gallery"
+                data-lightbox-items="{{ gallery_images|tojson|forceescape }}"
+            >
+                {% for image in gallery_images %}
+                    <button
+                        type="button"
+                        class="gallery-masonry__item"
+                        data-lightbox-trigger
+                        data-lightbox-source="public-gallery"
+                        data-lightbox-index="{{ loop.index0 }}"
+                        aria-label="Открыть фото {{ loop.index }}"
+                    >
+                        <img src="{{ image.src }}" alt="{{ image.alt }}">
+                        <span class="gallery-masonry__overlay">
+                            <span>{{ loop.index }} / {{ gallery_images|length }}</span>
+                        </span>
+                    </button>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state-card centered-copy centered-copy--compact">
+                <p class="section-copy__eyebrow">Галерея</p>
+                <h2>Фотографии скоро появятся</h2>
+                <p>Мы наполняем галерею атмосферой моря, номеров и территории Таласса.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

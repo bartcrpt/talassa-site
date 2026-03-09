@@ -1,0 +1,460 @@
+[
+  {
+    "id": "standart_plus_sv",
+    "slug": "standart-plus-sea-view",
+    "name": "Стандарт плюс с видом на море",
+    "category": "Стандарт",
+    "description":
+      "Уютный номер в натуральных тонах с балконом, откуда открывается живописный вид на Чёрное море. Пространство оформлено в современном стиле с удобной мебелью и вниманием к деталям, чтобы Ваш отдых был максимально комфортным. Прямой вид на море - просыпайтесь под шум прибоя и наслаждайтесь морским пейзажем. Звукоизоляция и удобные кровати гарантируют спокойный сон.",
+    "shortDescription":
+      "Уютный номер с балконом и прямым видом на Чёрное море. Просыпайтесь под шум прибоя.",
+    "area": 23,
+    "capacity": { "standard": 2, "max": 3 },
+    "extraBed": "Односпальный диван",
+    "extraGuestsMax": 1,
+    "prices": [
+      { "month": "Январь", "price": 3600 },
+      { "month": "Февраль", "price": 3600 },
+      { "month": "Март", "price": 3600 },
+      { "month": "Апрель", "price": 3600 },
+      { "month": "Май", "price": 5000 },
+      { "month": "Июнь", "price": 7500 },
+      { "month": "Июль", "price": 9800 },
+      { "month": "Август", "price": 10300 },
+      { "month": "Сентябрь", "price": 8700 },
+      { "month": "Октябрь", "price": 5500 },
+      { "month": "Ноябрь", "price": 3600 },
+      { "month": "Декабрь", "price": 3600 }
+    ],
+    "minPrice": 3600,
+    "maxPrice": 10300,
+    "amenities": [
+      "Кондиционер",
+      "Wi-Fi",
+      "Телевизор",
+      "Сейф",
+      "Мини-холодильник",
+      "Кресло",
+      "Стул",
+      "Стол",
+      "Душ",
+      "Фен",
+      "Ванные принадлежности",
+      "Пляжные полотенца",
+      "Чайник"
+    ],
+    "meals": "Завтраки включены (с июня по октябрь)",
+    "images": [
+      "/next-assets/images/rooms/standart_plus_sv/standart_plus_sv_1.jpg",
+      "/next-assets/images/rooms/standart_plus_sv/standart_plus_sv_2.jpg",
+      "/next-assets/images/rooms/standart_plus_sv/standart_plus_sv_3.jpg",
+      "/next-assets/images/rooms/standart_plus_sv/standart_plus_sv_4.jpg",
+      "/next-assets/images/rooms/standart_plus_sv/standart_plus_sv_5.jpg",
+      "/next-assets/images/rooms/standart_plus_sv/standart_plus_sv_6.jpg",
+      "/next-assets/images/rooms/standart_plus_sv/standart_plus_sv_7.jpg"
+    ],
+    "heroImage": "/next-assets/images/rooms/standart_plus_sv/standart_plus_sv_1.jpg",
+    "features": {
+      "seaView": true,
+      "balcony": true,
+      "terrace": false,
+      "accessible": false,
+      "firstFloor": false,
+      "kitchen": false
+    }
+  },
+  {
+    "id": "standart_sv_nb",
+    "slug": "standart-sea-view-no-balcony",
+    "name": "Стандарт без балкона с видом на море и горы",
+    "category": "Стандарт",
+    "description":
+      "Стандартный двухместный, однокомнатный номер (площадь 23 кв.м). В комплектации номера: двуспальная кровать (1м 60 см), прикроватная тумбочка, комод, шкаф, зеркало, TV-тумба, телевизор, мини-холодильник, чайная станция (чайник, кружки, чай, кофе при заезде), вода питьевая бутилированная 0.5 л при заезде на каждого гостя, кондиционер. Собственный санузел с душевой кабиной, фен, полотенца, косметические принадлежности.",
+    "shortDescription":
+      "Уютный стандартный номер с видом на море и горы. Всё необходимое для комфортного отдыха.",
+    "area": 23,
+    "capacity": { "standard": 2, "max": 2 },
+    "extraBed": null,
+    "extraGuestsMax": 0,
+    "prices": [
+      { "month": "Январь", "price": 3600 },
+      { "month": "Февраль", "price": 3600 },
+      { "month": "Март", "price": 3600 },
+      { "month": "Апрель", "price": 3600 },
+      { "month": "Май", "price": 5000 },
+      { "month": "Июнь", "price": 7500 },
+      { "month": "Июль", "price": 9800 },
+      { "month": "Август", "price": 10300 },
+      { "month": "Сентябрь", "price": 8700 },
+      { "month": "Октябрь", "price": 5500 },
+      { "month": "Ноябрь", "price": 3600 },
+      { "month": "Декабрь", "price": 3600 }
+    ],
+    "minPrice": 3600,
+    "maxPrice": 10300,
+    "amenities": [
+      "Сплит-система",
+      "Wi-Fi",
+      "Телевизор",
+      "Сейф",
+      "Диван",
+      "Чайник"
+    ],
+    "meals": "Завтраки включены (с июня по октябрь)",
+    "images": [
+      "/next-assets/images/rooms/standart_sv_nb/standart_sv_nb_1.jpg",
+      "/next-assets/images/rooms/standart_sv_nb/standart_sv_nb_2.jpg",
+      "/next-assets/images/rooms/standart_sv_nb/standart_sv_nb_3.jpg",
+      "/next-assets/images/rooms/standart_sv_nb/standart_sv_nb_4.jpg",
+      "/next-assets/images/rooms/standart_sv_nb/standart_sv_nb_5.jpg"
+    ],
+    "heroImage": "/next-assets/images/rooms/standart_sv_nb/standart_sv_nb_1.jpg",
+    "features": {
+      "seaView": true,
+      "balcony": false,
+      "terrace": false,
+      "accessible": false,
+      "firstFloor": false,
+      "kitchen": false
+    }
+  },
+  {
+    "id": "standart_bal_sv",
+    "slug": "standart-balcony-sea-view",
+    "name": "Стандарт с балконом и видом на море",
+    "category": "Стандарт",
+    "description":
+      "Стандартный двухместный, однокомнатный номер с балконом (площадь 21 кв.м). В комплектации номера: двуспальная кровать, кресло, две прикроватные тумбочки, вместительный шкаф, зеркало, стол, телевизор, мини-холодильник, чайная станция (чайник, кружки, чай, кофе при заезде), вода питьевая бутилированная 0.5 л при заезде на каждого гостя, кондиционер. Собственный санузел с душем, фен, полотенца, косметические принадлежности.",
+    "shortDescription":
+      "Стандартный номер с балконом и видом на море. Компактный и уютный.",
+    "area": 21,
+    "capacity": { "standard": 2, "max": 2 },
+    "extraBed": null,
+    "extraGuestsMax": 0,
+    "prices": [
+      { "month": "Январь", "price": 3600 },
+      { "month": "Февраль", "price": 3600 },
+      { "month": "Март", "price": 3600 },
+      { "month": "Апрель", "price": 3600 },
+      { "month": "Май", "price": 4500 },
+      { "month": "Июнь", "price": 7000 },
+      { "month": "Июль", "price": 9000 },
+      { "month": "Август", "price": 9500 },
+      { "month": "Сентябрь", "price": 8000 },
+      { "month": "Октябрь", "price": 5200 },
+      { "month": "Ноябрь", "price": 3600 },
+      { "month": "Декабрь", "price": 3600 }
+    ],
+    "minPrice": 3600,
+    "maxPrice": 9500,
+    "amenities": [
+      "Сплит-система",
+      "Wi-Fi",
+      "Телевизор",
+      "Сейф",
+      "Кресло",
+      "Стул",
+      "Стол"
+    ],
+    "meals": "Завтраки включены (с июня по октябрь)",
+    "images": [
+      "/next-assets/images/rooms/standart_bal_sv/standart_bal_sv_1.jpg",
+      "/next-assets/images/rooms/standart_bal_sv/standart_bal_sv_2.jpg",
+      "/next-assets/images/rooms/standart_bal_sv/standart_bal_sv_3.jpg",
+      "/next-assets/images/rooms/standart_bal_sv/standart_bal_sv_4.jpg",
+      "/next-assets/images/rooms/standart_bal_sv/standart_bal_sv_5.jpg",
+      "/next-assets/images/rooms/standart_bal_sv/standart_bal_sv_6.jpg",
+      "/next-assets/images/rooms/standart_bal_sv/standart_bal_sv_7.jpg"
+    ],
+    "heroImage": "/next-assets/images/rooms/standart_bal_sv/standart_bal_sv_1.jpg",
+    "features": {
+      "seaView": true,
+      "balcony": true,
+      "terrace": false,
+      "accessible": false,
+      "firstFloor": false,
+      "kitchen": false
+    }
+  },
+  {
+    "id": "standart_ff_nb",
+    "slug": "standart-first-floor",
+    "name": "Стандарт без балкона на первом этаже",
+    "category": "Стандарт",
+    "description":
+      "Стандартный двухместный, однокомнатный номер без балкона (площадь 25 кв.м). В комплектации номера: 2 односпальные кровати, комод, большой шкаф, зеркало, письменный стол, телевизор, мини-холодильник, чайная станция (чайник, кружки, чай, кофе при заезде), вода питьевая бутилированная 0.5 л при заезде на каждого гостя, кондиционер. Собственный санузел с душем, фен, полотенца, косметические принадлежности.",
+    "shortDescription":
+      "Просторный номер на первом этаже с двумя односпальными кроватями. Удобный доступ.",
+    "area": 25,
+    "capacity": { "standard": 2, "max": 2 },
+    "extraBed": null,
+    "extraGuestsMax": 0,
+    "prices": [
+      { "month": "Январь", "price": 3000 },
+      { "month": "Февраль", "price": 3000 },
+      { "month": "Март", "price": 3000 },
+      { "month": "Апрель", "price": 3000 },
+      { "month": "Май", "price": 4000 },
+      { "month": "Июнь", "price": 6500 },
+      { "month": "Июль", "price": 8500 },
+      { "month": "Август", "price": 9000 },
+      { "month": "Сентябрь", "price": 7500 },
+      { "month": "Октябрь", "price": 4700 },
+      { "month": "Ноябрь", "price": 3000 },
+      { "month": "Декабрь", "price": 3000 }
+    ],
+    "minPrice": 3000,
+    "maxPrice": 9000,
+    "amenities": [
+      "Сплит-система",
+      "Wi-Fi",
+      "Телевизор",
+      "Сейф",
+      "Чайник"
+    ],
+    "meals": "Завтраки включены (с июня по октябрь)",
+    "images": [
+      "/next-assets/images/rooms/standart_ff_nb/standart_ff_nb_1.jpg",
+      "/next-assets/images/rooms/standart_ff_nb/standart_ff_nb_2.jpg",
+      "/next-assets/images/rooms/standart_ff_nb/standart_ff_nb_3.jpg",
+      "/next-assets/images/rooms/standart_ff_nb/standart_ff_nb_4.jpg",
+      "/next-assets/images/rooms/standart_ff_nb/standart_ff_nb_5.jpg"
+    ],
+    "heroImage": "/next-assets/images/rooms/standart_ff_nb/standart_ff_nb_1.jpg",
+    "features": {
+      "seaView": false,
+      "balcony": false,
+      "terrace": false,
+      "accessible": false,
+      "firstFloor": true,
+      "kitchen": false
+    }
+  },
+  {
+    "id": "deluxe_ter_sv",
+    "slug": "deluxe-terrace-sea-view",
+    "name": "Deluxe плюс с террасой и видом на море",
+    "category": "Deluxe",
+    "description":
+      "Двухместный однокомнатный номер (площадь 25 кв.м) с собственной террасой. В комплектации номера: кровать двуспальная, диван, мини-холодильник, телевизор, шкаф, зеркало, тумбы прикроватные, столик, чайная станция (чайник, кружки, чай, кофе при заезде), вода питьевая бутилированная 0.5 л при заезде на каждого гостя, кондиционер, сушилка для белья, санузел с душевой кабиной, фен, полотенца, косметические принадлежности. Максимальное размещение - 3 человека.",
+    "shortDescription":
+      "Просторный номер с собственной террасой и панорамным видом на Чёрное море.",
+    "area": 25,
+    "capacity": { "standard": 2, "max": 3 },
+    "extraBed": "Односпальный диван",
+    "extraGuestsMax": 1,
+    "prices": [
+      { "month": "Январь", "price": 4000 },
+      { "month": "Февраль", "price": 4000 },
+      { "month": "Март", "price": 4000 },
+      { "month": "Апрель", "price": 4000 },
+      { "month": "Май", "price": 6300 },
+      { "month": "Июнь", "price": 9000 },
+      { "month": "Июль", "price": 11400 },
+      { "month": "Август", "price": 12000 },
+      { "month": "Сентябрь", "price": 10300 },
+      { "month": "Октябрь", "price": 6500 },
+      { "month": "Ноябрь", "price": 4000 },
+      { "month": "Декабрь", "price": 4000 }
+    ],
+    "minPrice": 4000,
+    "maxPrice": 12000,
+    "amenities": [
+      "Сплит-система",
+      "Wi-Fi",
+      "Телевизор",
+      "Сейф",
+      "Кресло",
+      "Чайник"
+    ],
+    "meals": "Завтраки включены (с июня по октябрь)",
+    "images": [
+      "/next-assets/images/rooms/deluxe_ter_sv/deluxe_plus_ter_sv_1.jpg",
+      "/next-assets/images/rooms/deluxe_ter_sv/deluxe_plus_ter_sv_2.jpg",
+      "/next-assets/images/rooms/deluxe_ter_sv/deluxe_plus_ter_sv_3.jpg",
+      "/next-assets/images/rooms/deluxe_ter_sv/deluxe_plus_ter_sv_4.jpg",
+      "/next-assets/images/rooms/deluxe_ter_sv/deluxe_plus_ter_sv_5.jpg"
+    ],
+    "heroImage": "/next-assets/images/rooms/deluxe_ter_sv/deluxe_plus_ter_sv_1.jpg",
+    "features": {
+      "seaView": true,
+      "balcony": false,
+      "terrace": true,
+      "accessible": false,
+      "firstFloor": false,
+      "kitchen": false
+    }
+  },
+  {
+    "id": "deluxe_big_ter_sv",
+    "slug": "deluxe-big-terrace-sea-view",
+    "name": "Deluxe с большой террасой и видом на море",
+    "category": "Deluxe",
+    "description":
+      "Двухместный однокомнатный номер (площадь 20 кв.м) с собственной большой террасой. В комплектации номера: кровать двуспальная, кресло, мини-холодильник, телевизор, шкаф, зеркало, тумба прикроватная, комод, столик, стулья, чайная станция (чайник, кружки, чай, кофе при заезде), вода питьевая бутилированная 0.5 л при заезде на каждого гостя, кондиционер, сушилка для белья, санузел с душевой кабиной, фен, полотенца, косметические принадлежности.",
+    "shortDescription":
+      "Номер с большой террасой - идеальное пространство для отдыха с видом на море.",
+    "area": 20,
+    "capacity": { "standard": 2, "max": 2 },
+    "extraBed": null,
+    "extraGuestsMax": 0,
+    "prices": [
+      { "month": "Январь", "price": 4000 },
+      { "month": "Февраль", "price": 4000 },
+      { "month": "Март", "price": 4000 },
+      { "month": "Апрель", "price": 4000 },
+      { "month": "Май", "price": 6300 },
+      { "month": "Июнь", "price": 9000 },
+      { "month": "Июль", "price": 11400 },
+      { "month": "Август", "price": 12000 },
+      { "month": "Сентябрь", "price": 10300 },
+      { "month": "Октябрь", "price": 6500 },
+      { "month": "Ноябрь", "price": 4000 },
+      { "month": "Декабрь", "price": 4000 }
+    ],
+    "minPrice": 4000,
+    "maxPrice": 12000,
+    "amenities": [
+      "Сплит-система",
+      "Wi-Fi",
+      "Телевизор",
+      "Сейф",
+      "Кресло",
+      "Чайник"
+    ],
+    "meals": "Завтраки включены (с июня по октябрь)",
+    "images": [
+      "/next-assets/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_1.jpg",
+      "/next-assets/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_2.jpg",
+      "/next-assets/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_3.jpg",
+      "/next-assets/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_4.jpg",
+      "/next-assets/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_5.jpg",
+      "/next-assets/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_6.jpg",
+      "/next-assets/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_7.jpg"
+    ],
+    "heroImage": "/next-assets/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_1.jpg",
+    "features": {
+      "seaView": true,
+      "balcony": false,
+      "terrace": true,
+      "accessible": false,
+      "firstFloor": false,
+      "kitchen": false
+    }
+  },
+  {
+    "id": "appart_bal_sv",
+    "slug": "apartment-balcony-sea-view",
+    "name": "Двухместные апартаменты с балконом и видом на море",
+    "category": "Апартаменты",
+    "description":
+      "В комплектации номера: двуспальная кровать, диван-кровать двуспальный, кресло, две прикроватные тумбочки, шкаф, зеркало, телевизор, холодильник, чайная станция, вода питьевая бутилированная 0.5 л при заезде на каждого гостя. Балкон. Собственный санузел с ванной, фен, полотенца, косметические принадлежности.",
+    "shortDescription":
+      "Просторные апартаменты с балконом, видом на море и двуспальным диваном-кроватью.",
+    "area": 35,
+    "capacity": { "standard": 2, "max": 4 },
+    "extraBed": "Двуспальный диван",
+    "extraGuestsMax": 2,
+    "prices": [
+      { "month": "Январь", "price": 4500 },
+      { "month": "Февраль", "price": 4500 },
+      { "month": "Март", "price": 4500 },
+      { "month": "Апрель", "price": 4500 },
+      { "month": "Май", "price": 7000 },
+      { "month": "Июнь", "price": 10000 },
+      { "month": "Июль", "price": 12400 },
+      { "month": "Август", "price": 13300 },
+      { "month": "Сентябрь", "price": 11300 },
+      { "month": "Октябрь", "price": 7300 },
+      { "month": "Ноябрь", "price": 4500 },
+      { "month": "Декабрь", "price": 4500 }
+    ],
+    "minPrice": 4500,
+    "maxPrice": 13300,
+    "amenities": [
+      "Сплит-система",
+      "Wi-Fi",
+      "Телевизор",
+      "Сейф",
+      "Кресло",
+      "Чайник",
+      "Диван"
+    ],
+    "meals": "Завтраки включены (с июня по октябрь)",
+    "images": [
+      "/next-assets/images/rooms/appart_bal_sv/appart_bal_sv_1.jpg",
+      "/next-assets/images/rooms/appart_bal_sv/appart_bal_sv_2.jpg",
+      "/next-assets/images/rooms/appart_bal_sv/appart_bal_sv_3.jpg",
+      "/next-assets/images/rooms/appart_bal_sv/appart_bal_sv_4.jpg",
+      "/next-assets/images/rooms/appart_bal_sv/appart_bal_sv_5.jpg",
+      "/next-assets/images/rooms/appart_bal_sv/appart_bal_sv_6.jpg",
+      "/next-assets/images/rooms/appart_bal_sv/appart_bal_sv_7.jpg",
+      "/next-assets/images/rooms/appart_bal_sv/appart_bal_sv_8.jpg",
+      "/next-assets/images/rooms/appart_bal_sv/appart_bal_sv_9.jpg"
+    ],
+    "heroImage": "/next-assets/images/rooms/appart_bal_sv/appart_bal_sv_1.jpg",
+    "features": {
+      "seaView": true,
+      "balcony": true,
+      "terrace": false,
+      "accessible": false,
+      "firstFloor": false,
+      "kitchen": false
+    }
+  },
+  {
+    "id": "appart",
+    "slug": "apartment-accessible",
+    "name": "Двухместные апартаменты",
+    "category": "Апартаменты",
+    "description":
+      "Уютный номер в натуральных тонах без балкона, с живописным видом на Чёрное море. Пространство оформлено в современном стиле с удобной мебелью и вниманием к деталям. Прямой вид на море - просыпайтесь под шум прибоя и наслаждайтесь морским пейзажем. Звукоизоляция и удобные кровати гарантируют спокойный сон. Полностью оборудованная кухня (варочная поверхность, микроволновая печь, холодильник) с посудой для приготовления пищи и уютная обеденная зона со столом и стульями. Номер полностью оборудован для маломобильных гостей.",
+    "shortDescription":
+      "Апартаменты с кухней и видом на море. Полностью оборудованы для маломобильных гостей.",
+    "area": 35,
+    "capacity": { "standard": 2, "max": 4 },
+    "extraBed": "Двуспальный диван",
+    "extraGuestsMax": 2,
+    "prices": [
+      { "month": "Январь", "price": 4000 },
+      { "month": "Февраль", "price": 4000 },
+      { "month": "Март", "price": 4000 },
+      { "month": "Апрель", "price": 4000 },
+      { "month": "Май", "price": 6000 },
+      { "month": "Июнь", "price": 8500 },
+      { "month": "Июль", "price": 10900 },
+      { "month": "Август", "price": 11500 },
+      { "month": "Сентябрь", "price": 10100 },
+      { "month": "Октябрь", "price": 6000 },
+      { "month": "Ноябрь", "price": 4000 },
+      { "month": "Декабрь", "price": 4000 }
+    ],
+    "minPrice": 4000,
+    "maxPrice": 11500,
+    "amenities": [
+      "Сплит-система",
+      "Wi-Fi",
+      "Телевизор",
+      "Сейф",
+      "Кресло",
+      "Чайник",
+      "Диван"
+    ],
+    "meals": "Завтраки включены (с июня по октябрь)",
+    "images": [
+      "/next-assets/images/rooms/appart/appart_1.jpg",
+      "/next-assets/images/rooms/appart/appart_2.jpg",
+      "/next-assets/images/rooms/appart/appart_3.jpg",
+      "/next-assets/images/rooms/appart/appart_4.jpg",
+      "/next-assets/images/rooms/appart/appart_5.jpg"
+    ],
+    "heroImage": "/next-assets/images/rooms/appart/appart_1.jpg",
+    "features": {
+      "seaView": true,
+      "balcony": false,
+      "terrace": false,
+      "accessible": true,
+      "firstFloor": true,
+      "kitchen": true
+    }
+  }]

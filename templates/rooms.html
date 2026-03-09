@@ -1,0 +1,742 @@
+{% extends "base.html" %}
+
+{% block title %}Номера - Система бронирования отеля{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Доступные номера</h1>
+    
+    <!-- Quick Search Section -->
+    <div class="bg-light py-4 mb-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body-main p-4" style="height: 500px;">
+                            <h5 class="text-center mb-4"><i class="bi bi-search"></i> Быстрый поиск номеров</h5>
+                            <form action="{{ url_for('rooms') }}" method="GET">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-3">
+                                        <label for="check_in_search" class="form-label small fw-bold text-muted">ДАТА ЗАЕЗДА</label>
+                                        <input type="text" class="form-control date-picker" id="check_in_search" name="check_in" 
+                                               placeholder="Выберите дату" readonly data-bs-toggle="modal" data-bs-target="#dateRangeModal"    
+                                               value="{{ request.args.get('check_in', '') }}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="check_out_search" class="form-label small fw-bold text-muted">ДАТА ВЫЕЗДА</label>
+                                        <input type="text" class="form-control date-picker" id="check_out_search" name="check_out" 
+                                               placeholder="Выберите дату" readonly data-bs-toggle="modal" data-bs-target="#dateRangeModal"
+                                               value="{{ request.args.get('check_out', '') }}">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="guests_search" class="form-label small fw-bold text-muted">ГОСТИ</label>
+                                        <div class="dropdown">
+                                            <button class="form-select text-start" type="button" id="guestsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <span id="guestsDisplay">2 взрослых, 0 детей</span>
+                                            </button>
+                                            <div class="dropdown-menu p-3" style="width: 300px;" aria-labelledby="guestsDropdown" id="guestsMenu">
+                                                <!-- Контент меню выбора гостей -->
+                                                <div class="row g-3">
+                                                    <!-- Взрослые -->
+                                                    <div class="col-12">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <label class="form-label fw-bold mb-0">Взрослые</label>
+                                                            <small class="text-muted">От 14 лет</small>
+                                                        </div>
+                                                        <div class="input-group input-group-sm mt-2">
+                                                            <button class="btn btn-outline-primary" type="button" onclick="changeGuests('adults', -1)">-</button>
+                                                            <input type="number" class="form-control text-center" id="adults" name="adults" value="2" min="1" max="10"
+                                                                   oninput="validateManualInput('adults')" onblur="validateManualInput('adults')">
+                                                            <button class="btn btn-outline-primary" type="button" onclick="changeGuests('adults', 1)">+</button>
+                                                        </div>
+
+                                                    </div>
+
+                                                    <!-- Дети -->
+                                                    <div class="col-12">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <label class="form-label fw-bold mb-0">Дети</label>
+                                                            <small class="text-muted">От 6 до 13 лет</small>
+                                                        </div>
+                                                        <div class="input-group input-group-sm mt-2">
+                                                            <button class="btn btn-outline-success" type="button" onclick="changeGuests('children', -1)">-</button>
+                                                            <input type="number" class="form-control text-center" id="children" name="children" value="0" min="0" max="10"
+                                                                   oninput="validateManualInput('children')" onblur="validateManualInput('children')">
+                                                            <button class="btn btn-outline-success" type="button" onclick="changeGuests('children', 1)">+</button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                            <label>Дети до 5 лет включительно проживают бесплатно</label>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <!-- Скрытые поля для отправки формы -->
+                                        <input type="hidden" id="capacity" name="capacity" value="2">
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <label for="category_search" class="form-label small fw-bold text-muted">КАТЕГОРИЯ</label>
+                                        <select class="form-select" id="category_search" name="category_id">
+                                            <option value="">Все</option>
+                                            {% for category in categories %}
+                                                <option value="{{ category.id }}" {{ 'selected' if request.args.get('category_id')|int == category.id }}>{{ category.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="submit" class="btn btn-primary w-100 py-2">
+                                            <i class="bi bi-search"></i> Найти
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Info -->
+    {% if request.args %}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-1">Результаты поиска</h6>
+                    <small class="text-muted">
+                        {% if request.args.get('check_in') and request.args.get('check_out') %}
+                            {{ request.args.get('check_in') }} - {{ request.args.get('check_out') }}
+                        {% endif %}
+                        {% if request.args.get('capacity') %}
+                            • {{ request.args.get('capacity') }}+ гостей
+                        {% endif %}
+                        {% if request.args.get('category_id') %}
+                            {% for category in categories %}
+                                {% if category.id|string == request.args.get('category_id') %}
+                                    • {{ category.name }}
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    </small>
+                </div>
+                <a href="{{ url_for('rooms') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-x-circle"></i> Очистить поиск
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Room Grid -->
+    <div class="row">
+        {% if rooms %}
+            {% for room in rooms %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card room-card h-100 border-0 shadow-sm">
+                        <div class="room-image-container">
+                            {% if room.photos %}
+                                <img src="{{ url_for('static', filename='uploads/' + room.photos[0].filename) }}"
+                                     class="card-img-top room-image" alt="Room {{ room.number }}">
+                            {% else %}
+                                <div class="card-img-top room-image bg-light d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                                </div>
+                            {% endif %}
+                            <div class="room-overlay">
+                                <a class="room-id" style="display: none;">{{ room.id }}</a>
+                                <a href="{{ url_for('room_detail', room_id=room.id, check_in=request.args.get('check_in'), check_out=request.args.get('check_out'), num_of_adults = request.args.get('adults'), num_of_children = request.args.get('children'))  }}" class="btn btn-light me-2">
+                                    <i class="bi bi-eye"></i> Подробнее
+                                </a>
+                                {% if current_user.is_authenticated %}
+                                    <form method="POST">
+                                        <input id="room_id" name="room_id" type="hidden" value={{ room.id }}>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-calendar-check"></i> Забронировать
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title mb-0">{{ room.category.name }}</h5>
+                            </div>
+                            <p class="card-text text-muted small">{{ room.description|striptags|truncate(120) }}...</p>
+
+                            {% if room.amenities %}
+                                <div class="mb-3">
+                                    <small class="text-muted">
+                                        <i class="bi bi-star"></i> {{ room.amenities|striptags|truncate(50) }}...
+                                    </small>
+                                </div>
+                            {% endif %}
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="price-info">
+                                    <span class="h5 text-primary mb-0">{{ "%.0f"|format(room.price_per_night) }} ₽</span>
+                                    <small class="text-muted d-block">за ночь</small>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block">
+                                        <i class="bi bi-people"></i> Для {{ room.capacity }} гостей (максимум: {{ room.capacity + room.has_small_sofa +  room.has_large_sofa * 2}} гостей)
+                                    </small>
+                                    {% if not current_user.is_authenticated %}
+                                        <small class="text-info">
+                                            <a href="{{ url_for('login') }}">Войдите для бронирования</a>
+                                        </small>
+                                    {% else %}
+                                        <small class="text-muted">
+                                            Заезд 14:00 • Выезд 12:00
+                                        </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="bi bi-search text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3">Номера не найдены</h4>
+                    <p class="text-muted">Попробуйте изменить фильтры для получения результатов.</p>
+                    <a href="{{ url_for('rooms') }}" class="btn btn-primary">Посмотреть все номера</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Date Range Modal -->
+<div class="modal fade" id="dateRangeModal" tabindex="-1" aria-labelledby="dateRangeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dateRangeModalLabel">
+                    <i class="bi bi-calendar-range text-primary"></i> Выберите даты проживания
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="dateRangeCalendar"></div>
+                <div class="mt-3 p-3 bg-light rounded">
+                    <div id="selectedDatesDisplay" class="text-center text-muted">
+                        Выберите дату заезда и выезда
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="confirmDates" disabled>
+                    <i class="bi bi-check-circle"></i> Подтвердить даты
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Функция для инициализации значений гостей из URL
+function initializeGuestsFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const adultsParam = urlParams.get('adults');
+    const childrenParam = urlParams.get('children');
+
+    if (adultsParam) {
+        document.getElementById('adults').value = adultsParam;
+    }
+    if (childrenParam) {
+        document.getElementById('children').value = childrenParam;
+    }
+
+    updateGuestsDisplay();
+}
+
+function changeGuests(type, change) {
+    // Предотвращаем закрытие dropdown
+    event.stopPropagation();
+
+    const input = document.getElementById(type);
+    let value = parseInt(input.value);
+    const min = parseInt(input.min);
+    const max = parseInt(input.max);
+
+    let newValue = value + change;
+
+    if (newValue >= min && newValue <= max) {
+        input.value = newValue;
+        updateGuestsDisplay();
+    }
+}
+
+function validateManualInput(type) {
+    const input = document.getElementById(type);
+    let value = input.value;
+
+    // Убираем ведущие нули
+    if (value.startsWith('0') && value.length > 1) {
+        value = value.replace(/^0+/, '');
+        // Если после удаления нулей строка пустая, ставим 0
+        if (value === '') {
+            value = '0';
+        }
+        input.value = value;
+    }
+
+    let numValue = parseInt(value);
+    const min = parseInt(input.min);
+    const max = parseInt(input.max);
+
+    // Если значение не число или пустое, устанавливаем минимальное
+    if (isNaN(numValue)) {
+        input.value = min;
+        numValue = min;
+    }
+    // Если значение меньше минимума
+    else if (numValue < min) {
+        input.value = min;
+        numValue = min;
+    }
+    // Если значение больше максимума
+    else if (numValue > max) {
+        input.value = max;
+        numValue = max;
+    }
+    // Если значение дробное, округляем
+    else if (!Number.isInteger(numValue)) {
+        input.value = Math.round(numValue);
+        numValue = Math.round(numValue);
+    }
+
+    updateGuestsDisplay();
+}
+
+function updateGuestsDisplay() {
+    const adults = document.getElementById('adults').value;
+    const children = document.getElementById('children').value;
+    const total = parseInt(adults) + parseInt(children);
+
+    let displayText = '';
+    if (parseInt(children) === 0) {
+        displayText = `${adults} ${getRussianWord(adults, ['взрослый', 'взрослых', 'взрослых'])}`;
+    } else {
+        displayText = `${adults} ${getRussianWord(adults, ['взрослый', 'взрослых', 'взрослых'])}, ${children} ${getRussianWord(children, ['ребенок', 'ребенка', 'детей'])}`;
+    }
+
+    document.getElementById('guestsDisplay').textContent = displayText;
+    document.getElementById('capacity').value = total;
+}
+
+function getRussianWord(number, words) {
+    number = Math.abs(number) % 100;
+    let n = number % 10;
+    if (number > 10 && number < 20) return words[2];
+    if (n > 1 && n < 5) return words[1];
+    if (n == 1) return words[0];
+    return words[2];
+}
+
+function applyGuests() {
+    // Обновляем отображение
+    updateGuestsDisplay();
+    // Закрываем dropdown
+    const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('guestsDropdown'));
+    dropdown.hide();
+}
+
+// Предотвращаем закрытие dropdown при клике внутри него
+document.addEventListener('DOMContentLoaded', function() {
+    const checkInInput = document.getElementById('check_in_search');
+    const checkOutInput = document.getElementById('check_out_search');
+    const guestsMenu = document.getElementById('guestsMenu');
+    if (guestsMenu) {
+        guestsMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+
+    // Инициализируем значения гостей из URL
+    initializeGuestsFromURL();
+
+    // Добавляем обработчики для ручного ввода
+    const adultsInput = document.getElementById('adults');
+    const childrenInput = document.getElementById('children');
+
+    if (adultsInput) {
+        adultsInput.addEventListener('input', function() {
+            validateManualInput('adults');
+        });
+        adultsInput.addEventListener('blur', function() {
+            validateManualInput('adults');
+        });
+    }
+
+    if (childrenInput) {
+        childrenInput.addEventListener('input', function() {
+            validateManualInput('children');
+        });
+        childrenInput.addEventListener('blur', function() {
+            validateManualInput('children');
+        });
+    }
+
+
+    async function calculatePrice(room_id) {
+
+        if (checkInInput.value && checkOutInput.value) {
+            const checkIn = new Date(checkInInput.value);
+            const checkOut = new Date(checkOutInput.value);
+            const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+
+            const adults = parseInt(document.getElementById('adults').value) || 0;
+            const children = parseInt(document.getElementById('children').value) || 0;
+
+            if (nights > 0) {
+                try {
+                    const response = await fetch('/calcPrice', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            checkIn: checkInInput.value,
+                            checkOut: checkOutInput.value,
+                            adults: adults,
+                            children: children,
+                            room_id: room_id
+                        })
+                    });
+
+                    console.log('Response status:', response.status);
+                    const data = await response.json();
+                    console.log('Response data:', data);
+
+                    const total = data.total;
+                    return total
+
+                } catch (e) {
+                    console.error('Error calculating price:', e);
+                }
+            } else {
+                console.error('Wrong dates:', e);
+            }
+        } else {
+            console.error('Enter dates:', e);
+        }
+    }
+
+    updateGuestsDisplay();
+    const rooms = document.getElementsByClassName("card room-card h-100 border-0 shadow-sm");
+    if (checkInInput.value && checkOutInput.value) {
+        if (rooms.length !== 0) {
+                (async () => {
+                    for (const room of rooms) {
+                        console.log('Обработка комнаты:', room);
+                        const id = room.getElementsByClassName("room-id")[0].textContent;
+                        const price = await calculatePrice(id);
+                        const info = room.getElementsByClassName("price-info")[0];
+                        info.innerHTML = `<span class="h5 text-primary mb-0">${price} ₽</span>
+                                            <small class="text-muted d-block">за выбранный период</small>`
+                    }
+                })();
+        }
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Date Range Calendar Modal
+    class DateRangeCalendar {
+        constructor(containerId, options = {}) {
+            this.container = document.getElementById(containerId);
+            this.currentDate = new Date();
+            this.selectedStart = null;
+            this.selectedEnd = null;
+            this.minDate = options.minDate || new Date();
+            this.onDateSelect = options.onDateSelect || function() {};
+
+            this.render();
+        }
+
+        render() {
+            const year = this.currentDate.getFullYear();
+            const month = this.currentDate.getMonth();
+
+            this.container.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="prevMonth">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <h6 class="mb-0 fw-bold">${this.getMonthName(month)} ${year}</h6>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="nextMonth">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+                <div class="calendar-modal-grid">
+                    ${this.renderCalendarGrid(year, month)}
+                </div>
+            `;
+
+            this.attachEventListeners();
+        }
+
+        renderCalendarGrid(year, month) {
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+
+            // Adjust start date to begin with Monday
+            const dayOfWeek = firstDay.getDay();
+            const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            startDate.setDate(firstDay.getDate() + mondayOffset);
+
+            let html = '<div class="row text-center mb-2">';
+            const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+            dayNames.forEach(day => {
+                html += `<div class="col"><small class="text-muted fw-bold">${day}</small></div>`;
+            });
+            html += '</div>';
+
+            const currentDate = new Date(startDate);
+            for (let week = 0; week < 6; week++) {
+                html += '<div class="row mb-1">';
+                for (let day = 0; day < 7; day++) {
+                    const dateStr = currentDate.toISOString().split('T')[0];
+                    const isCurrentMonth = currentDate.getMonth() === month;
+                    const isDisabled = currentDate < this.minDate;
+                    const isSelected = this.isDateSelected(currentDate);
+                    const isInRange = this.isDateInRange(currentDate);
+                    const isToday = this.isToday(currentDate);
+
+                    let classes = 'col p-1';
+                    let btnClasses = 'btn btn-sm w-100 calendar-modal-day';
+
+                    if (!isCurrentMonth) {
+                        btnClasses += ' btn-outline-light text-muted border-0';
+                    } else if (isDisabled) {
+                        btnClasses += ' btn-outline-secondary disabled';
+                    } else if (isSelected) {
+                        btnClasses += ' btn-primary';
+                    } else if (isInRange) {
+                        btnClasses += ' bg-primary bg-opacity-25 border-primary text-primary';
+                    } else if (isToday) {
+                        btnClasses += ' btn-outline-primary border-2';
+                    } else {
+                        btnClasses += ' btn-outline-light border-light';
+                    }
+
+                    html += `
+                        <div class="${classes}">
+                            <button type="button" class="${btnClasses}"
+                                    data-date="${dateStr}"
+                                    ${isDisabled ? 'disabled' : ''}>
+                                ${currentDate.getDate()}
+                            </button>
+                        </div>
+                    `;
+
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+                html += '</div>';
+
+                if (currentDate.getMonth() !== month && week >= 4) break;
+            }
+
+            return html;
+        }
+
+        attachEventListeners() {
+            document.getElementById('prevMonth').addEventListener('click', () => {
+                this.currentDate.setMonth(this.currentDate.getMonth() - 1);
+                this.render();
+            });
+
+            document.getElementById('nextMonth').addEventListener('click', () => {
+                this.currentDate.setMonth(this.currentDate.getMonth() + 1);
+                this.render();
+            });
+
+            this.container.querySelectorAll('.calendar-modal-day').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    if (e.target.disabled) return;
+
+                    const selectedDate = new Date(e.target.dataset.date + 'T00:00:00');
+                    this.selectDate(selectedDate);
+                });
+            });
+        }
+
+        selectDate(date) {
+            if (!this.selectedStart || (this.selectedStart && this.selectedEnd)) {
+                // Start new selection
+                this.selectedStart = new Date(date.getTime() + 86400000);
+                this.selectedEnd = null;
+            } else if (date < this.selectedStart) {
+                // Selected date is before start, make it the new start
+                this.selectedEnd = this.selectedStart;
+                this.selectedStart = new Date(date.getTime() + 86400000);
+            } else {
+                // Selected date is after start, make it the end
+                this.selectedEnd = new Date(date.getTime() + 86400000);
+            }
+
+            this.render();
+            this.onDateSelect(this.selectedStart, this.selectedEnd);
+        }
+
+        isDateSelected(date) {
+            if (!this.selectedStart) return false;
+
+            const dateStr = date.toISOString().split('T')[0];
+            const startStr = this.selectedStart.toISOString().split('T')[0];
+            const endStr = this.selectedEnd ? this.selectedEnd.toISOString().split('T')[0] : null;
+
+            return dateStr === startStr || (endStr && dateStr === endStr);
+        }
+
+        isDateInRange(date) {
+            if (!this.selectedStart || !this.selectedEnd) return false;
+            return date > this.selectedStart && date < this.selectedEnd;
+        }
+
+        isToday(date) {
+            const today = new Date();
+            return date.toDateString() === today.toDateString();
+        }
+
+        getMonthName(month) {
+            const months = [
+                'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+            ];
+            return months[month];
+        }
+
+        reset() {
+            this.selectedStart = null;
+            this.selectedEnd = null;
+            this.render();
+        }
+    }
+
+    // Initialize modal calendar
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const checkInInput = document.getElementById('check_in_search');
+    const checkOutInput = document.getElementById('check_out_search');
+    const selectedDatesDisplay = document.getElementById('selectedDatesDisplay');
+    const confirmDatesBtn = document.getElementById('confirmDates');
+    const dateRangeModal = new bootstrap.Modal(document.getElementById('dateRangeModal'));
+
+    // Initialize display with existing values
+    if (checkInInput.value) {
+        const date = new Date(checkInInput.value);
+        checkInInput.setAttribute('placeholder', date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }));
+    }
+    if (checkOutInput.value) {
+        const date = new Date(checkOutInput.value);
+        checkOutInput.setAttribute('placeholder', date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }));
+    }
+
+    let currentInputTarget = null;
+
+    const calendar = new DateRangeCalendar('dateRangeCalendar', {
+        minDate: today,
+        onDateSelect: function(startDate, endDate) {
+            if (startDate && endDate) {
+                const options = { day: 'numeric', month: 'short', year: 'numeric' };
+                selectedDatesDisplay.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-calendar-check text-primary"></i>
+                            <strong>Заезд:</strong> ${startDate.toLocaleDateString('ru-RU', options)}
+                        </div>
+                        <div>
+                            <i class="bi bi-calendar-x text-primary"></i>
+                            <strong>Выезд:</strong> ${endDate.toLocaleDateString('ru-RU', options)}
+                        </div>
+                    </div>
+                    <div class="text-center mt-2">
+                        <small class="text-muted">
+                            ${Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))}
+                            ${Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) === 1 ? 'ночь' :
+                              Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) < 5 ? 'ночи' : 'ночей'}
+                        </small>
+                    </div>
+                `;
+                confirmDatesBtn.disabled = false;
+            } else if (startDate) {
+                const options = { day: 'numeric', month: 'short', year: 'numeric' };
+                selectedDatesDisplay.innerHTML = `
+                    <div class="text-center">
+                        <i class="bi bi-calendar text-primary"></i>
+                        <strong>Заезд:</strong> ${startDate.toLocaleDateString('ru-RU', options)}
+                        <br><small class="text-muted">Выберите дату выезда</small>
+                    </div>
+                `;
+                confirmDatesBtn.disabled = true;
+            } else {
+                selectedDatesDisplay.innerHTML = 'Выберите дату заезда и выезда';
+                confirmDatesBtn.disabled = true;
+            }
+        }
+    });
+
+    // Open modal when clicking on date inputs
+    document.querySelectorAll('.date-picker').forEach(input => {
+        input.addEventListener('click', function() {
+            currentInputTarget = this;
+            calendar.reset();
+            selectedDatesDisplay.innerHTML = 'Выберите дату заезда и выезда';
+            confirmDatesBtn.disabled = true;
+        });
+    });
+
+    // Confirm dates button
+    confirmDatesBtn.addEventListener('click', function() {
+        if (calendar.selectedStart && calendar.selectedEnd) {
+            const startDate = calendar.selectedStart.getFullYear() + '-' +
+                             String(calendar.selectedStart.getMonth() + 1).padStart(2, '0') + '-' +
+                             String(calendar.selectedStart.getDate()).padStart(2, '0');
+            const endDate = calendar.selectedEnd.getFullYear() + '-' +
+                           String(calendar.selectedEnd.getMonth() + 1).padStart(2, '0') + '-' +
+                           String(calendar.selectedEnd.getDate()).padStart(2, '0');
+
+            checkInInput.value = startDate;
+            checkOutInput.value = endDate;
+
+            // Update display text
+            const options = { day: 'numeric', month: 'short' };
+            checkInInput.setAttribute('placeholder', calendar.selectedStart.toLocaleDateString('ru-RU', options));
+            checkOutInput.setAttribute('placeholder', calendar.selectedEnd.toLocaleDateString('ru-RU', options));
+
+            dateRangeModal.hide();
+        }
+    });
+
+    // Reset modal when closed
+    document.getElementById('dateRangeModal').addEventListener('hidden.bs.modal', function() {
+        calendar.reset();
+        selectedDatesDisplay.innerHTML = 'Выберите дату заезда и выезда';
+        confirmDatesBtn.disabled = true;
+    });
+
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (!checkInInput.value || !checkOutInput.value) {
+            e.preventDefault();
+            alert('Пожалуйста, выберите даты заезда и выезда');
+        }
+    });
+});
+</script>
+{% endblock %}

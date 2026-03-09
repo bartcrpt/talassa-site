@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ seo.title if seo and seo.title else (page.meta_title if page and page.meta_title else 'Таласса Hotel & Spa') }}{% endblock %}</title>
+    <meta name="description" content="{{ seo.description if seo and seo.description else (page.meta_description if page and page.meta_description else 'Спа-отель у Чёрного моря с видом на море, оздоровлением и спокойным отдыхом.') }}">
+    <link rel="canonical" href="{{ seo.canonical_url if seo and seo.canonical_url else request.base_url }}">
+    {% if seo and seo.noindex %}
+        <meta name="robots" content="noindex, nofollow">
+    {% else %}
+        <meta name="robots" content="index, follow">
+    {% endif %}
+    <meta property="og:locale" content="ru_RU">
+    <meta property="og:site_name" content="{{ seo.site_name if seo and seo.site_name else 'Таласса Hotel & Spa' }}">
+    <meta property="og:type" content="{{ seo.og_type if seo and seo.og_type else 'website' }}">
+    <meta property="og:title" content="{{ seo.title if seo and seo.title else 'Таласса Hotel & Spa' }}">
+    <meta property="og:description" content="{{ seo.description if seo and seo.description else 'Спа-отель у Чёрного моря с видом на море, оздоровлением и спокойным отдыхом.' }}">
+    <meta property="og:url" content="{{ seo.canonical_url if seo and seo.canonical_url else request.base_url }}">
+    <meta property="og:image" content="{{ seo.image_url if seo and seo.image_url else request.url_root.rstrip('/') + url_for('static', filename='site/images/logo.png') }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ seo.title if seo and seo.title else 'Таласса Hotel & Spa' }}">
+    <meta name="twitter:description" content="{{ seo.description if seo and seo.description else 'Спа-отель у Чёрного моря с видом на море, оздоровлением и спокойным отдыхом.' }}">
+    <meta name="twitter:image" content="{{ seo.image_url if seo and seo.image_url else request.url_root.rstrip('/') + url_for('static', filename='site/images/logo.png') }}">
+    <meta name="theme-color" content="#314e6f">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" sizes="any">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}">
+</head>
+<body>
+    <header class="site-header">
+        <div class="site-container">
+            <div class="site-header__inner">
+                <a class="site-brand" href="{{ url_for('index') }}" aria-label="Таласса Hotel & Spa">
+                    <img src="{{ url_for('static', filename='site/images/logo_menu.png') }}" alt="Таласса Hotel & Spa" class="site-brand__logo">
+                </a>
+
+                <nav class="site-nav" data-site-nav>
+
+                    <a href="{{ url_for('rooms') }}" class="{{ 'is-active' if request.path.startswith('/rooms') else '' }}">Номера</a>
+                    <a href="{{ url_for('gallery') }}" class="{{ 'is-active' if request.path.startswith('/gallery') else '' }}">Галерея</a>
+                    <a href="{{ url_for('wellness_page') }}" class="{{ 'is-active' if request.path.startswith('/wellness') else '' }}">ТАЛАССОТЕРАПИЯ</a>
+                    <a href="{{ url_for('journal_page') }}" class="{{ 'is-active' if request.path.startswith('/journal') or request.path.startswith('/news') else '' }}">Журнал</a>
+                    <a href="{{ url_for('contact_page') }}" class="{{ 'is-active' if request.path.startswith('/contact') or request.path.startswith('/contacts') else '' }}">Контакты</a>
+                    <a href="{{ url_for('book_landing_page') }}" class="site-nav__mobile-cta">Бронировать</a>
+                </nav>
+
+                <div class="site-header__actions">
+                    <a href="{{ url_for('book_landing_page') }}" class="site-btn site-btn--gold site-header__book">Бронировать</a>
+                </div>
+
+                <button type="button" class="site-nav-toggle" data-site-nav-toggle aria-label="Открыть меню" aria-expanded="false">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="site-container site-flashes">
+                {% for category, message in messages %}
+                    <div class="site-flash site-flash--{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="site-container">
+            <div class="site-footer__grid">
+                <div>
+                    <p class="site-footer__eyebrow">Таласса Hotel & Spa</p>
+
+                    <a href="{{ url_for('index') }}" class="site-footer__brand" aria-label="Таласса Hotel & Spa">
+                        <img src="{{ url_for('static', filename='site/images/logo.png') }}" alt="Таласса Hotel & Spa" class="site-footer__logo">
+                    </a>
+                    <p class="site-footer__description">Восстановление через воду, тишину и контакт с природой. Spa-отель на побережье Чёрного моря.</p>
+
+                    <div class="site-footer__socials">
+                        <a href="https://t.me/thalassa_hotelAbkhazia" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.904-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.248-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.429-.008-1.252-.242-1.865-.442-.751-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.831-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.12.098.153.229.168.327.015.093.034.306.019.472z"/>
+                            </svg>
+                        </a>
+                        <a href="https://vk.com/talassa_abkhazia" target="_blank" rel="noopener noreferrer" aria-label="ВКонтакте">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M12.785 16.241s.288-.032.435-.194c.135-.149.13-.43.13-.43s-.018-1.312.591-1.505c.601-.19 1.372 1.268 2.19 1.829.619.425 1.09.332 1.09.332l2.19-.03s1.145-.071.602-.971c-.044-.074-.316-.665-1.625-1.878-1.369-1.268-1.186-1.063.463-3.259 1.004-1.337 1.406-2.153 1.28-2.503-.12-.334-.86-.246-.86-.246l-2.466.015s-.183-.025-.318.056c-.132.08-.217.266-.217.266s-.39 1.04-.91 1.925c-1.096 1.868-1.534 1.968-1.713 1.852-.414-.269-.31-1.08-.31-1.656 0-1.8.273-2.55-.531-2.744-.266-.064-.462-.106-1.144-.113-.876-.009-1.617.003-2.035.207-.278.136-.492.438-.361.456.163.022.53.099.725.365.252.342.243 1.11.243 1.11s.145 2.119-.339 2.381c-.332.179-.787-.186-1.766-1.885-.501-.87-.88-1.834-.88-1.834s-.074-.178-.206-.273c-.16-.114-.385-.15-.385-.15L2.839 7.15s-.493.014-.674.231c-.161.194-.013.592-.013.592s2.051 4.8 4.373 7.215c2.13 2.214 4.545 2.068 4.545 2.068h1.715z" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="site-footer__eyebrow">Навигация</p>
+                    <ul class="site-footer__list">
+                        <li><a href="{{ url_for('rooms') }}">Номера</a></li>
+                        <li><a href="{{ url_for('gallery') }}">Галерея</a></li>
+                        <li><a href="{{ url_for('journal_page') }}">Журнал</a></li>
+                        <li><a href="{{ url_for('contact_page') }}">Контакты</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <p class="site-footer__eyebrow">Контакты</p>
+                    <div class="site-footer__contacts">
+                        <a href="tel:+79385551563">Основной: +7 (938) 555-15-63</a>
+                        <a href="tel:+79407334335">Доп.: +7 (940) 733-43-35</a>
+                        <a href="mailto:talassahotelspa@gmail.com">talassahotelspa@gmail.com</a>
+                        <a href="{{ url_for('contact_page') }}">ул. Железнодорожная, 5, пос. Цандрыпш</a>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="site-footer__eyebrow">Бронирование</p>
+                    <p class="site-footer__description">Выберите номер и оставьте заявку онлайн. Подтвердим детали и ответим в Telegram или по телефону.</p>
+                    <a href="{{ url_for('book_landing_page') }}" class="site-btn site-btn--gold site-footer__book">Забронировать</a>
+                    <div class="site-footer__contacts site-footer__contacts--booking">
+                        <a href="https://t.me/thalassa_hotelAbkhazia" target="_blank" rel="noopener noreferrer">Написать в Telegram</a>
+                        <a href="tel:+79385551563">Позвонить в отель</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="site-footer__bottom">
+                <p>Таласса Hotel • Республика Абхазия • 2026</p>
+            </div>
+        </div>
+    </footer>
+
+    <div class="site-lightbox" data-site-lightbox hidden>
+        <button type="button" class="site-lightbox__close" data-site-lightbox-close aria-label="Закрыть">
+            <span></span>
+            <span></span>
+        </button>
+        <button type="button" class="site-lightbox__nav site-lightbox__nav--prev" data-site-lightbox-prev aria-label="Предыдущее фото">‹</button>
+        <div class="site-lightbox__stage">
+            <div class="site-lightbox__counter" data-site-lightbox-counter></div>
+            <img src="" alt="" class="site-lightbox__image" data-site-lightbox-image>
+        </div>
+        <button type="button" class="site-lightbox__nav site-lightbox__nav--next" data-site-lightbox-next aria-label="Следующее фото">›</button>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/site.js') }}"></script>
+</body>
+</html>
+
+
+

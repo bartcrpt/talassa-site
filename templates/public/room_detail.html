@@ -1,0 +1,160 @@
+{% extends "public/base_public.html" %}
+
+{% block content %}
+<section class="room-breadcrumb-wrap">
+    <div class="site-container">
+        <nav class="room-breadcrumb" aria-label="Хлебные крошки">
+            <a href="{{ url_for('index') }}">Главная</a>
+            <span>/</span>
+            <a href="{{ url_for('rooms') }}">Номера</a>
+            <span>/</span>
+            <span>{{ room_name }}</span>
+        </nav>
+    </div>
+</section>
+
+<section class="section section--tight-top room-detail-next">
+    <div class="site-container">
+        <div class="room-detail-next__top">
+            <div class="room-detail-next__gallery-column">
+                <div
+                    class="room-gallery-modern"
+                    data-room-gallery
+                    data-lightbox-gallery-id="room-{{ room.id }}"
+                    data-lightbox-items="{{ photo_items|tojson|forceescape }}"
+                >
+                    <button
+                        type="button"
+                        class="room-gallery-modern__main"
+                        data-room-gallery-main
+                        data-lightbox-trigger
+                        data-lightbox-source="room-{{ room.id }}"
+                        data-lightbox-index="0"
+                        aria-label="Открыть галерею номера"
+                    >
+                        <img src="{{ photo_items[0].url }}" alt="{{ photo_items[0].alt }}" data-room-gallery-main-image>
+                        <span class="room-gallery-modern__counter" data-room-gallery-counter>1 / {{ photo_items|length }}</span>
+                    </button>
+
+                    {% if photo_items|length > 1 %}
+                        <div class="room-gallery-modern__thumbs">
+                            {% for photo in photo_items %}
+                                <button
+                                    type="button"
+                                    class="room-gallery-modern__thumb {{ 'is-active' if loop.first else '' }}"
+                                    data-room-gallery-thumb
+                                    data-index="{{ loop.index0 }}"
+                                    aria-label="Фото {{ loop.index }}"
+                                >
+                                    <img src="{{ photo.url }}" alt="{{ photo.alt }}">
+                                </button>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="room-detail-next__info">
+                <p class="room-detail-next__category">{{ room_category_group }}</p>
+                <h1>{{ room_name }}</h1>
+
+                <div class="room-detail-next__tags">
+                    {% for label in feature_labels %}
+                        <span>{{ label }}</span>
+                    {% endfor %}
+                    {% if area_label %}
+                        <span>{{ area_label }}</span>
+                    {% endif %}
+                </div>
+
+                {% if room_description %}
+                    <p class="room-detail-next__description">{{ room_description }}</p>
+                {% endif %}
+
+                <div class="room-detail-next__facts">
+                    <div>
+                        <p>Гостей</p>
+                        <strong>до {{ max_capacity }}*</strong>
+                    </div>
+                    {% if area_label %}
+                        <div>
+                            <p>Площадь</p>
+                            <strong>{{ area_label }}</strong>
+                        </div>
+                    {% endif %}
+                    {% if extra_bed %}
+                        <div>
+                            <p>Доп. место</p>
+                            <strong>{{ extra_bed }}</strong>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="room-detail-next__meals">
+                    <p><strong>Питание:</strong> {{ meals_text }}</p>
+                </div>
+
+                <a href="{{ book_url }}" class="site-btn site-btn--gold room-detail-next__cta">Забронировать</a>
+            </div>
+        </div>
+
+        <div class="room-occupancy-card">
+            <p><strong>* Размещение:</strong> стандартное количество гостей - 2.</p>
+            {% if extra_bed and extra_guests_max > 0 %}
+                <p>В номере есть {{ extra_bed|lower }}. На нем можно разместить еще {{ extra_guests_max }} {{ extra_guests_word }} за дополнительную плату.</p>
+            {% endif %}
+            <p>За каждого дополнительного гостя свыше вместимости номера (2 гостей) действует доплата: с 01.11 по 30.04 - 0 руб/сутки для детей до 5 лет включительно, 1000 руб/сутки для детей от 6 до 13 лет включительно и 2000 руб/сутки для детей от 14 лет и взрослых.</p>
+            <p>С 01.05 по 31.10 - 0 руб/сутки для детей до 5 лет включительно, 1500 руб/сутки для детей от 6 до 13 лет включительно и 2500 руб/сутки для детей от 14 лет и взрослых. В этот период в цену включен завтрак.</p>
+            <p>Дети до 5 лет при подсчете количества гостей не учитываются.</p>
+        </div>
+    </div>
+</section>
+
+<section class="section section--tight-top room-pricing-section-next">
+    <div class="site-container">
+        <h2 class="section-heading-inline">Цены по месяцам</h2>
+        <div class="room-month-wrapper">
+            {% if current_price %}
+                <div class="room-current-price">
+                    <p>Цена сейчас</p>
+                    <strong>{{ '%.0f'|format(current_price) }} ₽ <span>/ ночь</span></strong>
+                </div>
+            {% endif %}
+            <div class="room-month-grid">
+                {% for item in monthly_prices %}
+                    <div class="room-month-grid__item {{ 'is-current' if item.is_current else '' }}">
+                        <p>{{ item.label[:3] }}</p>
+                        <strong>{{ '%.0f'|format(item.price) }} ₽</strong>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section section--light room-amenities-section-next">
+    <div class="site-container">
+        <h2 class="section-heading-inline">Удобства</h2>
+        {% if amenities_list %}
+            <div class="amenity-grid amenity-grid--next">
+                {% for amenity in amenities_list %}
+                    <div class="amenity-grid__item">
+                        <span class="amenity-grid__icon">✓</span>
+                        <span>{{ amenity }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state-card centered-copy centered-copy--compact">
+                <p>Удобства для этого номера появятся чуть позже.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<section class="section room-detail-next__back-section">
+    <div class="site-container room-detail-next__back-wrap">
+        <a href="{{ url_for('rooms') }}" class="site-btn site-btn--secondary">Все номера</a>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Номер {{ room.number }} - Система бронирования отеля{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Photo Gallery -->
+            <div class="mb-4">
+                {% if room.photos %}
+                    <div id="roomCarousel" class="carousel slide" data-bs-ride="false">
+                        <div class="carousel-inner rounded bg-white">
+                            {% for photo in room.photos %}
+                                <div class="carousel-item {{ 'active' if loop.first }}">
+                                    <!-- Контейнер для центрирования изображения -->
+                                    <div class="d-flex justify-content-center align-items-center w-100 h-100 p-3">
+                                        <div class="image-wrapper">
+                                            <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}"
+                                                 class="room-carousel-image"
+                                                 alt="{{ photo.original_filename }}"
+                                                 loading="lazy">
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% if room.photos|length > 1 %}
+                            <button class="carousel-control-prev" type="button" data-bs-target="#roomCarousel" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon"></span>
+                                <span class="visually-hidden">Предыдущее</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#roomCarousel" data-bs-slide="next">
+                                <span class="carousel-control-next-icon"></span>
+                                <span class="visually-hidden">Следующее</span>
+                            </button>
+
+                            <!-- Indicators -->
+                            <div class="carousel-indicators">
+                                {% for photo in room.photos %}
+                                    <button type="button" data-bs-target="#roomCarousel" data-bs-slide-to="{{ loop.index0 }}"
+                                            class="{{ 'active' if loop.first }}" aria-current="{{ 'true' if loop.first }}"
+                                            aria-label="Слайд {{ loop.index }}"></button>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+
+                    
+                    <!-- Thumbnail Navigation -->
+                    {% if room.photos|length > 1 %}
+                        <div class="row mt-3">
+                            {% for photo in room.photos %}
+                                <div class="col-3 col-md-2 mb-2">
+                                    <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" 
+                                         class="img-thumbnail thumbnail-nav {{ 'active' if loop.first }}" 
+                                         data-bs-target="#roomCarousel" data-bs-slide-to="{{ loop.index0 }}"
+                                         alt="Миниатюра {{ loop.index }}" style="cursor: pointer;">
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 400px;">
+                        <i class="bi bi-image text-muted" style="font-size: 5rem;"></i>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Room Details -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4"> <!-- Убрал кастомный класс, используем стандартный -->
+                    <h1 class="card-title">{{ room.category.name }}</h1>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6><i class="bi bi-people text-primary"></i> Вместимость</h6>
+                            <p class="mb-2">Для {{ room.capacity }} гостей (с доп оплатой: до {{ room.capacity + room.has_small_sofa +  room.has_large_sofa * 2}} гостей)</p>
+                            {% if room.has_large_sofa or room.has_small_sofa %}
+                                <p class="mb-1"><strong>Дополнительные спальные места:</strong></p>
+                                <ul class="list-unstyled mb-0">
+                                    {% if room.has_small_sofa %}
+                                        <li>Односпальный диван</li>
+                                    {% endif %}
+                                    {% if room.has_large_sofa %}
+                                        <li>Двуспальный диван</li>
+                                    {% endif %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {% if request.args.get("check_in") %}
+                                {% if request.args.get("check_in")[5:7] == "01" %}
+                                    <h6><i class="bi bi-currency-exchange text-primary"></i> Цена в январе</h6>
+                                {% elif request.args.get("check_in")[5:7] == "02" %}
+                                    <h6><i class="bi bi-currency-exchange text-primary"></i> Цена в феврале</h6>
+                                {% elif request.args.get("check_in")[5:7] == "03" %}
+                                    <h6><i class="bi bi-currency-exchange text-primary"></i> Цена в марте</h6>
+                                {% elif request.args.get("check_in")[5:7] == "04" %}
+                                    <h6><i class="bi bi-currency-exchange text-primary"></i> Цена в апреле</h6>
+                                {% elif request.args.get("check_in")[5:7] == "05" %}
+                                    <h6><i class="bi bi-currency-exchange text-primary"></i> Цена в мае</h6>
+                                {% elif request.args.get("check_in")[5:7] == "06" %}
+                                    <h6><i class="bi bi-currency-exchange text-primary"></i> Цена в июне</h6>
+                                {% elif request.args.get("check_in")[5:7] == "07" %}
+                                    <h6><i class="bi bi-currency-exchange text-primary"></i> Цена в июле</h6>
+                                {% elif request.args.get("check_in")[5:7] == "08" %}
+                                    <h6><i class="bi bi-currency-exchange text-primary"></i> Цена в августе</h6>
+                                {% elif request.args.get("check_in")[5:7] == "09" %}
+                                    <h6><i class="bi bi-currency-exchange text-primary"></i> Цена в сентябре</h6>
+                                {% elif request.args.get("check_in")[5:7] == "10" %}
+                                    <h6><i class="bi bi-currency-exchange text-primary"></i> Цена в октябре</h6>
+                                {% elif request.args.get("check_in")[5:7] == "11" %}
+                                    <h6><i class="bi bi-currency-exchange text-primary"></i> Цена в ноябре</h6>
+                                {% elif request.args.get("check_in")[5:7] == "12" %}
+                                    <h6><i class="bi bi-currency-exchange text-primary"></i> Цена в декабре</h6>
+                                {% endif %}
+                            {% else %}
+                                <h6><i class="bi bi-currency-exchange text-primary"></i> Цена в этом месяце</h6>
+                            {% endif %}
+                            <div class="dropdown">
+                                <button class="btn btn-link p-0 text-primary text-decoration-none" type="button"
+                                        id="priceDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span class="h4">
+                                        {{ "%.0f"|format(price_this_month) }} ₽
+                                        <small class="text-muted">за ночь</small>
+                                        <i class="bi bi-chevron-down small align-middle"></i>
+                                    </span>
+                                </button>
+                                <div class="dropdown-menu p-3" aria-labelledby="priceDropdown" style="min-width: 250px;">
+                                    <h6 class="dropdown-header border-bottom pb-2 mb-2">Цены по месяцам</h6>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <div class="text-muted small">Январь:</div>
+                                            <div class="fw-bold">{{ "%.0f"|format(room.price_per_night["January"]) }} ₽</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-muted small">Февраль:</div>
+                                            <div class="fw-bold">{{ "%.0f"|format(room.price_per_night["February"]) }} ₽</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-muted small">Март:</div>
+                                            <div class="fw-bold">{{ "%.0f"|format(room.price_per_night["March"]) }} ₽</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-muted small">Апрель:</div>
+                                            <div class="fw-bold">{{ "%.0f"|format(room.price_per_night["April"]) }} ₽</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-muted small">Май:</div>
+                                            <div class="fw-bold">{{ "%.0f"|format(room.price_per_night["May"]) }} ₽</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-muted small">Июнь:</div>
+                                            <div class="fw-bold">{{ "%.0f"|format(room.price_per_night["June"]) }} ₽</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-muted small">Июль:</div>
+                                            <div class="fw-bold">{{ "%.0f"|format(room.price_per_night["July"]) }} ₽</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-muted small">Август:</div>
+                                            <div class="fw-bold">{{ "%.0f"|format(room.price_per_night["August"]) }} ₽</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-muted small">Сентябрь:</div>
+                                            <div class="fw-bold">{{ "%.0f"|format(room.price_per_night["September"]) }} ₽</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-muted small">Октябрь:</div>
+                                            <div class="fw-bold">{{ "%.0f"|format(room.price_per_night["October"]) }} ₽</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-muted small">Ноябрь:</div>
+                                            <div class="fw-bold">{{ "%.0f"|format(room.price_per_night["November"]) }} ₽</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-muted small">Декабрь:</div>
+                                            <div class="fw-bold">{{ "%.0f"|format(room.price_per_night["December"]) }} ₽</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6><i class="bi bi-info-circle text-primary"></i> Описание</h6>
+                    <div class="mb-4">{{ room.description|safe }}</div>
+
+                    {% if room.amenities %}
+                        <h6><i class="bi bi-star text-primary"></i> Удобства</h6>
+                        <div>{{ room.amenities|safe }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Booking Card -->
+            <div class="card border-0 shadow-lg sticky-top" style="top: 2rem;">
+                <div class="card-body">
+                    <h5 class="card-title text-center mb-4">Информация о бронировании</h5>
+
+                    <div class="text-center mb-3">
+                        <div class="h4 text-primary mb-2">{{ "%.0f"|format(price_this_month) }} ₽</div>
+                        <small class="text-muted">за ночь (в этом месяце)</small>
+                    </div>
+
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span><i class="bi bi-people text-primary"></i> Вместимость:</span>
+                            <span>Для {{ room.capacity }} гостей (максимум: {{ room.capacity + room.has_small_sofa +  room.has_large_sofa * 2}} гостей)</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span><i class="bi bi-bag-heart text-primary"></i> Питание:</span>
+                            <span>Завтраки включены (с июня по октябрь)</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-tag text-primary"></i> Категория:</span>
+                            <span>{{ room.category.name }}</span>
+                        </div>
+                    </div>
+
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('book_room', room_id=room.id, check_in=request.args.get('check_in'), check_out=request.args.get('check_out'), got_adults=request.args.get('num_of_adults'), got_children = request.args.get('num_of_children')) }}" class="btn btn-primary w-100 btn-lg">
+                            <i class="bi bi-calendar-check"></i> Забронировать номер
+                        </a>
+                    {% else %}
+                        <div class="text-center">
+                            <p class="mb-3">Войдите в систему для бронирования номера</p>
+                            <a href="{{ url_for('register') }}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-person-plus"></i> Регистрация
+                            </a>
+                            <a href="{{ url_for('login') }}" class="btn btn-primary w-100 mb-2">
+                                <i class="bi bi-box-arrow-in-right"></i> Войти
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    <div class="mt-3 text-center">
+                        <small class="text-muted">
+                            <i class="bi bi-shield-check"></i> Заезд 14:00 • Выезд 12:00 • Дети до 5 лет бесплатно
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Thumbnail navigation
+    const thumbnails = document.querySelectorAll('.thumbnail-nav');
+    const carousel = new bootstrap.Carousel(document.getElementById('roomCarousel'));
+
+    thumbnails.forEach(thumb => {
+        thumb.addEventListener('click', function() {
+            thumbnails.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+
+            // Get the slide index and navigate to it
+            const slideIndex = parseInt(this.getAttribute('data-bs-slide-to'));
+            carousel.to(slideIndex);
+        });
+    });
+
+    // Update thumbnail active state when carousel slides
+    const carouselElement = document.getElementById('roomCarousel');
+    if (carouselElement) {
+        carouselElement.addEventListener('slide.bs.carousel', function(event) {
+            thumbnails.forEach(t => t.classList.remove('active'));
+            const activeThumb = document.querySelector(`.thumbnail-nav[data-bs-slide-to="${event.to}"]`);
+            if (activeThumb) {
+                activeThumb.classList.add('active');
+            }
+        });
+    }
+});
+</script>
+
+<style>
+/* Убедимся, что карточка расширяется по контенту */
+.card-body {
+    min-height: auto !important;
+    height: auto !important;
+}
+
+/* Для удобств, если они в несколько колонок */
+.amenities-columns {
+    column-count: 3;
+    column-gap: 2rem;
+}
+
+@media (max-width: 768px) {
+    .amenities-columns {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 576px) {
+    .amenities-columns {
+        column-count: 1;
+    }
+}
+
+/* Улучшаем отступы для лучшего визуального разделения */
+.mb-4 {
+    margin-bottom: 1.5rem !important;
+}
+</style>
+{% endblock %}

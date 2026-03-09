@@ -1,0 +1,862 @@
+{% extends "base.html" %}
+
+{% block title %}Бронирование номера {{ room.number }} - Система бронирования отеля{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="bi bi-calendar-check"></i> Бронирование номера {{ room.number }}</h3>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Room Summary -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            {% if room.photos %}
+                                <img src="{{ url_for('static', filename='uploads/' + room.photos[0].filename) }}"
+                                     class="img-fluid rounded" alt="Room {{ room.number }}">
+                            {% else %}
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 150px;">
+                                    <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-9">
+                            <h4>Номер {{ room.number }} - {{ room.category.name }}</h4>
+                            <div class="row">
+                                <div class="col-md-6-book">
+                                    <p class="mb-1"><strong>Вместимость:</strong> До {{ room.capacity }} гостей</p>
+                                    <p class="mb-1"><strong>Доп спальные места:</strong>
+                                        {% if room.has_large_sofa %}Двуспальный диван{% endif %}
+                                        {% if room.has_large_sofa and room.has_small_sofa %}и{% endif %}
+                                        {% if room.has_small_sofa %}Односпальный диван{% endif %}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    {% if room.amenities %}
+                                        <p class="mb-1"><strong>Удобства:</strong></p>
+                                        <p class="mb-1">{{ room.amenities|striptags }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Booking Form -->
+
+                    <form method="POST" id="bookingForm" onsubmit="return validateBookingForm(event)">
+                        <div class="row" >
+                            <div class="col-md-6 mb-3">
+                                <label for="check_in_display" class="form-label">Дата заезда *</label>
+                                <input type="text" class="form-control date-picker" id="check_in_display"
+                                       placeholder="Выберите дату" readonly data-bs-toggle="modal" data-bs-target="#dateRangeModal">
+                                <input type="hidden" id="check_in" name="check_in"
+                                       value="{{ request.args.get('check_in', '') }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="check_out_display" class="form-label">Дата выезда *</label>
+                                <input type="text" class="form-control date-picker" id="check_out_display"
+                                       placeholder="Выберите дату" readonly data-bs-toggle="modal" data-bs-target="#dateRangeModal">
+                                <input type="hidden" id="check_out" name="check_out"
+                                       value="{{ request.args.get('check_out', '') }}" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="mb-3">
+                                    <label class="form-label">Количество гостей *</label>
+                                    <div class="dropdown">
+                                        <button class="form-select text-start" type="button" id="guestsDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="text-align: left;">
+                                            <span id="guestsDisplay">2 взрослых, 0 детей</span>
+                                        </button>
+                                        <div class="dropdown-menu p-3" style="width: 280px; position: absolute; transform: translate3d(0px, 38px, 0px);" data-bs-popper="static">
+                                            <div class="row g-3">
+                                                <!-- Взрослые -->
+                                                <div class="col-12">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <label class="form-label fw-bold mb-0">Взрослые</label>
+                                                        <small class="text-muted">От 14 лет</small>
+                                                    </div>
+                                                    <div class="input-group input-group-sm mt-2">
+                                                        <button class="btn btn-outline-primary" type="button" onclick="changeBookingGuests('adults', -1)">-</button>
+                                                        <input type="number" class="form-control text-center" id="booking_adults" name="adults" value={{ num_of_adults }} min="1" max="10"
+                                                               oninput="validateBookingManualInput('adults')" onblur="validateBookingManualInput('adults')">
+                                                        <button class="btn btn-outline-primary" type="button" onclick="changeBookingGuests('adults', 1)">+</button>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Дети -->
+                                                <div class="col-12">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <label class="form-label fw-bold mb-0">Дети</label>
+                                                        <small class="text-muted">От 6 до 13 лет</small>
+                                                    </div>
+                                                    <div class="input-group input-group-sm mt-2">
+                                                        <button class="btn btn-outline-success" type="button" onclick="changeBookingGuests('children', -1)">-</button>
+                                                        <input type="number" class="form-control text-center" id="booking_children" name="children" value={{ num_of_children }} min="0" max="10"
+                                                               oninput="validateBookingManualInput('children')" onblur="validateBookingManualInput('children')">
+                                                        <button class="btn btn-outline-success" type="button" onclick="changeBookingGuests('children', 1)">+</button>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Дети до 5 -->
+                                                <div class="col-12">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <label class="form-label fw-bold mb-0">Дети до 5 лет</label>
+                                                    </div>
+                                                    <div class="input-group input-group-sm mt-2">
+                                                        <button class="btn btn-outline-primary" type="button" onclick="changeBookingGuests('children_under_five', -1)">-</button>
+                                                        <input type="number" class="form-control text-center" id="booking_children_under_five" name="children_under_five" value=0 min="0" max="10"
+                                                               oninput="validateBookingManualInput('children_under_five')" onblur="validateBookingManualInput('children_under_five')">
+                                                        <button class="btn btn-outline-primary" type="button" onclick="changeBookingGuests('children_under_five', 1)">+</button>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12">
+                                                    <small class="text-muted">Дети до 5 лет включительно проживают бесплатно</small>
+                                                </div>
+                                            </div>
+
+                                            <div class="mt-3 pt-2 border-top">
+                                                <button type="button" class="btn btn-primary w-100" onclick="applyBookingGuests()">Применить</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Скрытые поля для отправки формы -->
+                                    <input type="hidden" id="total_guests" name="guests" value="2" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Общая стоимость</label>
+                                <div id="priceCalculation" class="form-control-plaintext fw-bold text-primary">
+                                    <span id="totalPrice">Рассчитается ниже</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p>*За каждого дополнительного гостя
+                                (располагаются на дополнительных спальных местах)
+                                свыше вместимости номера
+                                ({{ room.capacity }} гостей)
+                                берётся дополнительная оплата: с 1.11 по 30.04 - 0 руб/сутки для детей до 5 лет
+                                включительно, 1000 руб/сутки для детей от 6 до 13 лет включительно и
+                                2000 руб/сутки для детей от 14 и для взрослых; с 1.05 по 31.10 - 0 руб/сутки для детей до 5 лет
+                                включительно, 1500 руб/сутки для детей от 6 до 13 лет включительно и
+                                2500 руб/сутки для детей от 14 и для взрослых (в этот период в цену включён завтрак).
+                            </p>
+                            <p>**Дети до 5 лет при подсчете количества гостей не учитываются.
+                            </p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="special_requests" class="form-label">Особые пожелания (необязательно)</label>
+                            <textarea class="form-control" id="special_requests" name="special_requests"
+                                      rows="3" placeholder="Любые особые пожелания или требования..."></textarea>
+                        </div>
+
+                        <!-- Terms and Conditions -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    Я согласен с <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">условиями и положениями</a> *
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('room_detail', room_id=room.id) }}" class="btn btn-outline-secondary me-md-2">
+                                <i class="bi bi-arrow-left"></i> Назад к номеру
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg px-4" id="submitBtn">
+                                <i class="bi bi-credit-card"></i> Подтвердить бронирование
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Guest Information -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Информация о госте</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Имя:</strong> {{ current_user.first_name }} {{ current_user.last_name }}</p>
+                            <p><strong>Email:</strong> {{ current_user.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Телефон:</strong> {{ current_user.phone|format_phone }}</p>
+                            <p><strong>Логин:</strong> {{ current_user.username }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Date Range Modal -->
+<div class="modal fade" id="dateRangeModal" tabindex="-1" aria-labelledby="dateRangeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dateRangeModalLabel">
+                    <i class="bi bi-calendar-range text-primary"></i> Выберите даты проживания
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="dateRangeCalendar"></div>
+                <div class="mt-3 p-3 bg-light rounded">
+                    <div id="selectedDatesDisplay" class="text-center text-muted">
+                        Выберите дату заезда и выезда
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="confirmDates" disabled>
+                    <i class="bi bi-check-circle"></i> Подтвердить даты
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Terms and Conditions Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Условия и положения</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Условия бронирования</h6>
+                <ul>
+                    <li>Расчетный час: 14:00 заезд, 12:00 выезд</li>
+                    <li>Дети до 5-ти лет принимаются бесплатно</li>
+                    <li>При заезде требуется действительный документ удостоверяющий личность</li>
+                    <li>Тарифы номеров облагаются применимыми налогами</li>
+                    <li>Курить в номера, холлах и помещениях отеля запрещено</li>
+                    <li>Проживание в отеле с домашними животными строго запрещено</li>
+                    <li>При бронировании необходимо внести предоплату не менее стоимости проживания за одни сутки</li>
+                    <li>Отмена бронирования без штрафных санкций должна быть сделана минимум за 14 дней до забронированной даты</li>
+                    <li>При отмене бронирования менее чем за 14 дней удерживается предоплата в размере стоимости одних суток. Условия оплаты</li>
+                    <li>Произвести окончательный расчёт за проживание требуется при заселении</li>
+                    <li>К оплате принимаем основные кредитные, дебетовые карты и наличные</li>
+                </ul>
+
+                <h6>Условия оплаты</h6>
+                <ul>
+                    <li>Оплата требуется при заезде</li>
+                    <li>Мы принимаем основные кредитные карты и наличные</li>
+                    <li>Может потребоваться залог</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Принять</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Date Range Calendar
+    class DateRangeCalendar {
+        constructor(containerId, options = {}) {
+            this.container = document.getElementById(containerId);
+            this.currentDate = new Date();
+            this.selectedStart = null;
+            this.selectedEnd = null;
+            this.minDate = options.minDate || new Date();
+            this.onDateSelect = options.onDateSelect || function() {};
+
+            this.render();
+        }
+
+        render() {
+            const year = this.currentDate.getFullYear();
+            const month = this.currentDate.getMonth();
+
+            this.container.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="prevMonth">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <h6 class="mb-0 fw-bold">${this.getMonthName(month)} ${year}</h6>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="nextMonth">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+                <div class="calendar-modal-grid">
+                    ${this.renderCalendarGrid(year, month)}
+                </div>
+            `;
+
+            this.attachEventListeners();
+        }
+
+        renderCalendarGrid(year, month) {
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+
+            // Adjust start date to begin with Monday
+            const dayOfWeek = firstDay.getDay();
+            const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            startDate.setDate(firstDay.getDate() + mondayOffset);
+
+            let html = '<div class="row text-center mb-2">';
+            const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+            dayNames.forEach(day => {
+                html += `<div class="col"><small class="text-muted fw-bold">${day}</small></div>`;
+            });
+            html += '</div>';
+
+            const currentDate = new Date(startDate);
+            for (let week = 0; week < 6; week++) {
+                html += '<div class="row mb-1">';
+                for (let day = 0; day < 7; day++) {
+                    const dateStr = currentDate.toISOString().split('T')[0];
+                    const isCurrentMonth = currentDate.getMonth() === month;
+                    const isDisabled = currentDate < this.minDate;
+                    const isSelected = this.isDateSelected(currentDate);
+                    const isInRange = this.isDateInRange(currentDate);
+                    const isToday = this.isToday(currentDate);
+
+                    let classes = 'col p-1';
+                    let btnClasses = 'btn btn-sm w-100 calendar-modal-day';
+
+                    if (!isCurrentMonth) {
+                        btnClasses += ' btn-outline-light text-muted border-0';
+                    } else if (isDisabled) {
+                        btnClasses += ' btn-outline-secondary disabled';
+                    } else if (isSelected) {
+                        btnClasses += ' btn-primary';
+                    } else if (isInRange) {
+                        btnClasses += ' bg-primary bg-opacity-25 border-primary text-primary';
+                    } else if (isToday) {
+                        btnClasses += ' btn-outline-primary border-2';
+                    } else {
+                        btnClasses += ' btn-outline-light border-light';
+                    }
+
+                    html += `
+                        <div class="${classes}">
+                            <button type="button" class="${btnClasses}"
+                                    data-date="${dateStr}"
+                                    ${isDisabled ? 'disabled' : ''}>
+                                ${currentDate.getDate()}
+                            </button>
+                        </div>
+                    `;
+
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+                html += '</div>';
+
+                if (currentDate.getMonth() !== month && week >= 4) break;
+            }
+
+            return html;
+        }
+
+        attachEventListeners() {
+            document.getElementById('prevMonth').addEventListener('click', () => {
+                this.currentDate.setMonth(this.currentDate.getMonth() - 1);
+                this.render();
+            });
+
+            document.getElementById('nextMonth').addEventListener('click', () => {
+                this.currentDate.setMonth(this.currentDate.getMonth() + 1);
+                this.render();
+            });
+
+            this.container.querySelectorAll('.calendar-modal-day').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    if (e.target.disabled) return;
+
+                    const selectedDate = new Date(e.target.dataset.date + 'T00:00:00');
+                    this.selectDate(selectedDate);
+                });
+            });
+        }
+
+        selectDate(date) {
+            if (!this.selectedStart || (this.selectedStart && this.selectedEnd)) {
+                // Start new selection
+                this.selectedStart = new Date(date.getTime() + 86400000);
+                this.selectedEnd = null;
+            } else if (date < this.selectedStart) {
+                // Selected date is before start, make it the new start
+                this.selectedEnd = this.selectedStart;
+                this.selectedStart = new Date(date.getTime() + 86400000);
+            } else {
+                // Selected date is after start, make it the end
+                this.selectedEnd = new Date(date.getTime() + 86400000);
+            }
+
+            this.render();
+            this.onDateSelect(this.selectedStart, this.selectedEnd);
+        }
+
+        isDateSelected(date) {
+            if (!this.selectedStart) return false;
+
+            const dateStr = date.toISOString().split('T')[0];
+            const startStr = this.selectedStart.toISOString().split('T')[0];
+            const endStr = this.selectedEnd ? this.selectedEnd.toISOString().split('T')[0] : null;
+
+            return dateStr === startStr || (endStr && dateStr === endStr);
+        }
+
+        isDateInRange(date) {
+            if (!this.selectedStart || !this.selectedEnd) return false;
+            return date > this.selectedStart && date < this.selectedEnd;
+        }
+
+        isToday(date) {
+            const today = new Date();
+            return date.toDateString() === today.toDateString();
+        }
+
+        getMonthName(month) {
+            const months = [
+                'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+            ];
+            return months[month];
+        }
+
+        reset() {
+            this.selectedStart = null;
+            this.selectedEnd = null;
+            this.render();
+        }
+    }
+
+    // Initialize calendar
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const checkInInput = document.getElementById('check_in');
+    const checkOutInput = document.getElementById('check_out');
+    const checkInDisplay = document.getElementById('check_in_display');
+    const checkOutDisplay = document.getElementById('check_out_display');
+    const selectedDatesDisplay = document.getElementById('selectedDatesDisplay');
+    const confirmDatesBtn = document.getElementById('confirmDates');
+    const dateRangeModal = new bootstrap.Modal(document.getElementById('dateRangeModal'));
+
+    // Initialize display with existing values
+    if (checkInInput.value) {
+        const date = new Date(checkInInput.value);
+        checkInDisplay.value = date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+    }
+    if (checkOutInput.value) {
+        const date = new Date(checkOutInput.value);
+        checkOutDisplay.value = date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+    }
+
+    const calendar = new DateRangeCalendar('dateRangeCalendar', {
+        minDate: today,
+        onDateSelect: function(startDate, endDate) {
+            if (startDate && endDate) {
+                const options = { day: 'numeric', month: 'short', year: 'numeric' };
+                selectedDatesDisplay.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-calendar-check text-primary"></i>
+                            <strong>Заезд:</strong> ${startDate.toLocaleDateString('ru-RU', options)}
+                        </div>
+                        <div>
+                            <i class="bi bi-calendar-x text-primary"></i>
+                            <strong>Выезд:</strong> ${endDate.toLocaleDateString('ru-RU', options)}
+                        </div>
+                    </div>
+                    <div class="text-center mt-2">
+                        <small class="text-muted">
+                            ${Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))}
+                            ${Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) === 1 ? 'ночь' :
+                              Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) < 5 ? 'ночи' : 'ночей'}
+                        </small>
+                    </div>
+                `;
+                confirmDatesBtn.disabled = false;
+            } else if (startDate) {
+                const options = { day: 'numeric', month: 'short', year: 'numeric' };
+                selectedDatesDisplay.innerHTML = `
+                    <div class="text-center">
+                        <i class="bi bi-calendar text-primary"></i>
+                        <strong>Заезд:</strong> ${startDate.toLocaleDateString('ru-RU', options)}
+                        <br><small class="text-muted">Выберите дату выезда</small>
+                    </div>
+                `;
+                confirmDatesBtn.disabled = true;
+            } else {
+                selectedDatesDisplay.innerHTML = 'Выберите дату заезда и выезда';
+                confirmDatesBtn.disabled = true;
+            }
+        }
+    });
+
+    // Open modal when clicking on date inputs
+    document.querySelectorAll('.date-picker').forEach(input => {
+        input.addEventListener('click', function() {
+            calendar.reset();
+            selectedDatesDisplay.innerHTML = 'Выберите дату заезда и выезда';
+            confirmDatesBtn.disabled = true;
+        });
+    });
+
+    // Confirm dates button
+    confirmDatesBtn.addEventListener('click', function() {
+        if (calendar.selectedStart && calendar.selectedEnd) {
+            const startDate = calendar.selectedStart.getFullYear() + '-' +
+                             String(calendar.selectedStart.getMonth() + 1).padStart(2, '0') + '-' +
+                             String(calendar.selectedStart.getDate()).padStart(2, '0');
+            const endDate = calendar.selectedEnd.getFullYear() + '-' +
+                           String(calendar.selectedEnd.getMonth() + 1).padStart(2, '0') + '-' +
+                           String(calendar.selectedEnd.getDate()).padStart(2, '0');
+
+            checkInInput.value = startDate;
+            checkOutInput.value = endDate;
+
+            // Update display text
+            const options = { day: 'numeric', month: 'short' };
+            checkInDisplay.value = calendar.selectedStart.toLocaleDateString('ru-RU', options);
+            checkOutDisplay.value = calendar.selectedEnd.toLocaleDateString('ru-RU', options);
+
+            dateRangeModal.hide();
+            calculatePrice();
+        }
+    });
+
+    // Reset modal when closed
+    document.getElementById('dateRangeModal').addEventListener('hidden.bs.modal', function() {
+        calendar.reset();
+        selectedDatesDisplay.innerHTML = 'Выберите дату заезда и выезда';
+        confirmDatesBtn.disabled = true;
+    });
+
+    const totalPriceEl = document.getElementById('totalPrice');
+    const pricePerNight = {{ room.price_per_night }};
+
+
+// Обновляем расчет цены при изменении количества гостей
+function updateBookingGuestsDisplay() {
+    const adults = document.getElementById('booking_adults').value;
+    const children = document.getElementById('booking_children').value;
+    const total = parseInt(adults) + parseInt(children);
+
+    let displayText = '';
+    if (parseInt(children) === 0) {
+        displayText = `${adults} ${getRussianWord(adults, ['взрослый', 'взрослых', 'взрослых'])}`;
+    } else {
+        displayText = `${adults} ${getRussianWord(adults, ['взрослый', 'взрослых', 'взрослых'])}, ${children} ${getRussianWord(children, ['ребенок', 'ребенка', 'детей'])}`;
+    }
+
+    document.getElementById('guestsDisplay').textContent = displayText;
+    document.getElementById('total_guests').value = total;
+
+    // Проверяем не превышает ли общее количество вместимость номера
+    const capacity = getCapacity();
+    if (total > capacity) {
+        document.getElementById('guestsDisplay').classList.add('text-danger');
+    } else {
+        document.getElementById('guestsDisplay').classList.remove('text-danger');
+    }
+
+    // Пересчитываем стоимость при изменении количества гостей
+    calculatePrice();
+}
+
+
+    if (checkInInput) {
+        checkInInput.addEventListener('change', calculatePrice);
+    }
+    if (checkOutInput) {
+        checkOutInput.addEventListener('change', calculatePrice);
+    }
+
+    const adultsInput = document.getElementById('booking_adults');
+    const childrenInput = document.getElementById('booking_children');
+
+    if (adultsInput) {
+        adultsInput.addEventListener('change', calculatePrice);
+    }
+    if (childrenInput) {
+        childrenInput.addEventListener('change', calculatePrice);
+    }
+
+    // Сбрасываем выбор гостей при загрузке страницы
+    resetGuestsToDefault();
+
+    // Initial calculation
+    calculatePrice();
+});
+
+// Выносим функцию calculatePrice в глобальную область видимости
+async function calculatePrice() {
+    const checkInInput = document.getElementById('check_in');
+    const checkOutInput = document.getElementById('check_out');
+    const totalPriceEl = document.getElementById('totalPrice');
+
+    if (checkInInput.value && checkOutInput.value) {
+        const checkIn = new Date(checkInInput.value);
+        const checkOut = new Date(checkOutInput.value);
+        const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+
+        const adults = parseInt(document.getElementById('booking_adults').value) || 0;
+        const children = parseInt(document.getElementById('booking_children').value) || 0;
+
+        if (nights > 0) {
+            totalPriceEl.innerHTML = 'Расчёт стоимости...';
+            try {
+                const response = await fetch('/calcPrice', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        checkIn: checkInInput.value,
+                        checkOut: checkOutInput.value,
+                        adults: adults,
+                        children: children,
+                        room_id: {{ room.id }}
+                    })
+                });
+
+                console.log('Response status:', response.status);
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                const total = data.total;
+                const basePrice = data.basePrice || total;
+                const extraPrice = data.extraPrice || 0;
+                const extraAdults = data.extraAdults || 0;
+                const extraChildren = data.extraChildren || 0;
+
+                const nightsText = nights === 1 ? 'ночь' : nights < 5 ? 'ночи' : 'ночей';
+
+                let priceHTML = `${Math.round(total)} ₽ (${nights} ${nightsText})`;
+
+                if (extraPrice > 0) {
+                    priceHTML += `<br><small class="text-muted">
+                        Включая доплату за ${extraAdults + extraChildren} гостей сверх лимита
+                    </small>`;
+                }
+
+                totalPriceEl.innerHTML = priceHTML;
+
+            } catch (e) {
+                console.error('Error calculating price:', e);
+                totalPriceEl.innerHTML = 'Произошла ошибка';
+            }
+        } else {
+            totalPriceEl.innerHTML = 'Неверные даты';
+        }
+    } else {
+        totalPriceEl.innerHTML = 'Выберите даты';
+    }
+}
+
+
+
+// И при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    calculatePrice();
+});
+
+function changeBookingGuests(type, change) {
+    event.stopPropagation();
+    const input = document.getElementById('booking_' + type);
+    let value = parseInt(input.value);
+    const min = parseInt(input.min);
+    const max = parseInt(input.max);
+
+    let newValue = value + change;
+
+    if (newValue >= min && newValue <= max) {
+        input.value = newValue;
+        updateBookingGuestsDisplay();
+
+        // Пересчитываем стоимость при изменении через кнопки +/-
+        calculatePrice();
+    }
+}
+
+function validateBookingManualInput(type) {
+    const input = document.getElementById('booking_' + type);
+    let value = input.value;
+
+    // Убираем ведущие нули
+    if (value.startsWith('0') && value.length > 1) {
+        value = value.replace(/^0+/, '');
+        value = value === '' ? '0' : value;
+        input.value = value;
+    }
+
+    let numValue = parseInt(value);
+    const min = parseInt(input.min);
+    const max = parseInt(input.max);
+
+    // Валидация значения
+    if (isNaN(numValue)) {
+        numValue = min;
+    } else if (numValue < min) {
+        numValue = min;
+    } else if (numValue > max) {
+        numValue = max;
+    } else if (!Number.isInteger(numValue)) {
+        numValue = Math.round(numValue);
+    }
+
+    input.value = numValue;
+    updateBookingGuestsDisplay();
+
+    // Пересчитываем стоимость при ручном вводе
+    calculatePrice();
+}
+
+function getCapacity() {
+    let capacity = {{ room.capacity }};
+    {% if room.has_small_sofa %}
+        capacity += 1;
+    {% endif %}
+    {% if room.has_large_sofa %}
+        capacity += 2;
+    {% endif %}
+    return capacity;
+}
+
+function updateBookingGuestsDisplay() {
+    const adults = document.getElementById('booking_adults').value;
+    const children = document.getElementById('booking_children').value;
+    const children_under_five = document.getElementById('booking_children_under_five').value;
+    const total = parseInt(adults) + parseInt(children);
+
+    let displayText = '';
+    if (parseInt(children) === 0 && parseInt(children_under_five) === 0) {
+        displayText = `${adults} ${getRussianWord(adults, ['взрослый', 'взрослых', 'взрослых'])}`;
+    } else if (parseInt(children) === 0 && parseInt(children_under_five) !== 0) {
+        displayText = `${adults} ${getRussianWord(adults, ['взрослый', 'взрослых', 'взрослых'])}, ${children_under_five} детей до 5 лет`;
+    } else if (parseInt(children) !== 0 && parseInt(children_under_five) !== 0) {
+        displayText = `${adults} ${getRussianWord(adults, ['взрослый', 'взрослых', 'взрослых'])}, ${children} ${getRussianWord(children, ['ребенок', 'ребенка', 'детей'])}, ${children_under_five} детей до 5 лет`;
+    } else {
+        displayText = `${adults} ${getRussianWord(adults, ['взрослый', 'взрослых', 'взрослых'])}, ${children} ${getRussianWord(children, ['ребенок', 'ребенка', 'детей'])}`;
+    }
+
+    document.getElementById('guestsDisplay').textContent = displayText;
+    document.getElementById('total_guests').value = total;
+
+    // Проверяем не превышает ли общее количество вместимость номера
+    const capacity = getCapacity();
+    if (total > capacity) {
+        document.getElementById('guestsDisplay').classList.add('text-danger');
+    } else {
+        document.getElementById('guestsDisplay').classList.remove('text-danger');
+    }
+
+    // Гарантированно пересчитываем стоимость
+    calculatePrice();
+}
+
+
+function getRussianWord(number, words) {
+    number = Math.abs(number) % 100;
+    let n = number % 10;
+    if (number > 10 && number < 20) return words[2];
+    if (n > 1 && n < 5) return words[1];
+    if (n == 1) return words[0];
+    return words[2];
+}
+
+
+function applyBookingGuests() {
+    const total = parseInt(document.getElementById('booking_adults').value) +
+                  parseInt(document.getElementById('booking_children').value);
+    const capacity = getCapacity();
+
+    if (total > capacity) {
+        alert(`Превышена вместимость номера! Максимум: ${capacity} гостей`);
+        return false;
+    }
+
+    // Закрываем dropdown
+    const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('guestsDropdown'));
+    dropdown.hide();
+
+    // Пересчитываем стоимость после изменения количества гостей
+    calculatePrice();
+    return true;
+}
+
+// Предотвращаем закрытие dropdown при клике внутри
+document.addEventListener('DOMContentLoaded', function() {
+    const guestsMenu = document.querySelector('#guestsDropdown + .dropdown-menu');
+    if (guestsMenu) {
+        guestsMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+
+    updateBookingGuestsDisplay();
+});
+
+// Добавьте эту функцию для проверки перед отправкой формы
+function validateBookingForm(event) {
+    // Проверка вместимости
+    const total = parseInt(document.getElementById('booking_adults').value) +
+                  parseInt(document.getElementById('booking_children').value);
+    const capacity = getCapacity();
+
+    if (total > capacity) {
+        alert(`Превышена вместимость номера! Максимум: ${capacity} гостей`);
+        event.preventDefault(); // Останавливаем отправку формы
+        return false;
+    }
+
+    // Проверка дат заезда и выезда
+    const checkIn = document.getElementById('check_in').value;
+    const checkOut = document.getElementById('check_out').value;
+
+    if (!checkIn || !checkOut) {
+        alert('Пожалуйста, выберите даты заезда и выезда');
+        event.preventDefault();
+        return false;
+    }
+
+    // Проверка что дата выезда позже даты заезда
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+
+    if (checkInDate >= checkOutDate) {
+        alert('Дата выезда должна быть позже даты заезда');
+        event.preventDefault();
+        return false;
+    }
+
+    // Проверка что дата заезда не в прошлом
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Обнуляем время для сравнения только дат
+
+    if (checkInDate < today) {
+        alert('Дата заезда не может быть в прошлом');
+        event.preventDefault();
+        return false;
+    }
+
+    return true;
+}
+
+</script>
+{% endblock %}

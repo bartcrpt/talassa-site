@@ -1,0 +1,162 @@
+{% extends "public/base_public.html" %}
+
+{% block content %}
+{% set hero = blocks.get('hero') %}
+{% set philosophy = blocks.get('philosophy') %}
+{% set highlights = blocks.get('highlights') %}
+{% set rooms_preview = blocks.get('rooms_preview') %}
+{% set wellness = blocks.get('wellness') %}
+{% set gallery_block = blocks.get('gallery') %}
+{% set cta = blocks.get('cta') %}
+
+<section class="hero" style="background-image: linear-gradient(rgba(49, 78, 111, 0.38), rgba(49, 78, 111, 0.60)), url('{{ hero.image_url if hero and hero.image_url else '/static/site/images/gallery/photo_7.jpg' }}');">
+    <div class="hero__content site-container">
+        <p class="hero__eyebrow">{{ hero.payload.get('eyebrow') if hero and hero.payload and hero.payload.get('eyebrow') else 'Абхазия • Чёрное море' }}</p>
+        <img src="{{ url_for('static', filename='site/images/logo.png') }}" alt="Таласса Hotel & Spa" class="hero__logo">
+        <p class="hero__tagline">{{ hero.body if hero and hero.body else 'Где море лечит' }}</p>
+        <p class="hero__subtitle">{{ hero.subtitle if hero and hero.subtitle else 'Талассотерапия у Чёрного моря' }}</p>
+        <div class="hero__actions">
+            <a href="{{ hero.button_url if hero and hero.button_url else '/rooms' }}" class="site-btn site-btn--gold">{{ hero.button_label if hero and hero.button_label else 'Забронировать' }}</a>
+            <a href="{{ hero.payload.get('secondary_button_url') if hero and hero.payload and hero.payload.get('secondary_button_url') else '/rooms' }}" class="site-btn site-btn--ghost">{{ hero.payload.get('secondary_button_label') if hero and hero.payload and hero.payload.get('secondary_button_label') else 'Смотреть номера' }}</a>
+        </div>
+    </div>
+</section>
+
+<section id="philosophy" class="section section--pattern">
+    <div class="site-container split-grid split-grid--top">
+        <div>
+            <div class="paper-card">
+                <div class="section-copy">
+                    <h2>{{ philosophy.title if philosophy and philosophy.title else 'Философия Таласса' }}</h2>
+                    <div class="philosophy-text" data-philosophy>
+                        {% if philosophy_paragraphs %}
+                            <p>{{ philosophy_paragraphs[0] }} <button type="button" class="inline-toggle" data-philosophy-expand>... читать дальше</button></p>
+                            <div class="philosophy-text__more" data-philosophy-more hidden>
+                                {% for paragraph in philosophy_paragraphs[1:] %}
+                                    <p>{{ paragraph }}</p>
+                                {% endfor %}
+                            </div>
+                            {% if philosophy_paragraphs|length > 1 %}
+                                <button type="button" class="collapse-toggle" data-philosophy-collapse hidden>Свернуть</button>
+                            {% endif %}
+                        {% else %}
+                            <p>Контент блока пока не заполнен.</p>
+                        {% endif %}
+                    </div>
+                    <a href="{{ philosophy.button_url if philosophy and philosophy.button_url else '#' }}" class="site-btn site-btn--secondary">{{ philosophy.button_label if philosophy and philosophy.button_label else 'Узнать историю' }}</a>
+                </div>
+            </div>
+        </div>
+        <div class="section-image section-image--tall">
+            <img src="{{ philosophy.image_url if philosophy and philosophy.image_url else '/static/site/images/gallery/photo_3.jpg' }}" alt="Территория отеля Таласса">
+        </div>
+    </div>
+</section>
+
+<section class="section section--light">
+    <div class="site-container">
+        <div class="section-heading section-heading--center">
+            <h2>{{ highlights.title if highlights and highlights.title else 'Почему Таласса' }}</h2>
+            <p>{{ highlights.subtitle if highlights and highlights.subtitle else 'Уникальное сочетание моря, гор и заботы о здоровье' }}</p>
+        </div>
+        <div class="highlights-grid">
+            {% for item in (highlights.payload.get('items') if highlights and highlights.payload and highlights.payload.get('items') else []) %}
+                <article class="feature-card">
+                    <h3>{{ item.title }}</h3>
+                    {% if item.desc %}
+                        <p>{{ item.desc }}</p>
+                    {% elif item['items'] %}
+                        <ul>
+                            {% for list_item in item['items'] %}
+                                <li>{{ list_item }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="site-container">
+        <div class="section-heading section-heading--between">
+            <div>
+                <h2>{{ rooms_preview.title if rooms_preview and rooms_preview.title else 'Номера' }}</h2>
+                <p>{{ rooms_preview.subtitle if rooms_preview and rooms_preview.subtitle else 'Комфорт у моря для каждого гостя' }}</p>
+            </div>
+            <a href="{{ rooms_preview.button_url if rooms_preview and rooms_preview.button_url else '/rooms' }}" class="site-btn site-btn--secondary">{{ rooms_preview.button_label if rooms_preview and rooms_preview.button_label else 'Все номера' }}</a>
+        </div>
+        <div class="rooms-grid rooms-grid--home-next">
+            {% for room in room_cards %}
+                <article class="room-card room-card--home-next">
+                    <a href="{{ room.detail_url }}" class="room-card__image room-card__image--home-next">
+                        <img src="{{ room.photo_url }}" alt="{{ room.name }}">
+                        <span class="room-card__badge room-card__badge--home-next">{{ room.category }}</span>
+                    </a>
+                    <div class="room-card__body room-card__body--home-next">
+                        <h3><a href="{{ room.detail_url }}">{{ room.name }}</a></h3>
+                        <div class="room-card__divider room-card__divider--home-next"></div>
+                        <p class="room-card__desc room-card__desc--home-next">{{ room.short_description }}</p>
+                        <div class="room-card__tags room-card__tags--home-next">
+                            {% for tag in room.feature_labels %}
+                                <span>{{ tag }}</span>
+                            {% endfor %}
+                            {% if room.area_label %}
+                                <span>{{ room.area_label }}</span>
+                            {% endif %}
+                            <span>до {{ room.max_capacity }} гостей</span>
+                        </div>
+                        <div class="room-card__price-range">
+                            <span class="room-card__price-range-value">{{ '%.0f'|format(room.min_price) }} ₽ - {{ '%.0f'|format(room.max_price) }} ₽</span>
+                            <span class="room-card__price-range-caption">/ ночь</span>
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section id="wellness" class="section section--overlay section--overlay-bottom" style="background-image: linear-gradient(rgba(82, 110, 98, 0.82), rgba(49, 78, 111, 0.82)), url('{{ wellness.image_url if wellness and wellness.image_url else '/static/site/images/gallery/photo_6.jpg' }}');">
+    <div class="site-container centered-copy">
+        <p class="section-copy__eyebrow">{{ wellness.payload.get('eyebrow') if wellness and wellness.payload and wellness.payload.get('eyebrow') else 'Оздоровление' }}</p>
+        <h2>{{ wellness.title if wellness and wellness.title else 'Талассотерапия' }}</h2>
+        <p>{{ wellness.body if wellness and wellness.body else '' }}</p>
+        <a href="{{ wellness.button_url if wellness and wellness.button_url else '/news' }}" class="site-btn site-btn--gold">{{ wellness.button_label if wellness and wellness.button_label else 'Узнать о процедурах' }}</a>
+    </div>
+</section>
+
+<section class="section">
+    <div class="site-container">
+        <div class="section-heading section-heading--between">
+            <div>
+                <h2>{{ gallery_block.title if gallery_block and gallery_block.title else 'Атмосфера' }}</h2>
+                <p>{{ gallery_block.subtitle if gallery_block and gallery_block.subtitle else 'Море, горы и тишина в фотографиях' }}</p>
+            </div>
+            <a href="{{ gallery_block.button_url if gallery_block and gallery_block.button_url else '/gallery' }}" class="site-btn site-btn--secondary">{{ gallery_block.button_label if gallery_block and gallery_block.button_label else 'Вся галерея' }}</a>
+        </div>
+        <div class="gallery-grid">
+            {% for image in (gallery_block.payload.get('images') if gallery_block and gallery_block.payload and gallery_block.payload.get('images') else []) %}
+                <div class="gallery-grid__item {% if loop.first %}gallery-grid__item--large{% endif %}">
+                    <img src="{{ image }}" alt="Таласса Hotel & Spa - фото {{ loop.index }}">
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="site-container centered-copy centered-copy--compact">
+        <h2>{{ cta.title if cta and cta.title else 'Начните свой отдых' }}</h2>
+        <p>{{ cta.body if cta and cta.body else '' }}</p>
+        <a href="{{ cta.button_url if cta and cta.button_url else '/rooms' }}" class="site-btn site-btn--gold">{{ cta.button_label if cta and cta.button_label else 'Забронировать отдых' }}</a>
+    </div>
+</section>
+{% endblock %}
+
+
+
+
+
+

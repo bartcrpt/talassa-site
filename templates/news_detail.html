@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }} - Новости{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('news') }}">Новости</a></li>
+                    <li class="breadcrumb-item active">{{ article.title }}</li>
+                </ol>
+            </nav>
+            
+            <article class="card border-0 shadow-sm">
+                <div class="card-body p-5">
+                    <header class="mb-4">
+                        <h1 class="display-5 fw-bold mb-3">{{ article.title }}</h1>
+                        <div class="d-flex justify-content-between align-items-center text-muted">
+                            <div>
+                                <i class="bi bi-person"></i> {{ article.author.first_name }} {{ article.author.last_name }}
+                            </div>
+                            <div>
+                                <i class="bi bi-calendar"></i> {{ article.created_at.strftime('%d %B %Y в %H:%M') }}
+                            </div>
+                        </div>
+                        {% if article.updated_at != article.created_at %}
+                            <small class="text-muted">
+                                Обновлено: {{ article.updated_at.strftime('%d.%m.%Y в %H:%M') }}
+                            </small>
+                        {% endif %}
+                    </header>
+                    
+                    <!-- Photo Carousel -->
+                    {% if article.photos %}
+                        <div class="mb-4">
+                            <div id="newsCarousel" class="carousel slide" data-bs-ride="false">
+                                <div class="carousel-inner rounded">
+                                    {% for photo in article.photos %}
+                                        <div class="carousel-item {{ 'active' if loop.first }}">
+                                            <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" 
+                                                 class="d-block w-100 news-image" alt="{{ photo.original_filename }}">
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                {% if article.photos|length > 1 %}
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#newsCarousel" data-bs-slide="prev">
+                                        <span class="carousel-control-prev-icon"></span>
+                                        <span class="visually-hidden">Предыдущее</span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#newsCarousel" data-bs-slide="next">
+                                        <span class="carousel-control-next-icon"></span>
+                                        <span class="visually-hidden">Следующее</span>
+                                    </button>
+                                    
+                                    <!-- Indicators -->
+                                    <div class="carousel-indicators">
+                                        {% for photo in article.photos %}
+                                            <button type="button" data-bs-target="#newsCarousel" data-bs-slide-to="{{ loop.index0 }}" 
+                                                    class="{{ 'active' if loop.first }}" aria-current="{{ 'true' if loop.first }}" 
+                                                    aria-label="Слайд {{ loop.index }}"></button>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="article-content">
+                        {{ article.content|safe }}
+                    </div>
+                </div>
+            </article>
+            
+            <div class="text-center mt-4">
+                <a href="{{ url_for('news') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left"></i> Вернуться к новостям
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.news-image {
+    height: 400px;
+    object-fit: cover;
+}
+
+@media (max-width: 768px) {
+    .news-image {
+        height: 250px;
+    }
+}
+</style>
+{% endblock %}

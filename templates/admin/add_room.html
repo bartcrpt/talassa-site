@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+
+{% block title %}Add Room - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="bi bi-gear"></i> Admin Panel</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('admin_rooms') }}" class="list-group-item list-group-item-action active">
+                        <i class="bi bi-door-open"></i> Rooms
+                    </a>
+                    <a href="{{ url_for('admin_categories') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-tags"></i> Categories
+                    </a>
+                    <a href="{{ url_for('admin_bookings') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-calendar-check"></i> Bookings
+                    </a>
+                    <a href="{{ url_for('admin_users') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-people"></i> Users
+                    </a>
+                    <a href="{{ url_for('admin_news') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-newspaper"></i> Новости
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Добавить новый номер</h1>
+                <a href="{{ url_for('admin_rooms') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Назад к номерам
+                </a>
+            </div>
+
+            <!-- Форма добавления номера -->
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <form method="POST">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <!-- Контейнер для полей номеров комнат -->
+                                        <div id="room-numbers-container">
+                                            <div class="mb-3 room-number-field">
+                                                <label for="number" class="form-label">Номер комнаты *</label>
+                                                <input type="text" class="form-control" id="number" name="number" required>
+                                            </div>
+                                        </div>
+
+                                        <!-- Кнопка добавления нового поля номера -->
+                                        <div class="mb-3">
+                                            <button type="button" id="add-room-btn" class="btn btn-outline-primary w-100">
+                                                <i class="bi bi-plus-circle"></i> Добавить ещё одну комнату
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="category_id" class="form-label">Категория *</label>
+                                            <select class="form-select" id="category_id" name="category_id" required>
+                                                <option value="">Выберите категорию</option>
+                                                {% for category in categories %}
+                                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label>Дополнительное спальное место</label>
+                                        </div>
+                                        <div>
+                                            <label>
+                                              <input type="checkbox" name="has_small_sofa" value=0>
+                                              Односпальный диван
+                                            </label>
+                                        </div>
+                                        <div>
+                                            <label>
+                                              <input type="checkbox" name="has_large_sofa" value=0>
+                                              Двуспальный диван
+                                            </label>
+                                    </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="capacity" class="form-label">Вместимость (гостей) *</label>
+                                        <input type="number" class="form-control" id="capacity"
+                                               name="capacity" min="1" max="10" required>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3"></div>
+                                    <div class="col-md-6 mb-3"></div>
+                                    <div class="col-md-6 mb-3"></div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="price_per_night_january" class="form-label">Цена за ночь в Январе *</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="price_per_night_january"
+                                                   name="price_per_night_january" step="0.01" min="0" required>
+                                            <span class="input-group-text">₽</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="price_per_night" class="form-label">Цена за ночь в Феврале *</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="price_per_night"
+                                                   name="price_per_night_february" step="0.01" min="0" required>
+                                            <span class="input-group-text">₽</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="price_per_night_march" class="form-label">Цена за ночь в Марте *</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="price_per_night_march"
+                                                   name="price_per_night_march" step="0.01" min="0" required>
+                                            <span class="input-group-text">₽</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="price_per_night_april" class="form-label">Цена за ночь в Апреле *</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="price_per_night_april"
+                                                   name="price_per_night_april" step="0.01" min="0" required>
+                                            <span class="input-group-text">₽</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="price_per_night_may" class="form-label">Цена за ночь в Мае *</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="price_per_night_may"
+                                                   name="price_per_night_may" step="0.01" min="0" required>
+                                            <span class="input-group-text">₽</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="price_per_night_june" class="form-label">Цена за ночь в Июне *</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="price_per_night_june"
+                                                   name="price_per_night_june" step="0.01" min="0" required>
+                                            <span class="input-group-text">₽</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="price_per_night_july" class="form-label">Цена за ночь в Июле *</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="price_per_night_july"
+                                                   name="price_per_night_july" step="0.01" min="0" required>
+                                            <span class="input-group-text">₽</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="price_per_night_august" class="form-label">Цена за ночь в Августе *</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="price_per_night_august"
+                                                   name="price_per_night_august" step="0.01" min="0" required>
+                                            <span class="input-group-text">₽</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="price_per_night_september" class="form-label">Цена за ночь в Сентябре *</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="price_per_night_september"
+                                                   name="price_per_night_september" step="0.01" min="0" required>
+                                            <span class="input-group-text">₽</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="price_per_night_october" class="form-label">Цена за ночь в Октябре *</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="price_per_night_october"
+                                                   name="price_per_night_october" step="0.01" min="0" required>
+                                            <span class="input-group-text">₽</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="price_per_night_november" class="form-label">Цена за ночь в Ноябре *</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="price_per_night_november"
+                                                   name="price_per_night_november" step="0.01" min="0" required>
+                                            <span class="input-group-text">₽</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="price_per_night_december" class="form-label">Цена за ночь в Декабре *</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="price_per_night_december"
+                                                   name="price_per_night_december" step="0.01" min="0" required>
+                                            <span class="input-group-text">₽</span>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Описание</label>
+                                    <textarea class="form-control wysiwyg-editor" id="description" name="description"
+                                              rows="4" placeholder="Опишите особенности и планировку номера..."></textarea>
+                                </div>
+
+
+
+                                <div class="mb-3">
+                                    <label for="amenities" class="form-label">Удобства</label>
+                                    <textarea class="form-control wysiwyg-editor-simple" id="amenities" name="amenities"
+                                              rows="3" placeholder="Перечислите удобства номера (WiFi, ТВ, мини-бар и т.д.)"></textarea>
+                                </div>
+
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <a href="{{ url_for('admin_rooms') }}" class="btn btn-outline-secondary me-md-2">
+                                        Отмена
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-plus-circle"></i> Добавить номер
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- TinyMCE WYSIWYG Editor -->
+<script src="{{ url_for('static', filename='js/tinymce/tinymce.min.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize TinyMCE for description
+    tinymce.init({
+        selector: '.wysiwyg-editor',
+        license_key: 'gpl',
+        height: 300,
+        menubar: false,
+        plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'charmap', 'preview',
+            'searchreplace', 'visualblocks', 'code', 'fullscreen',
+            'insertdatetime', 'help', 'wordcount'
+        ],
+        toolbar: 'undo redo | blocks | ' +
+            'bold italic forecolor | alignleft aligncenter ' +
+            'alignright alignjustify | bullist numlist outdent indent | ' +
+            'removeformat | help',
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; }',
+        language: 'ru',
+        branding: false,
+        promotion: false
+    });
+    
+    // Initialize simple TinyMCE for amenities
+    tinymce.init({
+        selector: '.wysiwyg-editor-simple',
+        license_key: 'gpl',
+        height: 200,
+        menubar: false,
+        plugins: ['lists', 'help'],
+        toolbar: 'bold italic | bullist numlist | removeformat | help',
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; }',
+        language: 'ru',
+        branding: false,
+        promotion: false
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let roomCounter = 1;
+
+    // Переименовываем первое поле для consistency
+    const firstField = document.querySelector('.room-number-field');
+    firstField.querySelector('input').name = 'number_0';
+    firstField.querySelector('input').id = 'number_0';
+    firstField.querySelector('label').htmlFor = 'number_0';
+
+    // Добавляем кнопку удаления к первому полю (но скрываем её)
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'btn btn-sm btn-outline-danger mt-2 remove-room-btn';
+    removeBtn.innerHTML = '<i class="bi bi-trash"></i> Удалить';
+    removeBtn.style.display = 'none'; // Скрываем для первого поля
+    firstField.appendChild(removeBtn);
+
+    // Обработчик кнопки добавления комнаты
+    document.getElementById('add-room-btn').addEventListener('click', function() {
+        const container = document.getElementById('room-numbers-container');
+        const newField = document.querySelector('.room-number-field').cloneNode(true);
+
+        // Обновляем id и name
+        const newId = `number_${roomCounter}`;
+        newField.querySelector('input').id = newId;
+        newField.querySelector('input').name = `number_${roomCounter}`;
+        newField.querySelector('input').value = '';
+        newField.querySelector('label').htmlFor = newId;
+
+        // Показываем кнопку удаления для новых полей
+        newField.querySelector('.remove-room-btn').style.display = 'block';
+
+        // Вставляем перед кнопкой добавления
+        container.appendChild(newField);
+
+        roomCounter++;
+    });
+
+    // Обработчик удаления поля (делегирование событий)
+    document.getElementById('room-numbers-container').addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-room-btn') || e.target.closest('.remove-room-btn')) {
+            const field = e.target.closest('.room-number-field');
+            if (document.querySelectorAll('.room-number-field').length > 1) {
+                field.remove();
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
