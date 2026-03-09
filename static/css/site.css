@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --sea: #314e6f;
   --moss: #526e62;
   --gold: #c09f6b;
@@ -4080,6 +4080,8 @@ body {
   border: none;
   box-shadow: none;
   padding: 0;
+  border-radius: 0;
+  overflow: visible;
 }
 
 .page--journal .article-detail__gallery-item {
@@ -4939,6 +4941,7 @@ body.site-lightbox-open {
     font-size: 22px;
   }
 }
+
 
 
 
