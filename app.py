@@ -1496,6 +1496,62 @@ def build_booking_result_data(room, total_info, book_url):
     )
 
 
+def format_price_rub(value):
+    try:
+        amount = float(value)
+    except (TypeError, ValueError):
+        return str(value)
+    return f"{amount:,.0f}".replace(",", " ") + " ₽"
+
+
+def get_user_display_name(user):
+    full_name = f"{(user.first_name or '').strip()} {(user.last_name or '').strip()}".strip()
+    return full_name or f"Пользователь #{user.id}"
+
+
+def build_booking_notification_message(user, booking_items, total_price, special_requests=''):
+    lines = [
+        "Новая бронь на сайте Таласса",
+        f"Гость: {get_user_display_name(user)}",
+        f"Телефон: {format_phone_for_display(user.phone)}",
+    ]
+
+    if getattr(user, 'email', None):
+        lines.append(f"Email: {user.email}")
+
+    if booking_items:
+        lines.append(f"Даты: {booking_items[0]['check_in']} - {booking_items[0]['check_out']}")
+
+    lines.append("Номера:")
+    for item in booking_items:
+        room_label = item.get('room_label') or f"Номер {item['room'].number}"
+        lines.append(
+            f"- {room_label} ({item['room'].number}), "
+            f"{item['adults']} взр."
+            + (f", {item['children']} дет." if item['children'] else "")
+            + f", {format_price_rub(item['total_price'])}"
+        )
+
+    lines.append(f"Итого: {format_price_rub(total_price)}")
+
+    if special_requests:
+        lines.append(f"Пожелания: {special_requests}")
+
+    return "\n".join(lines)
+
+
+def notify_booking_via_telegram(message):
+    if not TELEGRAM_GROUP_ID:
+        app.logger.warning("TELEGRAM_GROUP_ID is not configured, booking notification skipped")
+        return False
+
+    try:
+        return send_tg_message(message, TELEGRAM_GROUP_ID)
+    except Exception:
+        app.logger.exception("Failed to send Telegram booking notification")
+        return False
+
+
 def find_two_room_guest_split(room_a, room_b, adults, children):
     max_capacity_a = get_room_max_capacity(room_a)
     max_capacity_b = get_room_max_capacity(room_b)
@@ -2166,6 +2222,24 @@ def book_room(room_id, got_check_in=None, got_check_out=None, got_adults=2, got_
         db.session.add(booking)
         db.session.commit()
 
+        notification_message = build_booking_notification_message(
+            current_user,
+            [
+                {
+                    'room': room,
+                    'room_label': get_room_display_name(room),
+                    'check_in': check_in.strftime('%d.%m.%Y'),
+                    'check_out': check_out.strftime('%d.%m.%Y'),
+                    'adults': adults,
+                    'children': children,
+                    'total_price': total_price,
+                }
+            ],
+            total_price=total_price,
+            special_requests=special_requests,
+        )
+        notify_booking_via_telegram(notification_message)
+
         flash('Booking confirmed successfully!', 'success')
         return redirect(url_for('thanks'))
 
@@ -2264,6 +2338,33 @@ def book_room_combination():
             db.session.add(booking_a)
             db.session.add(booking_b)
             db.session.commit()
+
+            notification_message = build_booking_notification_message(
+                current_user,
+                [
+                    {
+                        'room': room_a,
+                        'room_label': get_room_display_name(room_a),
+                        'check_in': check_in.strftime('%d.%m.%Y'),
+                        'check_out': check_out.strftime('%d.%m.%Y'),
+                        'adults': adults_a,
+                        'children': children_a,
+                        'total_price': total_info_a['total'],
+                    },
+                    {
+                        'room': room_b,
+                        'room_label': get_room_display_name(room_b),
+                        'check_in': check_in.strftime('%d.%m.%Y'),
+                        'check_out': check_out.strftime('%d.%m.%Y'),
+                        'adults': adults_b,
+                        'children': children_b,
+                        'total_price': total_info_b['total'],
+                    },
+                ],
+                total_price=total_price,
+                special_requests=special_requests,
+            )
+            notify_booking_via_telegram(notification_message)
             flash('Комбинированное бронирование успешно оформлено.', 'success')
             return redirect(url_for('thanks'))
         except Exception as exc:
@@ -3488,6 +3589,10 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=False, host='0.0.0.0', port=5000)
+
+
+
+
 
 
 

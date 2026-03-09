@@ -20,6 +20,14 @@ def send_tg_message(message, tg_group_id):
 
     :param message: Текст сообщения для отправки.
     """
+    if not TELEGRAM_TOKEN:
+        logging.warning("TELEGRAM_TOKEN is not configured, skipping Telegram notification")
+        return False
+
+    if not tg_group_id:
+        logging.warning("Telegram chat id is not configured, skipping Telegram notification")
+        return False
+
     telegram_api_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     payload = {
         "chat_id": tg_group_id,
@@ -30,12 +38,13 @@ def send_tg_message(message, tg_group_id):
         response = requests.post(telegram_api_url, json=payload)
         if response.status_code == 200:
             logging.info("Сообщение отправлено успешно")
+            return True
         else:
             logging.error(f"Ошибка при отправке сообщения: {response.status_code}, {response.text}")
-            #next line is for debugging
-            # logging.error(message)
+            return False
     except Exception as e:
         logging.error(f"Ошибка при выполнении HTTP-запроса: {e}")
+        return False
 
 
 # send_sms_message(phone, text_for_sms, api_key=api_key, sms_api_gateway=sms_api_gateway)
