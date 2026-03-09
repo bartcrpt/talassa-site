@@ -1,53 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Hotel Booking System{% endblock %}</title>
+    <title>{% block title %}Таласса Hotel & Spa{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     {% include '_service/yametrika.js' ignore missing %}
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">
-                <i class="bi bi-building"></i> Таласса Hotel & Spa
+<body class="internal-app {{ 'internal-admin' if request.path.startswith('/admin') else 'internal-user internal-portal' }} {{ 'internal-auth' if (request.endpoint or '') in ['login', 'register', 'verify_sms'] else '' }}">
+    <header class="navbar navbar-expand-lg internal-navbar sticky-top">
+        <div class="container internal-navbar__container">
+            <a class="navbar-brand internal-brand" href="{{ url_for('index') }}">
+                <span class="internal-brand__logo-wrap">
+                    <img src="{{ url_for('static', filename='site/images/logo_menu.png') }}" alt="Таласса Hotel & Spa" class="internal-brand__logo">
+                </span>
+                <span class="internal-brand__copy">
+                    <span class="internal-brand__eyebrow">Таласса Hotel & Spa</span>
+                    <span class="internal-brand__subtitle">Кабинет гостя</span>
+                </span>
             </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+
+            <button class="navbar-toggler internal-navbar__toggler" type="button" data-bs-toggle="collapse" data-bs-target="#internalNavbarNav" aria-controls="internalNavbarNav" aria-expanded="false" aria-label="Открыть меню">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}">Главная</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('rooms') }}">Номера</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('gallery') }}">Галерея</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('news') }}">Новости</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('contacts') }}">Контакты</a>
-                    </li>
+
+            <div class="collapse navbar-collapse" id="internalNavbarNav">
+                <ul class="navbar-nav mx-auto internal-nav__links">
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Главная</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('rooms') }}">Номера</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('gallery') }}">Галерея</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('journal_page') }}">Журнал</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('contact_page') }}">Контакты</a></li>
                 </ul>
-                
-                <ul class="navbar-nav">
+
+                <ul class="navbar-nav internal-nav__actions align-items-lg-center gap-lg-2">
                     {% if current_user.is_authenticated %}
+                        <li class="nav-item d-none d-lg-block">
+                            <a class="internal-action-link" href="{{ url_for('my_bookings') }}">Мои бронирования</a>
+                        </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle"></i> {{ current_user.first_name }}
+                            <a class="nav-link dropdown-toggle internal-user-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-circle"></i>
+                                <span>{{ current_user.first_name }}</span>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
+                            <ul class="dropdown-menu dropdown-menu-end internal-dropdown-menu">
                                 <li><a class="dropdown-item" href="{{ url_for('profile') }}">Мой профиль</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('my_bookings') }}">Мои бронирования</a></li>
                                 {% if current_user.is_admin %}
@@ -59,26 +61,22 @@
                             </ul>
                         </li>
                     {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('register') }}">Регистрация</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('login') }}">Войти</a>
-                        </li>
+                        <li class="nav-item"><a class="internal-action-link" href="{{ url_for('register') }}">Регистрация</a></li>
+                        <li class="nav-item"><a class="internal-action-link internal-action-link--primary" href="{{ url_for('login') }}">Войти</a></li>
                     {% endif %}
                 </ul>
             </div>
         </div>
-    </nav>
+    </header>
 
-    <main>
+    <main class="internal-main">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <div class="container mt-3">
+                <div class="container internal-flashes">
                     {% for category, message in messages %}
-                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <div class="internal-flash internal-flash--{{ category }}" role="alert">
+                            <span>{{ message }}</span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
                         </div>
                     {% endfor %}
                 </div>
@@ -88,43 +86,32 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="bg-dark text-light py-4 mt-5">
+    <footer class="internal-footer">
         <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <h5>Таласса Hotel&Spa</h5>
-                    <p>Ваш дом вдали от дома. Заезд с 14:00, выезд до 12:00. Дети до 5 лет проживают бесплатно.</p>
+            <div class="internal-footer__row">
+                <div>
+                    <p class="internal-footer__eyebrow">Таласса Hotel & Spa</p>
+                    <p class="internal-footer__description">Личный кабинет для бронирования, подтверждения деталей проживания и управления поездкой у Чёрного моря.</p>
                 </div>
-                <div class="col-md-6">
-                    <h6>Свяжитесь с нами</h6>
-                    <p><i class="bi bi-telephone"></i> +7 (938) 555-15-63</p>
-                    <p><i class="bi bi-telephone"></i> +7 (940) 733-43-35</p>
-                    <p><i class="bi bi-envelope"></i> talassahotelspa@gmail.com</p>
-                    <p><i class="fab fa-vk"></i> <a href="https://vk.com/talassa_abkhazia" target="_blank" class="footer-link">https://vk.com/talassa_abkhazia</a></p>
-                    <p><i class="fab fa-telegram"></i> <a href="https://t.me/thalassa_hotelAbkhazia" target="_blank" class="footer-link">https://t.me/thalassa_hotelAbkhazia</a></p>
-                    <p><i class="bi bi-geo-alt"></i> Республика Абхазия, Гагрский район, пос. Цандрыпш, ул. Железнодорожная, 5</p>
-                    <p><i class="bi bi-clock"></i> Время работы: по московскому времени (UTC+3)</p>
+                <div class="internal-footer__contacts">
+                    <a href="tel:+79385551563">+7 (938) 555-15-63</a>
+                    <a href="mailto:talassahotelspa@gmail.com">talassahotelspa@gmail.com</a>
+                    <a href="{{ url_for('contact_page') }}">Цандрыпш, ул. Железнодорожная, 5</a>
                 </div>
             </div>
-            <hr class="my-3">
-            <div class="text-center">
-                <p>&copy; 2025 Таласса Hotel&Spa. Все права защищены.</p>
-            </div>
+            <div class="internal-footer__bottom">Таласса Hotel & Spa • Республика Абхазия • 2026</div>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
-        // Установить московский часовой пояс для всего сайта
         window.MOSCOW_TIMEZONE = 'Europe/Moscow';
-        
-        // Функция для получения московского времени
+
         window.getMoscowTime = function() {
-            return new Date(new Date().toLocaleString("en-US", {timeZone: "Europe/Moscow"}));
+            return new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Moscow' }));
         };
-        
-        // Функция для получения московской даты
+
         window.getMoscowDate = function() {
             const moscowTime = getMoscowTime();
             moscowTime.setHours(0, 0, 0, 0);
@@ -134,3 +121,4 @@
     {% block scripts %}{% endblock %}
 </body>
 </html>
+

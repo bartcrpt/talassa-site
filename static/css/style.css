@@ -888,3 +888,835 @@ input[type=number] {
     }
 
 }
+/* Talassa internal user area redesign */
+body.internal-portal {
+    --talassa-sea: #314e6f;
+    --talassa-sea-deep: #243f5d;
+    --talassa-moss: #526e62;
+    --talassa-gold: #c09f6b;
+    --talassa-gold-soft: rgba(192, 159, 107, 0.18);
+    --talassa-cream: #f3efe6;
+    --talassa-cream-strong: #ebe4d6;
+    --talassa-card: #fffdf8;
+    --talassa-mist: #9db6bf;
+    --talassa-line: rgba(49, 78, 111, 0.12);
+    --talassa-shadow: 0 24px 48px rgba(36, 63, 93, 0.10);
+    background:
+        radial-gradient(circle at top, rgba(157, 182, 191, 0.22), transparent 34%),
+        linear-gradient(180deg, #f7f2e8 0%, #f3efe6 36%, #f8f5ee 100%);
+    color: var(--talassa-moss);
+    font-family: 'Montserrat', sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+body.internal-portal .internal-main {
+    min-height: calc(100vh - 220px);
+}
+
+body.internal-portal .internal-navbar {
+    background: rgba(255, 252, 246, 0.88);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid rgba(49, 78, 111, 0.10);
+    box-shadow: 0 18px 36px rgba(36, 63, 93, 0.08);
+}
+
+body.internal-portal .internal-navbar__container {
+    gap: 18px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+}
+
+body.internal-portal .internal-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+}
+
+body.internal-portal .internal-brand__logo-wrap {
+    width: 62px;
+    height: 62px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 12px 24px rgba(36, 63, 93, 0.10);
+}
+
+body.internal-portal .internal-brand__logo {
+    max-width: 40px;
+    max-height: 40px;
+}
+
+body.internal-portal .internal-brand__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+body.internal-portal .internal-brand__eyebrow,
+body.internal-portal .internal-brand__subtitle,
+body.internal-portal .internal-nav__links .nav-link,
+body.internal-portal .internal-action-link,
+body.internal-portal .internal-footer__eyebrow,
+body.internal-portal .account-page__eyebrow,
+body.internal-portal .account-card__eyebrow,
+body.internal-portal .booking-card-next__eyebrow,
+body.internal-portal .combo-booking-room-card__eyebrow,
+body.internal-portal .account-auth-intro__eyebrow {
+    font-family: 'Montserrat', sans-serif;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+body.internal-portal .internal-brand__eyebrow {
+    font-size: 0.68rem;
+    color: var(--talassa-sea);
+    font-weight: 600;
+}
+
+body.internal-portal .internal-brand__subtitle {
+    font-size: 0.72rem;
+    color: rgba(82, 110, 98, 0.88);
+    font-weight: 500;
+    letter-spacing: 0.12em;
+}
+
+body.internal-portal .internal-nav__links .nav-link,
+body.internal-portal .internal-action-link,
+body.internal-portal .internal-user-toggle {
+    color: var(--talassa-sea);
+    font-size: 0.82rem;
+    font-weight: 500;
+}
+
+body.internal-portal .internal-nav__links .nav-link:hover,
+body.internal-portal .internal-action-link:hover,
+body.internal-portal .internal-user-toggle:hover,
+body.internal-portal .dropdown-item:hover {
+    color: var(--talassa-gold);
+}
+
+body.internal-portal .internal-action-link {
+    text-decoration: none;
+}
+
+body.internal-portal .internal-action-link--primary,
+body.internal-portal .account-btn.btn-primary,
+body.internal-portal .btn-primary {
+    background: linear-gradient(135deg, var(--talassa-gold), #c9aa73);
+    border: none;
+    color: #fff;
+    border-radius: 999px;
+    box-shadow: 0 16px 30px rgba(192, 159, 107, 0.26);
+}
+
+body.internal-portal .internal-action-link--primary {
+    padding: 12px 22px;
+}
+
+body.internal-portal .internal-navbar__toggler {
+    border: 1px solid rgba(49, 78, 111, 0.12);
+    border-radius: 16px;
+    padding: 10px 12px;
+}
+
+body.internal-portal .internal-dropdown-menu {
+    border: 1px solid rgba(49, 78, 111, 0.08);
+    border-radius: 18px;
+    padding: 12px;
+    box-shadow: var(--talassa-shadow);
+}
+
+body.internal-portal .internal-flashes {
+    padding-top: 22px;
+}
+
+body.internal-portal .internal-flash {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 20px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid var(--talassa-line);
+    color: var(--talassa-sea);
+    box-shadow: 0 12px 24px rgba(36, 63, 93, 0.08);
+    margin-bottom: 12px;
+}
+
+body.internal-portal .internal-flash--success {
+    border-color: rgba(82, 110, 98, 0.24);
+}
+
+body.internal-portal .internal-flash--danger,
+body.internal-portal .internal-flash--error {
+    border-color: rgba(170, 91, 76, 0.24);
+}
+
+body.internal-portal .internal-footer {
+    padding: 34px 0 28px;
+    background: var(--talassa-sea);
+    color: rgba(243, 239, 230, 0.86);
+    margin-top: 48px;
+}
+
+body.internal-portal .internal-footer__row {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+body.internal-portal .internal-footer__eyebrow {
+    color: #fff;
+    font-size: 0.72rem;
+    margin-bottom: 12px;
+}
+
+body.internal-portal .internal-footer__description,
+body.internal-portal .internal-footer__contacts a,
+body.internal-portal .internal-footer__bottom {
+    color: rgba(243, 239, 230, 0.78);
+    font-size: 0.95rem;
+}
+
+body.internal-portal .internal-footer__contacts {
+    display: grid;
+    gap: 10px;
+}
+
+body.internal-portal .internal-footer__contacts a {
+    text-decoration: none;
+}
+
+body.internal-portal .internal-footer__bottom {
+    padding-top: 24px;
+    margin-top: 24px;
+    border-top: 1px solid rgba(243, 239, 230, 0.14);
+}
+
+body.internal-portal h1,
+body.internal-portal h2,
+body.internal-portal h3,
+body.internal-portal h4,
+body.internal-portal h5,
+body.internal-portal h6 {
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--talassa-sea);
+    font-weight: 500;
+}
+
+body.internal-portal .account-shell,
+body.internal-portal .account-page {
+    padding-top: 42px;
+}
+
+body.internal-portal .account-auth-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(360px, 540px);
+    gap: 28px;
+    align-items: stretch;
+}
+
+body.internal-portal .account-auth-intro,
+body.internal-portal .account-panel,
+body.internal-portal .account-card,
+body.internal-portal .booking-layout-card,
+body.internal-portal .booking-guest-card,
+body.internal-portal .combo-booking-card,
+body.internal-portal .account-empty-state {
+    background: rgba(255, 253, 248, 0.94);
+    border: 1px solid rgba(49, 78, 111, 0.08);
+    border-radius: 30px;
+    box-shadow: var(--talassa-shadow);
+}
+
+body.internal-portal .account-auth-intro {
+    padding: 42px;
+    background:
+        linear-gradient(160deg, rgba(49, 78, 111, 0.94), rgba(36, 63, 93, 0.92)),
+        radial-gradient(circle at top, rgba(192, 159, 107, 0.26), transparent 46%);
+    color: rgba(255, 250, 242, 0.92);
+}
+
+body.internal-portal .account-auth-intro h1,
+body.internal-portal .account-page__header h1,
+body.internal-portal .account-panel h2,
+body.internal-portal .account-card h2,
+body.internal-portal .booking-card-next h2,
+body.internal-portal .combo-booking-room-card h2 {
+    font-size: clamp(2rem, 3vw, 3.4rem);
+    line-height: 0.98;
+    margin-bottom: 14px;
+}
+
+body.internal-portal .account-auth-intro h1 {
+    color: #fff;
+    max-width: 12ch;
+}
+
+body.internal-portal .account-auth-intro p {
+    max-width: 34rem;
+    font-size: 1.02rem;
+    line-height: 1.8;
+    color: rgba(255, 247, 238, 0.84);
+}
+
+body.internal-portal .account-auth-intro__eyebrow,
+body.internal-portal .account-page__eyebrow,
+body.internal-portal .account-card__eyebrow,
+body.internal-portal .booking-card-next__eyebrow,
+body.internal-portal .combo-booking-room-card__eyebrow {
+    font-size: 0.72rem;
+    color: var(--talassa-gold);
+    margin-bottom: 14px;
+    display: inline-block;
+}
+
+body.internal-portal .account-auth-intro__facts {
+    display: grid;
+    gap: 16px;
+    margin-top: 28px;
+}
+
+body.internal-portal .account-auth-intro__fact {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    gap: 16px;
+    align-items: start;
+    padding: 18px 20px;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+body.internal-portal .account-auth-intro__fact-icon {
+    width: 52px;
+    height: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    font-size: 1.15rem;
+}
+
+body.internal-portal .account-auth-intro__fact strong,
+body.internal-portal .account-panel__accent {
+    color: #fff;
+}
+
+body.internal-portal .account-auth-intro__fact span {
+    display: block;
+    margin-top: 4px;
+    color: rgba(255, 247, 238, 0.78);
+    font-size: 0.95rem;
+}
+
+body.internal-portal .account-panel {
+    padding: 34px 34px 30px;
+}
+
+body.internal-portal .account-panel__top {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+body.internal-portal .account-panel__icon,
+body.internal-portal .account-card__icon {
+    width: 72px;
+    height: 72px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 22px;
+    background: var(--talassa-gold-soft);
+    color: var(--talassa-sea);
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+}
+
+body.internal-portal .account-panel__top p,
+body.internal-portal .account-page__lead,
+body.internal-portal .account-card p,
+body.internal-portal .combo-booking-summary-card p,
+body.internal-portal .booking-card-next__category {
+    color: rgba(82, 110, 98, 0.86);
+    line-height: 1.8;
+}
+
+body.internal-portal .account-form .form-label,
+body.internal-portal .booking-layout-card .form-label {
+    color: var(--talassa-sea);
+    font-size: 0.88rem;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+body.internal-portal .account-form .form-control,
+body.internal-portal .account-form .form-select,
+body.internal-portal .booking-layout-card .form-control,
+body.internal-portal .booking-layout-card .form-select,
+body.internal-portal .combo-booking-form .form-control {
+    min-height: 54px;
+    border-radius: 18px;
+    border: 1px solid rgba(49, 78, 111, 0.14);
+    background: rgba(255, 255, 255, 0.94);
+    padding: 14px 18px;
+    font-size: 0.98rem;
+    color: var(--talassa-sea);
+    box-shadow: none;
+}
+
+body.internal-portal .account-form textarea.form-control,
+body.internal-portal .booking-layout-card textarea.form-control,
+body.internal-portal .combo-booking-form textarea.form-control {
+    min-height: 132px;
+    resize: vertical;
+}
+
+body.internal-portal .account-form .form-control:focus,
+body.internal-portal .account-form .form-select:focus,
+body.internal-portal .booking-layout-card .form-control:focus,
+body.internal-portal .booking-layout-card .form-select:focus,
+body.internal-portal .combo-booking-form .form-control:focus {
+    border-color: rgba(192, 159, 107, 0.72);
+    box-shadow: 0 0 0 4px rgba(192, 159, 107, 0.12);
+}
+
+body.internal-portal .form-text {
+    color: rgba(82, 110, 98, 0.74);
+    font-size: 0.85rem;
+    margin-top: 8px;
+}
+
+body.internal-portal .account-panel__footer-note,
+body.internal-portal .account-panel__meta {
+    margin-top: 22px;
+    color: rgba(82, 110, 98, 0.84);
+}
+
+body.internal-portal .account-panel__footer-note a,
+body.internal-portal .account-inline-link {
+    color: var(--talassa-sea);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+body.internal-portal .account-btn,
+body.internal-portal .btn {
+    min-height: 52px;
+    padding: 13px 24px;
+    border-radius: 999px;
+    font-size: 0.84rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+body.internal-portal .account-btn--full {
+    width: 100%;
+}
+
+body.internal-portal .btn-outline-secondary,
+body.internal-portal .account-btn--ghost {
+    border: 1px solid rgba(49, 78, 111, 0.14);
+    color: var(--talassa-sea);
+    background: rgba(255, 255, 255, 0.92);
+}
+
+body.internal-portal .btn-outline-danger,
+body.internal-portal .account-btn--danger {
+    border: 1px solid rgba(170, 91, 76, 0.2);
+    color: #a55649;
+    background: rgba(255, 255, 255, 0.92);
+}
+
+body.internal-portal .account-page__header,
+body.internal-portal .account-card__header,
+body.internal-portal .combo-booking-form__actions,
+body.internal-portal .account-form__actions,
+body.internal-portal .booking-card-next__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+}
+
+body.internal-portal .account-page__header {
+    margin-bottom: 24px;
+}
+
+body.internal-portal .account-layout-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+    gap: 24px;
+}
+
+body.internal-portal .account-sidebar,
+body.internal-portal .account-mini-bookings {
+    display: grid;
+    gap: 24px;
+}
+
+body.internal-portal .account-card,
+body.internal-portal .combo-booking-card,
+body.internal-portal .booking-guest-card {
+    padding: 30px;
+}
+
+body.internal-portal .account-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+body.internal-portal .account-stat-card,
+body.internal-portal .combo-booking-summary-card,
+body.internal-portal .account-mini-booking-card {
+    background: rgba(243, 239, 230, 0.72);
+    border-radius: 22px;
+    padding: 18px 20px;
+    border: 1px solid rgba(49, 78, 111, 0.08);
+}
+
+body.internal-portal .account-stat-card__label,
+body.internal-portal .combo-booking-summary-card span,
+body.internal-portal .booking-card-next__fact span {
+    display: block;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(82, 110, 98, 0.70);
+    margin-bottom: 8px;
+}
+
+body.internal-portal .account-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(82, 110, 98, 0.14);
+    color: var(--talassa-moss);
+    font-size: 0.74rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+body.internal-portal .account-status-badge--confirmed {
+    background: rgba(82, 110, 98, 0.14);
+    color: var(--talassa-moss);
+}
+
+body.internal-portal .account-status-badge--pending,
+body.internal-portal .account-status-badge--neutral {
+    background: rgba(157, 182, 191, 0.18);
+    color: var(--talassa-sea);
+}
+
+body.internal-portal .account-mini-booking-card__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+body.internal-portal .account-mini-booking-card h3,
+body.internal-portal .booking-card-next h2,
+body.internal-portal .combo-booking-room-card h2 {
+    font-size: 1.9rem;
+    margin-bottom: 4px;
+}
+
+body.internal-portal .account-mini-booking-card p,
+body.internal-portal .booking-card-next__meta small,
+body.internal-portal .combo-booking-room-card p {
+    margin: 0;
+    color: rgba(82, 110, 98, 0.74);
+}
+
+body.internal-portal .booking-list-grid {
+    display: grid;
+    gap: 22px;
+}
+
+body.internal-portal .booking-card-next {
+    display: grid;
+    grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+    gap: 26px;
+    padding: 22px;
+}
+
+body.internal-portal .booking-card-next__media img,
+body.internal-portal .combo-booking-room-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 24px;
+}
+
+body.internal-portal .booking-card-next__media {
+    min-height: 280px;
+}
+
+body.internal-portal .booking-card-next__content {
+    display: grid;
+    gap: 18px;
+}
+
+body.internal-portal .booking-card-next__top {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+body.internal-portal .booking-card-next__facts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+body.internal-portal .booking-card-next__fact,
+body.internal-portal .booking-card-next__note {
+    padding: 16px 18px;
+    border-radius: 20px;
+    background: rgba(243, 239, 230, 0.72);
+    border: 1px solid rgba(49, 78, 111, 0.08);
+}
+
+body.internal-portal .booking-card-next__note p {
+    margin: 0;
+    line-height: 1.7;
+}
+
+body.internal-portal .booking-card-next__meta {
+    display: grid;
+    gap: 6px;
+}
+
+body.internal-portal .booking-card-next__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+body.internal-portal .booking-layout-card__header {
+    background: transparent;
+    border-bottom: 1px solid rgba(49, 78, 111, 0.08);
+    padding: 26px 30px 18px;
+}
+
+body.internal-portal .booking-layout-card__header h3 {
+    font-size: 2rem;
+    margin: 0;
+}
+
+body.internal-portal .booking-layout-card__body {
+    padding: 28px 30px 30px;
+}
+
+body.internal-portal .booking-layout-card__summary {
+    margin-bottom: 28px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(49, 78, 111, 0.08);
+}
+
+body.internal-portal .booking-layout-card__summary h4 {
+    font-size: 2rem;
+    margin-bottom: 12px;
+}
+
+body.internal-portal .booking-layout-card .form-check,
+body.internal-portal .combo-booking-form__check {
+    padding: 18px 20px 18px 48px;
+    border-radius: 22px;
+    background: rgba(243, 239, 230, 0.62);
+    border: 1px solid rgba(49, 78, 111, 0.08);
+}
+
+body.internal-portal .booking-layout-card .dropdown-menu {
+    border-radius: 22px;
+    border: 1px solid rgba(49, 78, 111, 0.08);
+    box-shadow: var(--talassa-shadow);
+    padding: 18px;
+}
+
+body.internal-portal .booking-guest-card .card-title {
+    font-size: 1.8rem;
+    margin-bottom: 18px;
+}
+
+body.internal-portal .account-page--booking .modal-content {
+    border: none;
+    border-radius: 28px;
+    box-shadow: 0 30px 60px rgba(36, 63, 93, 0.16);
+}
+
+body.internal-portal .account-page--booking .modal-header,
+body.internal-portal .account-page--booking .modal-footer {
+    border-color: rgba(49, 78, 111, 0.08);
+    padding: 18px 24px;
+}
+
+body.internal-portal .account-page--booking .modal-body {
+    padding: 24px;
+}
+
+body.internal-portal .combo-booking-card {
+    display: grid;
+    gap: 24px;
+}
+
+body.internal-portal .combo-booking-card__rooms {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+body.internal-portal .combo-booking-room-card {
+    display: grid;
+    grid-template-columns: minmax(150px, 180px) minmax(0, 1fr);
+    gap: 18px;
+    padding: 18px;
+    border-radius: 26px;
+    background: rgba(243, 239, 230, 0.62);
+    border: 1px solid rgba(49, 78, 111, 0.08);
+}
+
+body.internal-portal .combo-booking-room-card__media {
+    min-height: 170px;
+}
+
+body.internal-portal .combo-booking-room-card__placeholder,
+body.internal-portal .booking-card-next__placeholder {
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 24px;
+    background: rgba(157, 182, 191, 0.18);
+    color: var(--talassa-sea);
+    font-size: 1.8rem;
+}
+
+body.internal-portal .combo-booking-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+
+body.internal-portal .combo-booking-summary-card--accent {
+    background: rgba(49, 78, 111, 0.08);
+}
+
+body.internal-portal .combo-booking-summary-card strong {
+    font-size: 1.4rem;
+    color: var(--talassa-sea);
+}
+
+body.internal-portal .combo-booking-form__actions,
+body.internal-portal .account-form__actions {
+    margin-top: 22px;
+    flex-wrap: wrap;
+}
+
+body.internal-portal .account-empty-state {
+    padding: 52px 32px;
+    text-align: center;
+}
+
+body.internal-portal .account-empty-state__icon {
+    width: 96px;
+    height: 96px;
+    margin: 0 auto 18px;
+    border-radius: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--talassa-gold-soft);
+    color: var(--talassa-sea);
+    font-size: 2rem;
+}
+
+body.internal-portal .account-empty-state h2 {
+    font-size: 2.3rem;
+    margin-bottom: 10px;
+}
+
+@media (max-width: 1199px) {
+    body.internal-portal .account-auth-layout,
+    body.internal-portal .account-layout-grid,
+    body.internal-portal .combo-booking-card__rooms,
+    body.internal-portal .combo-booking-summary-grid,
+    body.internal-portal .booking-card-next,
+    body.internal-portal .booking-card-next__facts {
+        grid-template-columns: 1fr;
+    }
+
+    body.internal-portal .booking-card-next__media {
+        min-height: 240px;
+    }
+}
+
+@media (max-width: 991px) {
+    body.internal-portal .internal-footer__row,
+    body.internal-portal .account-page__header,
+    body.internal-portal .account-card__header,
+    body.internal-portal .booking-card-next__top,
+    body.internal-portal .booking-card-next__footer,
+    body.internal-portal .combo-booking-form__actions,
+    body.internal-portal .account-form__actions {
+        grid-template-columns: 1fr;
+        flex-direction: column;
+    }
+
+    body.internal-portal .internal-nav__actions {
+        padding-top: 16px;
+    }
+}
+
+@media (max-width: 767px) {
+    body.internal-portal .account-shell,
+    body.internal-portal .account-page {
+        padding-top: 28px;
+    }
+
+    body.internal-portal .account-auth-intro,
+    body.internal-portal .account-panel,
+    body.internal-portal .account-card,
+    body.internal-portal .combo-booking-card,
+    body.internal-portal .booking-guest-card,
+    body.internal-portal .booking-layout-card__body {
+        padding: 24px;
+    }
+
+    body.internal-portal .booking-layout-card__header {
+        padding: 24px 24px 16px;
+    }
+
+    body.internal-portal .internal-brand__copy {
+        display: none;
+    }
+
+    body.internal-portal .account-auth-intro h1,
+    body.internal-portal .account-page__header h1,
+    body.internal-portal .account-panel h2,
+    body.internal-portal .account-card h2 {
+        font-size: 2.2rem;
+    }
+
+    body.internal-portal .account-stat-grid,
+    body.internal-portal .booking-card-next__facts {
+        grid-template-columns: 1fr;
+    }
+}
+

@@ -1,68 +1,69 @@
 {% extends "base.html" %}
 
-{% block title %}Подтверждение SMS-кода - Система бронирования отеля{% endblock %}
+{% block title %}Подтверждение входа - Таласса Hotel & Spa{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card border-0 shadow-lg">
-                <div class="card-body p-5">
-                    <div class="text-center mb-4">
-                        <i class="bi bi-shield-check text-primary" style="font-size: 3rem;"></i>
-                        <h2 class="mt-2">Подтверждение входа</h2>
-                        <p class="text-muted">Введите SMS-код, отправленный на номер</p>
-                        <p class="fw-bold text-primary">{{ phone|format_phone }}</p>
-                    </div>
-
-                    <form method="POST">
-                        <input type="hidden" name="phone" value="{{ phone }}">
-                        <input type="hidden" name="next" value="{{ next_page or '' }}">
-
-                        <div class="mb-3">
-                            <label for="sms_code" class="form-label">SMS-код *</label>
-                            <input type="text" class="form-control text-center" id="sms_code" name="sms_code"
-                                   placeholder="000000" maxlength="6" required
-                                   style="font-size: 1.5rem; letter-spacing: 0.5rem;">
-                            <div class="form-text">Введите 6-значный код из SMS</div>
+<section class="account-shell account-shell--auth">
+    <div class="container">
+        <div class="account-auth-layout">
+            <div class="account-auth-intro">
+                <p class="account-auth-intro__eyebrow">Таласса Hotel & Spa</p>
+                <h1>Подтверждение по SMS</h1>
+                <p>Мы отправили код на номер <strong>{{ phone|format_phone }}</strong>. Введите его, чтобы открыть кабинет гостя и продолжить оформление бронирования.</p>
+                <div class="account-auth-intro__facts">
+                    <div class="account-auth-intro__fact">
+                        <span class="account-auth-intro__fact-icon"><i class="bi bi-clock-history"></i></span>
+                        <div>
+                            <strong>Код действует 5 минут</strong>
+                            <span>Если сообщение задержалось, вы сможете запросить его повторно.</span>
                         </div>
-
-                    </form>
-                    
-                    <!-- Resend SMS Form -->
-                    <div class="text-center">
-                        <p class="text-muted mb-2">Не получили код?</p>
-                        <form method="POST" action="{{ url_for('resend_sms') }}" class="d-inline">
-                            <input type="hidden" name="phone" value="{{ phone }}">
-                        <input type="hidden" name="next" value="{{ next_page or '' }}">
-                            <button type="submit" class="btn btn-outline-secondary btn-sm" id="resendBtn">
-                                <i class="bi bi-arrow-clockwise"></i> Отправить повторно
-                            </button>
-                        </form>
                     </div>
-                    
-                    <div class="text-center mt-4">
-                        <a href="{{ url_for('login', next=next_page) if next_page else url_for('login') }}" class="text-muted">
-                            <i class="bi bi-arrow-left"></i> Изменить номер телефона
-                        </a>
+                    <div class="account-auth-intro__fact">
+                        <span class="account-auth-intro__fact-icon"><i class="bi bi-chat-dots"></i></span>
+                        <div>
+                            <strong>Один номер — один кабинет</strong>
+                            <span>На этот номер мы также отправляем обновления по вашему проживанию.</span>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Info Card -->
-            <div class="card border-0 shadow-sm mt-3">
-                <div class="card-body">
-                    <h6 class="card-title">
-                        <i class="bi bi-info-circle text-info"></i> Информация
-                    </h6>
-                    <p class="card-text small text-muted mb-0">
-                        SMS-код действует 5 минут. Если код не пришел, проверьте правильность номера телефона.
-                    </p>
+
+            <div class="account-panel account-panel--auth">
+                <div class="account-panel__top">
+                    <span class="account-panel__icon"><i class="bi bi-shield-check"></i></span>
+                    <h2>Введите 6-значный код</h2>
+                    <p>Код уже отправлен на номер <span class="account-panel__accent">{{ phone|format_phone }}</span>.</p>
+                </div>
+
+                <form method="POST" class="account-form account-form--code">
+                    <input type="hidden" name="phone" value="{{ phone }}">
+                    <input type="hidden" name="next" value="{{ next_page or '' }}">
+
+                    <div class="account-form__field mb-3">
+                        <label for="sms_code" class="form-label">SMS-код</label>
+                        <input type="text" class="form-control text-center" id="sms_code" name="sms_code" placeholder="000000" maxlength="6" required>
+                        <div class="form-text">Как только вы введёте все шесть цифр, форма отправится автоматически.</div>
+                    </div>
+                </form>
+
+                <div class="account-panel__meta text-center">
+                    <p>Не получили сообщение?</p>
+                    <form method="POST" action="{{ url_for('resend_sms') }}" class="d-inline-block">
+                        <input type="hidden" name="phone" value="{{ phone }}">
+                        <input type="hidden" name="next" value="{{ next_page or '' }}">
+                        <button type="submit" class="btn btn-outline-secondary account-btn account-btn--ghost" id="resendBtn">
+                            <i class="bi bi-arrow-clockwise"></i> Отправить повторно
+                        </button>
+                    </form>
+                </div>
+
+                <div class="account-panel__footer-note">
+                    <a href="{{ url_for('login', next=next_page) if next_page else url_for('login') }}"><i class="bi bi-arrow-left"></i> Изменить номер телефона</a>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 {% endblock %}
 
 {% block scripts %}
@@ -70,77 +71,63 @@
 document.addEventListener('DOMContentLoaded', function() {
     const smsCodeInput = document.getElementById('sms_code');
     const resendBtn = document.getElementById('resendBtn');
-    
-    // Auto-focus on SMS code input
+
     smsCodeInput.focus();
-    
-    // Only allow digits in SMS code input
+
     smsCodeInput.addEventListener('input', function(e) {
-        // Remove non-digits
         let value = e.target.value.replace(/\D/g, '');
-        
-        // Limit to 6 digits
         value = value.substring(0, 6);
-        
         e.target.value = value;
-        
-        // Auto-submit when 6 digits entered
+
         if (value.length === 6) {
-            // Small delay to show the complete code
             setTimeout(() => {
                 document.querySelector('form').submit();
             }, 500);
         }
     });
-    
-    // Prevent non-digit keypress
+
     smsCodeInput.addEventListener('keypress', function(e) {
         if (!/\d/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter'].includes(e.key)) {
             e.preventDefault();
         }
     });
-    
-    // Paste handling
+
     smsCodeInput.addEventListener('paste', function(e) {
         e.preventDefault();
         const paste = (e.clipboardData || window.clipboardData).getData('text');
         const digits = paste.replace(/\D/g, '').substring(0, 6);
         e.target.value = digits;
-        
-        // Auto-submit if 6 digits pasted
+
         if (digits.length === 6) {
             setTimeout(() => {
                 document.querySelector('form').submit();
             }, 500);
         }
     });
-    
-    // Resend button cooldown
-    let cooldownTime = 60; // 60 seconds
+
+    let cooldownTime = 60;
     let cooldownTimer;
-    
+
     function startCooldown() {
         resendBtn.disabled = true;
         resendBtn.innerHTML = `<i class="bi bi-clock"></i> Повторить через ${cooldownTime}с`;
-        
+
         cooldownTimer = setInterval(() => {
             cooldownTime--;
             resendBtn.innerHTML = `<i class="bi bi-clock"></i> Повторить через ${cooldownTime}с`;
-            
+
             if (cooldownTime <= 0) {
                 clearInterval(cooldownTimer);
                 resendBtn.disabled = false;
                 resendBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Отправить повторно';
-                cooldownTime = 60; // Reset for next time
+                cooldownTime = 60;
             }
         }, 1000);
     }
-    
-    // Start cooldown on page load (assuming SMS was just sent)
+
     startCooldown();
-    
-    // Handle resend form submission
-    document.querySelector('form[action="{{ url_for("resend_sms") }}"]').addEventListener('submit', function(e) {
+
+    document.querySelector('form[action="{{ url_for("resend_sms") }}"]').addEventListener('submit', function() {
         if (!resendBtn.disabled) {
             startCooldown();
         }
@@ -148,4 +135,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
-

@@ -27,7 +27,7 @@
         <div>
             <div class="paper-card">
                 <div class="section-copy">
-                    <h2>{{ philosophy.title if philosophy and philosophy.title else 'Философия Таласса' }}</h2>
+                    <h2>{{ philosophy.title if philosophy and philosophy.title else 'О Таласса' }}</h2>
                     <div class="philosophy-text" data-philosophy>
                         {% if philosophy_paragraphs %}
                             <p>{{ philosophy_paragraphs[0] }} <button type="button" class="inline-toggle" data-philosophy-expand>... читать дальше</button></p>
@@ -42,9 +42,7 @@
                         {% else %}
                             <p>Контент блока пока не заполнен.</p>
                         {% endif %}
-                    </div>
-                    <a href="{{ philosophy.button_url if philosophy and philosophy.button_url else '#' }}" class="site-btn site-btn--secondary">{{ philosophy.button_label if philosophy and philosophy.button_label else 'Узнать историю' }}</a>
-                </div>
+                    </div>                </div>
             </div>
         </div>
         <div class="section-image section-image--tall">
@@ -53,7 +51,7 @@
     </div>
 </section>
 
-<section class="section section--light">
+<section id="home-highlights" class="section section--light">
     <div class="site-container">
         <div class="section-heading section-heading--center">
             <h2>{{ highlights.title if highlights and highlights.title else 'Почему Таласса' }}</h2>
@@ -83,7 +81,7 @@
         <div class="section-heading section-heading--between">
             <div>
                 <h2>{{ rooms_preview.title if rooms_preview and rooms_preview.title else 'Номера' }}</h2>
-                <p>{{ rooms_preview.subtitle if rooms_preview and rooms_preview.subtitle else 'Комфорт у моря для каждого гостя' }}</p>
+                <p>{{ rooms_preview.subtitle if rooms_preview and rooms_preview.subtitle else 'Для наших гостей мы предлагаем 8 типов номеров, в которых есть всё необходимое для максимального удобства' }}</p>
             </div>
             <a href="{{ rooms_preview.button_url if rooms_preview and rooms_preview.button_url else '/rooms' }}" class="site-btn site-btn--secondary">{{ rooms_preview.button_label if rooms_preview and rooms_preview.button_label else 'Все номера' }}</a>
         </div>
@@ -146,7 +144,7 @@
     </div>
 </section>
 
-<section class="section">
+<section class="section home-cta-section">
     <div class="site-container centered-copy centered-copy--compact">
         <h2>{{ cta.title if cta and cta.title else 'Начните свой отдых' }}</h2>
         <p>{{ cta.body if cta and cta.body else '' }}</p>
@@ -154,6 +152,10 @@
     </div>
 </section>
 {% endblock %}
+
+
+
+
 
 
 

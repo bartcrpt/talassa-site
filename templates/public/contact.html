@@ -31,9 +31,6 @@
                     </a>
                 {% endfor %}
             </div>
-            <div class="contact-actions">
-                <a href="{{ contacts.payload.get('telegram_button_url') if contacts and contacts.payload else 'https://t.me/thalassa_hotelAbkhazia' }}" target="_blank" rel="noreferrer" class="site-btn site-btn--gold">{{ contacts.payload.get('telegram_button_label') if contacts and contacts.payload else 'Написать в Telegram' }}</a>
-            </div>
         </div>
         <div class="map-card">
             <iframe src="{{ map_embed_url or (contacts.payload.get('map_embed_url') if contacts and contacts.payload else '') }}" width="100%" height="100%" style="border:0;" allowfullscreen loading="lazy" title="Карта расположения"></iframe>
@@ -41,7 +38,7 @@
     </div>
 </section>
 
-<section class="section section--light">
+<section class="section">
     <div class="site-container">
         <div class="section-heading section-heading--center">
             <h2>{{ schedule.title if schedule and schedule.title else 'Режим работы' }}</h2>
@@ -58,7 +55,7 @@
     </div>
 </section>
 
-<section class="section">
+<section class="section section--light">
     <div class="site-container">
         <div class="section-heading section-heading--center">
             <h2>{{ directions.title if directions and directions.title else 'Как добраться' }}</h2>
@@ -67,7 +64,7 @@
         <div class="directions-grid">
             {% for item in (directions.payload.get('items') if directions and directions.payload and directions.payload.get('items') else []) %}
                 <article class="feature-card direction-card">
-                    <span class="direction-card__index">{{ '%02d'|format(loop.index) }}</span>
+                    <span class="direction-card__index">{{ loop.index }}</span>
                     <h3>{{ item.title }}</h3>
                     <ul>
                         {% for point in item.points %}
@@ -80,6 +77,9 @@
     </div>
 </section>
 {% endblock %}
+
+
+
 
 
 

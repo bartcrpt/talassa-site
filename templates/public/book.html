@@ -24,11 +24,11 @@
             <form action="{{ url_for('book_landing_page') }}" method="GET" class="rooms-search-form rooms-search-form--book">
                 <label>
                     <span>Заезд</span>
-                    <input type="date" name="check_in" value="{{ check_in }}">
+                    <input type="date" name="check_in" value="{{ check_in }}" min="{{ min_check_in_date }}">
                 </label>
                 <label>
                     <span>Выезд</span>
-                    <input type="date" name="check_out" value="{{ check_out }}">
+                    <input type="date" name="check_out" value="{{ check_out }}" min="{{ min_check_in_date }}">
                 </label>
                 <label>
                     <span>Взрослые</span>
@@ -236,5 +236,6 @@
     </div>
 </section>
 {% endblock %}
+
 
 

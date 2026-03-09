@@ -8,7 +8,7 @@
 {% set beach = blocks.get('beach') %}
 {% set cta = blocks.get('cta') %}
 
-<section class="page-hero" style="background-image: linear-gradient(rgba(82, 110, 98, 0.72), rgba(49, 78, 111, 0.76)), url('{{ hero.image_url if hero and hero.image_url else '/static/site/images/gallery/photo_6.jpg' }}');">
+<section class="page-hero page-hero--wellness-next" style="background-image: linear-gradient(rgba(82, 110, 98, 0.72), rgba(49, 78, 111, 0.76)), url('{{ hero.image_url if hero and hero.image_url else '/static/site/images/gallery/photo_6.jpg' }}');">
     <div class="site-container page-hero__content">
         <p class="hero__eyebrow">{{ hero.payload.get('eyebrow') if hero and hero.payload and hero.payload.get('eyebrow') else 'Оздоровление' }}</p>
         <h1>{{ hero.title if hero and hero.title else 'Талассотерапия' }}</h1>
@@ -99,4 +99,6 @@
     </div>
 </section>
 {% endblock %}
+
+
 

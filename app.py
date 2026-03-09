@@ -136,7 +136,7 @@ HOME_PAGE_DEFAULT_BLOCKS = {
         'name': 'Оздоровление',
         'title': 'Талассотерапия',
         'body': 'Морская вода Чёрного моря обладает уникальным составом минералов. Наши процедуры на основе талассотерапии помогают восстановить силы, улучшить здоровье и обрести гармонию.',
-        'image_url': '/static/site/images/gallery/photo_5.jpg',
+        'image_url': '/static/site/images/gallery/photo_6.jpg',
         'button_label': 'Узнать о процедурах',
         'button_url': '/wellness',
         'payload': {'eyebrow': 'Оздоровление'},
@@ -154,8 +154,7 @@ HOME_PAGE_DEFAULT_BLOCKS = {
                 '/static/site/images/gallery/photo_2.jpg',
                 '/static/site/images/gallery/photo_3.jpg',
                 '/static/site/images/gallery/photo_4.jpg',
-                '/static/site/images/gallery/photo_5.jpg',
-                '/static/site/images/gallery/photo_6.jpg'
+                '/static/site/images/gallery/photo_5.jpg'
             ]
         },
         'sort_order': 60,
@@ -205,7 +204,7 @@ ABOUT_PAGE_DEFAULT_BLOCKS = {
         'name': 'Локация',
         'title': 'Гагра, Абхазия',
         'body': 'Гагра - курортная жемчужина абхазского побережья. Город, основанный как курорт ещё в начале XX века, сочетает историческую элегантность с дикой красотой природы.\n\nКавказские горы подступают к самому берегу, создавая уникальный микроклимат: мягкие зимы, длинное тёплое лето, чистый горный воздух, насыщенный фитонцидами и морскими аэрозолями.\n\nГалечный пляж в шаговой доступности от отеля - немноголюдный, с кристально чистой водой и удобным заходом в море.',
-        'image_url': '/static/site/images/gallery/photo_5.jpg',
+        'image_url': '/static/site/images/gallery/photo_6.jpg',
         'sort_order': 40,
     },
     'values': {
@@ -279,8 +278,8 @@ WELLNESS_PAGE_DEFAULT_BLOCKS = {
             'items': [
                 {
                     'title': 'Гидромассажные купели',
-                    'description': 'Купели на морской воде для глубокого расслабления мышц, восстановления суставов и улучшения кровообращения. Температура и интенсивность подбираются индивидуально.',
-                    'benefits': ['Снятие мышечного напряжения', 'Улучшение кровообращения', 'Восстановление суставов'],
+                    'description': 'Купели на морской воде для глубокого расслабления мышц, восстановления суставов, улучшения кровообращения и мягкой капилляротерапии. Температура и интенсивность подбираются индивидуально.',
+                    'benefits': ['Снятие мышечного напряжения', 'Улучшение кровообращения', 'Восстановление суставов', 'Капилляротерапия'],
                     'icon': '💧'
                 },
                 {
@@ -523,6 +522,7 @@ ROOMS_PAGE_DEFAULT_BLOCKS = {
         'name': 'Hero',
         'title': 'Номера',
         'subtitle': 'От уютных стандартов до просторных апартаментов с видом на море',
+        'image_url': '/static/site/images/gallery/photo_1.jpg',
         'payload': {'eyebrow': 'Проживание'},
         'sort_order': 10,
     },
@@ -559,6 +559,7 @@ GALLERY_PAGE_DEFAULT_BLOCKS = {
         'name': 'Hero',
         'title': 'Галерея',
         'subtitle': 'Атмосфера Таласса в фотографиях - море, горы, номера и территория отеля',
+        'image_url': '/static/site/images/gallery/photo_7.jpg',
         'payload': {'eyebrow': 'Галерея'},
         'sort_order': 10,
     },
@@ -577,6 +578,72 @@ PAGE_DEFAULT_BLOCKS = {
     'gallery': GALLERY_PAGE_DEFAULT_BLOCKS,
 }
 
+CURRENT_CMS_BLOCK_SYNC = {
+    'home': {
+        'hero': {
+            'image_url': {
+                'target': '/static/site/images/gallery/photo_7.jpg',
+                'replace_if': [None, '', '/static/site/images/gallery/photo_1.jpg'],
+            },
+        },
+        'wellness': {
+            'image_url': {
+                'target': '/static/site/images/gallery/photo_6.jpg',
+                'replace_if': [None, '', '/static/site/images/gallery/photo_5.jpg'],
+            },
+        },
+        'gallery': {
+            'payload': {
+                'target': {
+                    'images': [
+                        '/static/site/images/gallery/photo_1.jpg',
+                        '/static/site/images/gallery/photo_2.jpg',
+                        '/static/site/images/gallery/photo_3.jpg',
+                        '/static/site/images/gallery/photo_4.jpg',
+                        '/static/site/images/gallery/photo_5.jpg',
+                    ]
+                },
+                'replace_if': [
+                    {'images': [
+                        '/static/site/images/gallery/photo_1.jpg',
+                        '/static/site/images/gallery/photo_2.jpg',
+                        '/static/site/images/gallery/photo_3.jpg',
+                        '/static/site/images/gallery/photo_4.jpg',
+                        '/static/site/images/gallery/photo_5.jpg',
+                        '/static/site/images/gallery/photo_6.jpg'
+                    ]},
+                    {'images': []},
+                    {},
+                    None,
+                ],
+            },
+        },
+    },
+    'wellness': {
+        'hero': {
+            'image_url': {
+                'target': '/static/site/images/gallery/photo_6.jpg',
+                'replace_if': [None, '', '/static/site/images/gallery/photo_5.jpg'],
+            },
+        },
+    },
+    'rooms': {
+        'hero': {
+            'image_url': {
+                'target': '/static/site/images/gallery/photo_1.jpg',
+                'replace_if': [None, ''],
+            },
+        },
+    },
+    'gallery': {
+        'hero': {
+            'image_url': {
+                'target': '/static/site/images/gallery/photo_7.jpg',
+                'replace_if': [None, ''],
+            },
+        },
+    },
+}
 PAGE_PREVIEW_ENDPOINTS = {
     'home': 'index',
     'about': 'about_page',
@@ -663,7 +730,7 @@ PUBLIC_PAGE_SEO_DEFAULTS = {
     'wellness': {
         'title': 'Оздоровление и талассотерапия',
         'description': 'Талассотерапия, гидромассажные купели, фитобочка и оздоровительные процедуры на морской воде в Таласса Hotel & Spa.',
-        'image_url': '/static/site/images/gallery/photo_5.jpg',
+        'image_url': '/static/site/images/gallery/photo_6.jpg',
     },
     'rooms': {
         'title': 'Номера Таласса Hotel & Spa',
@@ -1056,6 +1123,35 @@ def normalize_block_payload(payload):
     return {}
 
 
+def sync_current_cms_block_values(page_slug, blocks):
+    sync_rules = CURRENT_CMS_BLOCK_SYNC.get(page_slug)
+    if not sync_rules:
+        return blocks
+
+    updated = False
+    for block in blocks:
+        block_rules = sync_rules.get(block.block_key)
+        if not block_rules:
+            continue
+
+        image_rule = block_rules.get('image_url')
+        if image_rule:
+            current_image_url = block.image_url
+            if current_image_url in image_rule.get('replace_if', []):
+                block.image_url = image_rule.get('target')
+                updated = True
+
+        payload_rule = block_rules.get('payload')
+        if payload_rule:
+            normalized_payload = normalize_block_payload(block.payload)
+            if normalized_payload in payload_rule.get('replace_if', []):
+                block.payload = payload_rule.get('target')
+                updated = True
+
+    if updated:
+        db.session.commit()
+
+    return blocks
 def get_site_page_with_blocks(page_slug):
     ensure_default_blocks_for_page(page_slug)
 
@@ -1064,6 +1160,7 @@ def get_site_page_with_blocks(page_slug):
         return None, {}
 
     blocks = SiteBlock.query.filter_by(page_id=page.id).order_by(SiteBlock.sort_order.asc(), SiteBlock.id.asc()).all()
+    blocks = sync_current_cms_block_values(page_slug, blocks)
     block_map = {}
     for block in blocks:
         if not block.is_enabled:
@@ -1758,6 +1855,7 @@ def build_public_seo(page=None, blocks=None, seo_override=None):
     title = seo_override.get('title') or (page.meta_title if page and page.meta_title else defaults.get('title')) or 'Таласса Hotel & Spa'
     description = seo_override.get('description') or (page.meta_description if page and page.meta_description else defaults.get('description')) or 'Спа-отель у Чёрного моря с видом на море, оздоровлением и спокойным отдыхом.'
     canonical_url = seo_override.get('canonical_url') or (request.url if request.query_string else request.base_url)
+    fallback_slug = request.path.strip('/').split('/')[0] if request.path.strip('/') else 'home'
 
     return {
         'title': title,
@@ -1767,6 +1865,7 @@ def build_public_seo(page=None, blocks=None, seo_override=None):
         'og_type': seo_override.get('og_type', 'website'),
         'site_name': 'Таласса Hotel & Spa',
         'noindex': seo_override.get('noindex', False),
+        'page_slug': page_slug or fallback_slug,
     }
 
 
@@ -1795,13 +1894,18 @@ def parse_site_payload(raw_payload):
 @app.route('/')
 def index():
     page, blocks = get_site_page_with_blocks('home')
-    hero_block = blocks.get('hero')
-    if hero_block:
-        hero_block.image_url = '/static/site/images/gallery/photo_7.jpg'
 
-    wellness_block = blocks.get('wellness')
-    if wellness_block:
-        wellness_block.image_url = '/static/site/images/gallery/photo_6.jpg'
+    philosophy_block = blocks.get('philosophy')
+    if philosophy_block:
+        philosophy_block.title = 'О Таласса'
+        philosophy_block.button_label = ''
+        philosophy_block.button_url = ''
+
+    highlights_block = blocks.get('highlights')
+    rooms_preview_block = blocks.get('rooms_preview')
+    if rooms_preview_block:
+        rooms_preview_block.subtitle = 'Для наших гостей мы предлагаем 8 типов номеров, в которых есть всё необходимое для максимального удобства'
+
 
     featured_room_categories = ['Стандарт', 'Deluxe', 'Апартаменты']
     featured_rooms = []
@@ -1812,12 +1916,6 @@ def index():
             featured_rooms.append(room)
 
     room_cards = [build_next_room_card_data(room) for room in featured_rooms]
-
-    philosophy_block = blocks.get('philosophy')
-    if philosophy_block and philosophy_block.button_url == '/about':
-        philosophy_block.button_url = '/wellness'
-        if philosophy_block.button_label == 'Узнать историю':
-            philosophy_block.button_label = 'О талассотерапии'
 
     philosophy_paragraphs = []
     if philosophy_block and philosophy_block.body:
@@ -1839,9 +1937,20 @@ def about_page():
 @app.route('/wellness')
 def wellness_page():
     page, blocks = get_site_page_with_blocks('wellness')
-    hero_block = blocks.get('hero')
-    if hero_block:
-        hero_block.image_url = '/static/site/images/gallery/photo_6.jpg'
+    procedures_block = blocks.get('procedures')
+    if procedures_block:
+        payload = procedures_block.payload or {}
+        if not isinstance(payload, dict):
+            payload = {}
+        items = payload.get('items') or []
+        if isinstance(items, list):
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                if item.get('title') == 'Гидромассажные купели':
+                    item['description'] = 'Купели на морской воде для глубокого расслабления мышц, восстановления суставов, улучшения кровообращения и мягкой капилляротерапии. Температура и интенсивность подбираются индивидуально.'
+                    item['benefits'] = ['Снятие мышечного напряжения', 'Улучшение кровообращения', 'Восстановление суставов', 'Капилляротерапия']
+        procedures_block.payload = payload
 
     intro_paragraphs = split_block_body(blocks.get('intro'))
     beach_paragraphs = split_block_body(blocks.get('beach'))
@@ -1890,6 +1999,23 @@ def contact_page():
                     item['href'] = f'https://yandex.ru/maps/?ll={map_point}&pt={map_point},pm2rdm&z=17'
         contacts_block.payload = payload
 
+    schedule_block = blocks.get('schedule')
+    if schedule_block:
+        payload = schedule_block.payload or {}
+        if not isinstance(payload, dict):
+            payload = {}
+
+        items = payload.get('items') or []
+        if isinstance(items, list):
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                if item.get('label') == 'Ресторан':
+                    item['value'] = '07:30 - 23:00'
+                elif item.get('label') == 'Спа-центр':
+                    item['value'] = '09:00 - 19:00'
+        schedule_block.payload = payload
+
     return render_public_template(
         'public/contact.html',
         page=page,
@@ -1930,6 +2056,7 @@ def book_landing_page():
 
     check_in = request.args.get('check_in', '')
     check_out = request.args.get('check_out', '')
+    min_check_in_date = get_moscow_date().strftime('%Y-%m-%d')
     adults = request.args.get('adults', 2, type=int)
     children = request.args.get('children', 0, type=int)
     selected_category_id = request.args.get('category_id', type=int)
@@ -1958,7 +2085,9 @@ def book_landing_page():
             try:
                 parsed_check_in = datetime.strptime(check_in, '%Y-%m-%d').date()
                 parsed_check_out = datetime.strptime(check_out, '%Y-%m-%d').date()
-                if parsed_check_out <= parsed_check_in:
+                if parsed_check_in < get_moscow_date():
+                    search_error = 'Дата заезда не может быть в прошлом.'
+                elif parsed_check_out <= parsed_check_in:
                     search_error = 'Дата выезда должна быть позже даты заезда.'
                 else:
                     selected_range = f'{check_in} - {check_out}'
@@ -2013,6 +2142,7 @@ def book_landing_page():
         'public/book.html',
         page=page,
         blocks=blocks,
+        min_check_in_date=min_check_in_date,
         booking_categories=categories,
         check_in=check_in,
         check_out=check_out,
@@ -2031,6 +2161,7 @@ def book_landing_page():
 @app.route('/rooms', methods=['GET', 'POST'])
 def rooms():
     page, blocks = get_site_page_with_blocks('rooms')
+
     room_cards = [build_next_room_card_data(room) for room in load_next_rooms_data()]
 
     highlights_block = blocks.get('highlights')
@@ -2095,6 +2226,7 @@ def next_assets(filename):
 @app.route('/gallery')
 def gallery():
     page_config, blocks = get_site_page_with_blocks('gallery')
+
     gallery_images = get_public_gallery_images()
     return render_public_template(
         'public/gallery.html',
@@ -2619,6 +2751,42 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+
+
+def allow_debug_login_routes():
+    return os.getenv('ENABLE_DEBUG_LOGIN_ROUTES', '1') == '1'
+
+
+def login_debug_user(is_admin=False):
+    if not allow_debug_login_routes():
+        abort(404)
+
+    next_page = request.args.get('next')
+    user = User.query.filter_by(is_admin=is_admin).order_by(User.id.asc()).first()
+
+    if not user:
+        flash('Подходящий пользователь для debug-входа не найден.', 'error')
+        return redirect(url_for('login', next=next_page))
+
+    user.is_verified = True
+    user.sms_code = None
+    user.sms_code_expires = None
+    db.session.commit()
+
+    login_user(user)
+    flash(f"Временный вход выполнен: {'администратор' if is_admin else 'пользователь'} {user.first_name}.", 'success')
+
+    return redirect(next_page) if next_page else redirect(url_for('profile'))
+
+
+@app.route('/debug/login-admin')
+def debug_login_admin():
+    return login_debug_user(is_admin=True)
+
+
+@app.route('/debug/login-user')
+def debug_login_user():
+    return login_debug_user(is_admin=False)
 
 @app.route('/verify-sms')
 def verify_sms():
@@ -3323,6 +3491,7 @@ def admin_site_page_content(page_slug):
     ensure_default_blocks_for_page(page_slug)
     page = SitePage.query.filter_by(slug=page_slug).first_or_404()
     blocks = SiteBlock.query.filter_by(page_id=page.id).order_by(SiteBlock.sort_order.asc(), SiteBlock.id.asc()).all()
+    blocks = sync_current_cms_block_values(page_slug, blocks)
     preview_url = get_page_preview_url(page.slug)
     block_guides = get_page_block_guides(page.slug)
     existing_block_keys = {block.block_key for block in blocks}
@@ -3589,6 +3758,28 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=False, host='0.0.0.0', port=5000)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

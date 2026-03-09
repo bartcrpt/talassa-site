@@ -3,8 +3,8 @@
 {% block content %}
 {% set hero = blocks.get('hero') %}
 
-<section class="page-hero page-hero--soft page-hero--rooms-next">
-    <div class="site-container page-hero__content page-hero__content--compact">
+<section class="page-hero page-hero--soft page-hero--rooms-next" style="background-image: linear-gradient(rgba(49, 78, 111, 0.68), rgba(49, 78, 111, 0.82)), url('{{ hero.image_url if hero and hero.image_url else '/static/site/images/gallery/photo_1.jpg' }}');">
+    <div class="site-container page-hero__content page-hero__content--compact page-hero__content--light">
         <h1>{{ hero.title if hero and hero.title else 'Номера' }}</h1>
         <p class="page-hero__lead">{{ hero.subtitle if hero and hero.subtitle else 'Все важное об отдыхе в Таласса - в коротком списке:' }}</p>
         <ul class="rooms-highlights-list rooms-highlights-list--next">
@@ -85,3 +85,5 @@
     </div>
 </section>
 {% endblock %}
+
+

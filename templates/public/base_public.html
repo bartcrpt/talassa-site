@@ -29,7 +29,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}">
 </head>
-<body>
+<body class="page page--{{ (seo.page_slug if seo and seo.page_slug else 'home')|replace('/', '-')|replace('_', '-') }}">
     <header class="site-header">
         <div class="site-container">
             <div class="site-header__inner">
@@ -74,11 +74,16 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="site-footer">
+        <footer class="site-footer">
         <div class="site-container">
             <div class="site-footer__grid">
                 <div>
-                    <p class="site-footer__eyebrow">Таласса Hotel & Spa</p>
+                    <h3 class="site-footer__heading">О Таласса</h3>
+                    <ul class="site-footer__list site-footer__list--about">
+                        <li><a href="{{ url_for('index') }}">Главная</a></li>
+                        <li><a href="{{ url_for('wellness_page') }}">Талассотерапия</a></li>
+                        <li><a href="{{ url_for('accessibility_page') }}">Доступность</a></li>
+                    </ul>
 
                     <a href="{{ url_for('index') }}" class="site-footer__brand" aria-label="Таласса Hotel & Spa">
                         <img src="{{ url_for('static', filename='site/images/logo.png') }}" alt="Таласса Hotel & Spa" class="site-footer__logo">
@@ -100,7 +105,7 @@
                 </div>
 
                 <div>
-                    <p class="site-footer__eyebrow">Навигация</p>
+                    <h3 class="site-footer__heading">Навигация</h3>
                     <ul class="site-footer__list">
                         <li><a href="{{ url_for('rooms') }}">Номера</a></li>
                         <li><a href="{{ url_for('gallery') }}">Галерея</a></li>
@@ -110,7 +115,7 @@
                 </div>
 
                 <div>
-                    <p class="site-footer__eyebrow">Контакты</p>
+                    <h3 class="site-footer__heading">Контакты</h3>
                     <div class="site-footer__contacts">
                         <a href="tel:+79385551563">Основной: +7 (938) 555-15-63</a>
                         <a href="tel:+79407334335">Доп.: +7 (940) 733-43-35</a>
@@ -119,19 +124,13 @@
                     </div>
                 </div>
 
-                <div>
-                    <p class="site-footer__eyebrow">Бронирование</p>
-                    <p class="site-footer__description">Выберите номер и оставьте заявку онлайн. Подтвердим детали и ответим в Telegram или по телефону.</p>
+                <div class="site-footer__booking-only">
                     <a href="{{ url_for('book_landing_page') }}" class="site-btn site-btn--gold site-footer__book">Забронировать</a>
-                    <div class="site-footer__contacts site-footer__contacts--booking">
-                        <a href="https://t.me/thalassa_hotelAbkhazia" target="_blank" rel="noopener noreferrer">Написать в Telegram</a>
-                        <a href="tel:+79385551563">Позвонить в отель</a>
-                    </div>
                 </div>
             </div>
 
             <div class="site-footer__bottom">
-                <p>Таласса Hotel • Республика Абхазия • 2026</p>
+                <p>Таласса Hotel & Spa • Республика Абхазия • 2026</p>
             </div>
         </div>
     </footer>
@@ -152,6 +151,9 @@
     <script src="{{ url_for('static', filename='js/site.js') }}"></script>
 </body>
 </html>
+
+
+
 
 
 

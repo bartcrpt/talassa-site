@@ -1,74 +1,67 @@
 {% extends "base.html" %}
 
-{% block title %}Регистрация - Система бронирования отеля{% endblock %}
+{% block title %}Регистрация - Таласса Hotel & Spa{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card border-0 shadow-lg">
-                <div class="card-body p-5">
-                    <div class="text-center mb-4">
-                        <i class="bi bi-person-plus text-primary" style="font-size: 3rem;"></i>
-                        <h2 class="mt-2">Создать аккаунт</h2>
-                        <p class="text-muted">Введите номер телефона для регистрации</p>
-                    </div>
-
-                    <div class="text-center mt-4">
-                        <h5 class="mb-0">Уже есть аккаунт?
-                            <a href="{{ url_for('login') }}" class="text-primary">Войдите здесь</a>
-                        </h5>
-                    </div>
-
-                    <div class="text-center mt-4">
-                        <h5 class="mb-0"></h5>
-                    </div>
-
-                    <form method="POST">
-                        <div class="mb-3">
-                            <label for="phone" class="form-label">Номер телефона *</label>
-                            <input type="tel" class="form-control" id="phone" name="phone" 
-                                   placeholder="+7 (999) 999-99-99" maxlength="18" required>
-                            <div class="form-text">Введите номер в формате +7 (999) 999-99-99. На этот номер будет отправлен SMS-код для подтверждения.</div>
+<section class="account-shell account-shell--auth">
+    <div class="container">
+        <div class="account-auth-layout">
+            <div class="account-auth-intro">
+                <p class="account-auth-intro__eyebrow">Таласса Hotel & Spa</p>
+                <h1>Регистрация в кабинете гостя</h1>
+                <p>Создайте кабинет по номеру телефона, чтобы оформлять бронирования быстрее, просматривать историю поездок и сохранять контактные данные для следующего визита.</p>
+                <div class="account-auth-intro__facts">
+                    <div class="account-auth-intro__fact">
+                        <span class="account-auth-intro__fact-icon"><i class="bi bi-person-plus"></i></span>
+                        <div>
+                            <strong>Быстрый старт</strong>
+                            <span>На первом шаге нужен только номер телефона, подтверждение придёт по SMS.</span>
                         </div>
-                        
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="terms" required>
-                                <label class="form-check-label" for="terms">
-                                    Я согласен с <a href="#" class="text-primary">Условиями обслуживания</a> и 
-                                    <a href="#" class="text-primary">Политикой конфиденциальности</a> *
-                                </label>
-                            </div>
+                    </div>
+                    <div class="account-auth-intro__fact">
+                        <span class="account-auth-intro__fact-icon"><i class="bi bi-stars"></i></span>
+                        <div>
+                            <strong>Удобно для повторных поездок</strong>
+                            <span>Данные сохранятся, и в следующий раз вы сможете перейти к бронированию гораздо быстрее.</span>
                         </div>
-                        
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="bi bi-send"></i> Получить SMS-код
-                            </button>
-                        </div>
-                    </form>
-
+                    </div>
                 </div>
             </div>
-            
-            <!-- Info Card -->
-            <div class="card border-0 shadow-sm mt-3">
-                <div class="card-body">
-                    <h6 class="card-title">
-                        <i class="bi bi-info-circle text-info"></i> Как это работает
-                    </h6>
-                    <ol class="card-text small text-muted mb-0">
-                        <li>Введите ваш номер телефона</li>
-                        <li>Получите SMS-код подтверждения</li>
-                        <li>Введите код для завершения регистрации</li>
-                        <li>Заполните профиль после входа</li>
-                    </ol>
+
+            <div class="account-panel account-panel--auth">
+                <div class="account-panel__top">
+                    <span class="account-panel__icon"><i class="bi bi-person-plus"></i></span>
+                    <h2>Создать кабинет</h2>
+                    <p>Введите номер телефона. Мы отправим код подтверждения и откроем для вас личный кабинет гостя.</p>
+                </div>
+
+                <form method="POST" class="account-form">
+                    <div class="account-form__field mb-3">
+                        <label for="phone" class="form-label">Номер телефона</label>
+                        <input type="tel" class="form-control" id="phone" name="phone" placeholder="+7 (999) 999-99-99" maxlength="18" required>
+                        <div class="form-text">На этот номер будет отправлен SMS-код для подтверждения входа и дальнейшей связи по бронированию.</div>
+                    </div>
+
+                    <div class="form-check combo-booking-form__check mb-3">
+                        <input class="form-check-input" type="checkbox" id="terms" required>
+                        <label class="form-check-label" for="terms">
+                            Я согласен с условиями обслуживания и политикой конфиденциальности.
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary account-btn account-btn--full">
+                        <i class="bi bi-send"></i> Получить SMS-код
+                    </button>
+                </form>
+
+                <div class="account-panel__footer-note">
+                    <span>Уже есть аккаунт?</span>
+                    <a href="{{ url_for('login') }}">Войти здесь</a>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 {% endblock %}
 
 {% block scripts %}
@@ -76,26 +69,20 @@
 document.addEventListener('DOMContentLoaded', function() {
     const phoneInput = document.getElementById('phone');
     const form = document.querySelector('form');
-    
-    // Phone number formatting and validation
+
     function formatPhoneNumber(value) {
-        // Remove all non-digit characters
         let cleaned = value.replace(/\D/g, '');
-        
-        // Replace leading 8 with 7
+
         if (cleaned.startsWith('8')) {
             cleaned = '7' + cleaned.substring(1);
         }
-        
-        // Ensure it starts with 7
+
         if (cleaned.length > 0 && !cleaned.startsWith('7')) {
             cleaned = '7' + cleaned;
         }
-        
-        // Limit to 11 digits (7 + 10 digits)
+
         cleaned = cleaned.substring(0, 11);
-        
-        // Format the number
+
         let formatted = '';
         if (cleaned.length > 0) {
             formatted = '+7';
@@ -109,26 +96,19 @@ document.addEventListener('DOMContentLoaded', function() {
                             formatted += '-' + cleaned.substring(9, 11);
                         }
                     }
-                } else {
-                    e.target.setCustomValidity('Введите номер телефона');
-                    e.target.classList.remove('is-valid');
-                    e.target.classList.add('is-invalid');
                 }
             }
         }
-        
+
         return formatted;
     }
-    
+
     function validatePhoneNumber(phone) {
-        // Remove all non-digit characters
         const cleaned = phone.replace(/\D/g, '');
-        
-        // Check if it's a valid Russian mobile number (11 digits starting with 7)
+
         if (cleaned.length === 11 && cleaned.startsWith('7')) {
             const code = cleaned.substring(1, 4);
-            // Valid Russian mobile codes
-            const validCodes = ['900', '901', '902', '903', '904', '905', '906', '908', '909', 
+            const validCodes = ['900', '901', '902', '903', '904', '905', '906', '908', '909',
                               '910', '911', '912', '913', '914', '915', '916', '917', '918', '919',
                               '920', '921', '922', '923', '924', '925', '926', '927', '928', '929',
                               '930', '931', '932', '933', '934', '936', '937', '938', '939',
@@ -137,25 +117,23 @@ document.addEventListener('DOMContentLoaded', function() {
                               '970', '971', '977', '978', '980', '981', '982', '983', '984',
                               '985', '986', '987', '988', '989', '991', '992', '993', '994',
                               '995', '996', '997', '999'];
-            
+
             return validCodes.includes(code);
         }
-        
+
         return false;
     }
-    
+
     phoneInput.addEventListener('input', function(e) {
         const cursorPosition = e.target.selectionStart;
         const oldValue = e.target.value;
         const newValue = formatPhoneNumber(e.target.value);
-        
+
         e.target.value = newValue;
-        
-        // Restore cursor position
+
         const newCursorPosition = cursorPosition + (newValue.length - oldValue.length);
         e.target.setSelectionRange(newCursorPosition, newCursorPosition);
-        
-        // Validate phone number
+
         if (newValue.length > 0) {
             if (validatePhoneNumber(newValue)) {
                 e.target.setCustomValidity('');
@@ -169,33 +147,28 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             e.target.setCustomValidity('Введите номер телефона');
             e.target.classList.remove('is-invalid', 'is-valid');
-            e.target.classList.add('is-invalid');
         }
     });
-    
+
     phoneInput.addEventListener('keydown', function(e) {
-        // Allow backspace, delete, tab, escape, enter
         if ([8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||
-            // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
             (e.keyCode === 65 && e.ctrlKey === true) ||
             (e.keyCode === 67 && e.ctrlKey === true) ||
             (e.keyCode === 86 && e.ctrlKey === true) ||
             (e.keyCode === 88 && e.ctrlKey === true) ||
-            // Allow home, end, left, right
             (e.keyCode >= 35 && e.keyCode <= 39)) {
             return;
         }
-        // Ensure that it is a number and stop the keypress
         if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
             e.preventDefault();
         }
     });
-    
+
     phoneInput.addEventListener('paste', function(e) {
         setTimeout(() => {
             const formatted = formatPhoneNumber(e.target.value);
             e.target.value = formatted;
-            
+
             if (formatted.length > 0) {
                 if (validatePhoneNumber(formatted)) {
                     e.target.setCustomValidity('');
@@ -209,16 +182,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 0);
     });
-    
+
     form.addEventListener('submit', function(e) {
-        // Validate phone if provided
         if (!phoneInput.value) {
             e.preventDefault();
             alert('Введите номер телефона');
             phoneInput.focus();
             return;
         }
-        
+
         if (!validatePhoneNumber(phoneInput.value)) {
             e.preventDefault();
             alert('Введите корректный номер телефона');

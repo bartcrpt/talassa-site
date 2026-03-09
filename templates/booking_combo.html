@@ -3,124 +3,109 @@
 {% block title %}Комбинированное бронирование - Таласса Hotel & Spa{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-xl-10">
-            <div class="card border-0 shadow-lg mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0"><i class="bi bi-calendar2-check"></i> Комбинированное бронирование</h3>
-                </div>
-                <div class="card-body p-4 p-lg-5">
-                    <div class="row g-4 mb-4">
-                        <div class="col-lg-6">
-                            <div class="border rounded-4 p-3 h-100 bg-light-subtle">
-                                <div class="row g-3 align-items-center">
-                                    <div class="col-sm-4">
-                                        {% if room_a.photos %}
-                                            <img src="{{ url_for('static', filename='uploads/' + room_a.photos[0].filename) }}" class="img-fluid rounded-3 w-100" alt="{{ room_a_summary.name }}">
-                                        {% else %}
-                                            <div class="bg-light rounded-3 d-flex align-items-center justify-content-center" style="height: 120px;">
-                                                <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                    <div class="col-sm-8">
-                                        <p class="text-uppercase text-muted small mb-2">{{ room_a_summary.category_name }}</p>
-                                        <h4 class="mb-2">{{ room_a_summary.name }}</h4>
-                                        <p class="mb-2 text-muted">Номер {{ room_a.number }} • {{ room_a_summary.guests_caption }}</p>
-                                        <p class="mb-0 fw-semibold text-primary">{{ '%.0f'|format(room_a_summary.total_price) }} ₽</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="border rounded-4 p-3 h-100 bg-light-subtle">
-                                <div class="row g-3 align-items-center">
-                                    <div class="col-sm-4">
-                                        {% if room_b.photos %}
-                                            <img src="{{ url_for('static', filename='uploads/' + room_b.photos[0].filename) }}" class="img-fluid rounded-3 w-100" alt="{{ room_b_summary.name }}">
-                                        {% else %}
-                                            <div class="bg-light rounded-3 d-flex align-items-center justify-content-center" style="height: 120px;">
-                                                <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                    <div class="col-sm-8">
-                                        <p class="text-uppercase text-muted small mb-2">{{ room_b_summary.category_name }}</p>
-                                        <h4 class="mb-2">{{ room_b_summary.name }}</h4>
-                                        <p class="mb-2 text-muted">Номер {{ room_b.number }} • {{ room_b_summary.guests_caption }}</p>
-                                        <p class="mb-0 fw-semibold text-primary">{{ '%.0f'|format(room_b_summary.total_price) }} ₽</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row g-4 mb-4">
-                        <div class="col-md-4">
-                            <div class="border rounded-4 p-3 h-100">
-                                <div class="text-muted small text-uppercase mb-2">Период</div>
-                                <div class="fw-semibold">{{ check_in }} - {{ check_out }}</div>
-                                <div class="text-muted small mt-1">{{ stay_days }} ноч.</div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="border rounded-4 p-3 h-100">
-                                <div class="text-muted small text-uppercase mb-2">Гости</div>
-                                <div class="fw-semibold">{{ total_guests }} гостей</div>
-                                <div class="text-muted small mt-1">{{ room_a_summary.guests_caption }} + {{ room_b_summary.guests_caption }}</div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="border rounded-4 p-3 h-100 bg-primary-subtle">
-                                <div class="text-muted small text-uppercase mb-2">Общая стоимость</div>
-                                <div class="fw-bold fs-4 text-primary">{{ '%.0f'|format(total_price) }} ₽</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <form method="POST" class="row g-4">
-                        <input type="hidden" name="room_a_id" value="{{ room_a.id }}">
-                        <input type="hidden" name="room_b_id" value="{{ room_b.id }}">
-                        <input type="hidden" name="check_in" value="{{ check_in }}">
-                        <input type="hidden" name="check_out" value="{{ check_out }}">
-                        <input type="hidden" name="adults_a" value="{{ adults_a }}">
-                        <input type="hidden" name="children_a" value="{{ children_a }}">
-                        <input type="hidden" name="adults_b" value="{{ adults_b }}">
-                        <input type="hidden" name="children_b" value="{{ children_b }}">
-
-                        <div class="col-md-6">
-                            <label for="children_under_five" class="form-label">Дети до 5 лет</label>
-                            <input type="number" class="form-control" id="children_under_five" name="children_under_five" min="0" max="10" value="{{ children_under_five }}">
-                            <div class="form-text">Не участвуют в расчёте вместимости, но мы передадим информацию администратору.</div>
-                        </div>
-
-                        <div class="col-12">
-                            <label for="special_requests" class="form-label">Особые пожелания</label>
-                            <textarea class="form-control" id="special_requests" name="special_requests" rows="4" placeholder="Любые пожелания по размещению, соседним номерам, трансферу или времени заезда">{{ special_requests }}</textarea>
-                        </div>
-
-                        <div class="col-12">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="terms" required>
-                                <label class="form-check-label" for="terms">
-                                    Я подтверждаю данные по двум номерам и согласен с условиями бронирования.
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="col-12 d-flex flex-wrap gap-3 justify-content-between align-items-center">
-                            <a href="{{ url_for('book_landing_page', check_in=check_in, check_out=check_out, adults=adults_a + adults_b, children=children_a + children_b) }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left"></i> Вернуться к результатам
-                            </a>
-                            <button type="submit" class="btn btn-primary btn-lg px-4">
-                                <i class="bi bi-check2-circle"></i> Подтвердить две брони
-                            </button>
-                        </div>
-                    </form>
-                </div>
+<section class="account-page account-page--combo-booking">
+    <div class="container">
+        <div class="account-page__header">
+            <div>
+                <p class="account-page__eyebrow">Бронирование для группы</p>
+                <h1>Подтверждение двух номеров</h1>
+                <p class="account-page__lead">Для вашей компании мы подобрали два номера. Проверьте состав гостей, даты и общую стоимость, а затем подтвердите бронь одним действием.</p>
             </div>
         </div>
+
+        <div class="account-card combo-booking-card">
+            <div class="combo-booking-card__rooms">
+                <article class="combo-booking-room-card">
+                    <div class="combo-booking-room-card__media">
+                        {% if room_a.photos %}
+                            <img src="{{ url_for('static', filename='uploads/' + room_a.photos[0].filename) }}" alt="{{ room_a_summary.name }}">
+                        {% else %}
+                            <div class="combo-booking-room-card__placeholder"><i class="bi bi-image"></i></div>
+                        {% endif %}
+                    </div>
+                    <div class="combo-booking-room-card__body">
+                        <p class="combo-booking-room-card__eyebrow">{{ room_a_summary.category_name }}</p>
+                        <h2>{{ room_a_summary.name }}</h2>
+                        <p>Номер {{ room_a.number }} • {{ room_a_summary.guests_caption }}</p>
+                        <strong>{{ '%.0f'|format(room_a_summary.total_price) }} ₽</strong>
+                    </div>
+                </article>
+
+                <article class="combo-booking-room-card">
+                    <div class="combo-booking-room-card__media">
+                        {% if room_b.photos %}
+                            <img src="{{ url_for('static', filename='uploads/' + room_b.photos[0].filename) }}" alt="{{ room_b_summary.name }}">
+                        {% else %}
+                            <div class="combo-booking-room-card__placeholder"><i class="bi bi-image"></i></div>
+                        {% endif %}
+                    </div>
+                    <div class="combo-booking-room-card__body">
+                        <p class="combo-booking-room-card__eyebrow">{{ room_b_summary.category_name }}</p>
+                        <h2>{{ room_b_summary.name }}</h2>
+                        <p>Номер {{ room_b.number }} • {{ room_b_summary.guests_caption }}</p>
+                        <strong>{{ '%.0f'|format(room_b_summary.total_price) }} ₽</strong>
+                    </div>
+                </article>
+            </div>
+
+            <div class="combo-booking-summary-grid">
+                <div class="combo-booking-summary-card">
+                    <span>Период проживания</span>
+                    <strong>{{ check_in }} - {{ check_out }}</strong>
+                    <p>{{ stay_days }} ноч.</p>
+                </div>
+                <div class="combo-booking-summary-card">
+                    <span>Гости</span>
+                    <strong>{{ total_guests }} гостей</strong>
+                    <p>{{ room_a_summary.guests_caption }} + {{ room_b_summary.guests_caption }}</p>
+                </div>
+                <div class="combo-booking-summary-card combo-booking-summary-card--accent">
+                    <span>Общая стоимость</span>
+                    <strong>{{ '%.0f'|format(total_price) }} ₽</strong>
+                    <p>Две брони будут созданы одновременно</p>
+                </div>
+            </div>
+
+            <form method="POST" class="account-form combo-booking-form">
+                <input type="hidden" name="room_a_id" value="{{ room_a.id }}">
+                <input type="hidden" name="room_b_id" value="{{ room_b.id }}">
+                <input type="hidden" name="check_in" value="{{ check_in }}">
+                <input type="hidden" name="check_out" value="{{ check_out }}">
+                <input type="hidden" name="adults_a" value="{{ adults_a }}">
+                <input type="hidden" name="children_a" value="{{ children_a }}">
+                <input type="hidden" name="adults_b" value="{{ adults_b }}">
+                <input type="hidden" name="children_b" value="{{ children_b }}">
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label for="children_under_five" class="form-label">Дети до 5 лет</label>
+                        <input type="number" class="form-control" id="children_under_five" name="children_under_five" min="0" max="10" value="{{ children_under_five }}">
+                        <div class="form-text">Они не влияют на вместимость, но мы передадим эту информацию администратору при подтверждении.</div>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="special_requests" class="form-label">Особые пожелания</label>
+                        <textarea class="form-control" id="special_requests" name="special_requests" rows="4" placeholder="Пожелания по соседним номерам, трансферу, времени заезда или другим деталям">{{ special_requests }}</textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-check combo-booking-form__check">
+                            <input class="form-check-input" type="checkbox" id="terms" required>
+                            <label class="form-check-label" for="terms">Я подтверждаю данные по двум номерам и согласен с условиями бронирования.</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="combo-booking-form__actions">
+                    <a href="{{ url_for('book_landing_page', check_in=check_in, check_out=check_out, adults=adults_a + adults_b, children=children_a + children_b) }}" class="btn btn-outline-secondary account-btn">
+                        <i class="bi bi-arrow-left"></i> Вернуться к результатам
+                    </a>
+                    <button type="submit" class="btn btn-primary account-btn">
+                        <i class="bi bi-check2-circle"></i> Подтвердить две брони
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
+</section>
 {% endblock %}
