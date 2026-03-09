@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import ast
 import html
-import re
+import json
 import shutil
 import sys
 from datetime import datetime, timedelta
@@ -11,8 +10,9 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 TALASSA_OLD_DIR = SCRIPT_DIR.parent
-REPO_ROOT = TALASSA_OLD_DIR.parent
-NEXT_JOURNAL_PATH = REPO_ROOT / 'src' / 'data' / 'journal.ts'
+SOURCE_DIR = SCRIPT_DIR / 'journal_source'
+ARTICLES_PATH = SOURCE_DIR / 'articles.json'
+IMAGES_DIR = SOURCE_DIR / 'images'
 
 if str(TALASSA_OLD_DIR) not in sys.path:
     sys.path.insert(0, str(TALASSA_OLD_DIR))
@@ -20,36 +20,17 @@ if str(TALASSA_OLD_DIR) not in sys.path:
 from app import News, NewsPhoto, app, db  # noqa: E402
 
 
-JOURNAL_KEYS = [
-    'slug',
-    'title',
-    'excerpt',
-    'category',
-    'image',
-    'intro',
-    'sections',
-    'heading',
-    'text',
-    'items',
-]
-
-
 def extract_articles() -> list[dict]:
-    source = NEXT_JOURNAL_PATH.read_text(encoding='utf-8')
-    match = re.search(
-        r'export const journalArticles: JournalArticle\[\] = \[(.*)\];\s*export const journalSlugs',
-        source,
-        re.S,
-    )
-    if not match:
-        raise RuntimeError(f'Could not parse journal articles from {NEXT_JOURNAL_PATH}')
+    if not ARTICLES_PATH.exists():
+        raise FileNotFoundError(f'Journal source file not found: {ARTICLES_PATH}')
 
-    payload = '[' + match.group(1) + ']'
-    for key in JOURNAL_KEYS:
-        payload = re.sub(rf'(?<!["\'])\b{key}\b(?=\s*:)', f'"{key}"', payload)
+    with ARTICLES_PATH.open('r', encoding='utf-8') as source_file:
+        articles = json.load(source_file)
 
-    payload = re.sub(r',(\s*[}\]])', r'\1', payload)
-    return ast.literal_eval(payload)
+    if not isinstance(articles, list):
+        raise RuntimeError(f'Unexpected journal source structure in {ARTICLES_PATH}')
+
+    return articles
 
 
 def render_article_html(article: dict) -> str:
@@ -65,8 +46,8 @@ def render_article_html(article: dict) -> str:
 
 
 def copy_cover_image(article: dict) -> str:
-    relative_image_path = Path(article['image'].lstrip('/'))
-    source_path = REPO_ROOT / 'public' / relative_image_path
+    original_filename = Path(article['image']).name
+    source_path = IMAGES_DIR / original_filename
     if not source_path.exists():
         raise FileNotFoundError(f'Cover image not found: {source_path}')
 
@@ -133,4 +114,3 @@ def upsert_articles() -> None:
 
 if __name__ == '__main__':
     upsert_articles()
-

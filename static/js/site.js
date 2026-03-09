@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   initSiteNav();
+  initSiteUserMenu();
+  initSiteAuth();
   initPhilosophyToggle();
   initRoomsFilter();
   initSiteLightbox();
@@ -676,3 +678,4 @@ function initSiteAuth() {
 
   updateSwitchActions();
 }
+

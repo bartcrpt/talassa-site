@@ -1597,6 +1597,7 @@ button {
 
 .site-nav {
   flex: 1;
+  min-width: 0;
   justify-content: center;
   gap: 28px;
 }
@@ -1631,6 +1632,8 @@ button {
 }
 
 .site-header__actions {
+  position: relative;
+  z-index: 3;
   display: flex;
   align-items: center;
   flex-shrink: 0;
@@ -1639,6 +1642,14 @@ button {
 .site-header__book {
   min-width: 168px;
   justify-content: center;
+}
+
+.site-header__auth,
+.site-header__book,
+.site-user-menu__trigger {
+  position: relative;
+  z-index: 4;
+  pointer-events: auto;
 }
 
 body.site-nav-open,
@@ -4771,6 +4782,11 @@ body.site-lightbox-open {
   gap: 14px;
 }
 
+.site-auth-form[hidden],
+.site-auth-modal__error[hidden] {
+  display: none !important;
+}
+
 .site-auth-form__label {
   font-size: 11px;
   letter-spacing: 0.18em;
@@ -4916,4 +4932,6 @@ body.site-lightbox-open {
     font-size: 22px;
   }
 }
+
+
 
