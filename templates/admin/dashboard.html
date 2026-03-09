@@ -1,143 +1,116 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Dashboard - Hotel Management{% endblock %}
+{% block title %}Дашборд - Talassa Admin{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row">
-        <!-- Sidebar -->
-        <div class="col-md-3 col-lg-2">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h6 class="mb-0"><i class="bi bi-gear"></i> Admin Panel</h6>
-                </div>
-                <div class="list-group list-group-flush">
-                    <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action active">
-                        <i class="bi bi-speedometer2"></i> Dashboard
-                    </a>
-                    <a href="{{ url_for('admin_rooms') }}" class="list-group-item list-group-item-action">
-                        <i class="bi bi-door-open"></i> Rooms
-                    </a>
-                    <a href="{{ url_for('admin_categories') }}" class="list-group-item list-group-item-action">
-                        <i class="bi bi-tags"></i> Categories
-                    </a>
-                    <a href="{{ url_for('admin_bookings') }}" class="list-group-item list-group-item-action">
-                        <i class="bi bi-calendar-check"></i> Bookings
-                    </a>
-                    <a href="{{ url_for('admin_users') }}" class="list-group-item list-group-item-action">
-                        <i class="bi bi-people"></i> Users
-                    </a>
-                    <a href="{{ url_for('admin_news') }}" class="list-group-item list-group-item-action">
-                        <i class="bi bi-newspaper"></i> Новости
-                    </a>
-                    <a href="{{ url_for('admin_site_content') }}" class="list-group-item list-group-item-action">
-                        <i class="bi bi-layout-text-window"></i> Контент сайта
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Main Content -->
-        <div class="col-md-9 col-lg-10">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1>Панель управления</h1>
-                <div class="text-muted">
-                    <i class="bi bi-calendar"></i> {{ datetime.now().strftime('%d %B %Y') }}
-                </div>
-            </div>
-            
-            <!-- Карточки статистики -->
-            <div class="row mb-4">
-                <div class="col-md-3 mb-3">
-                    <div class="card border-0 shadow-sm text-center">
-                        <div class="card-body">
-                            <i class="bi bi-door-open text-primary" style="font-size: 2rem;"></i>
-                            <h3 class="mt-2 mb-0">{{ total_rooms }}</h3>
-                            <p class="text-muted">Всего номеров</p>
-                        </div>
+<section class="admin-shell">
+    <div class="container-fluid admin-shell__container">
+        <div class="admin-layout">
+            <aside class="admin-sidebar">
+                {% set active_page = 'dashboard' %}
+                {% include 'admin/_sidebar.html' %}
+            </aside>
+
+            <div class="admin-content">
+                <div class="admin-page-header">
+                    <div>
+                        <p class="admin-page-header__eyebrow">Таласса Hotel & Spa</p>
+                        <h1>Панель управления</h1>
+                        <p>Ключевые показатели и последние бронирования, чтобы команда быстро видела состояние загрузки и активности гостей.</p>
+                    </div>
+                    <div class="admin-page-header__meta">
+                        <span><i class="bi bi-calendar3"></i> {{ datetime.now().strftime('%d.%m.%Y') }}</span>
                     </div>
                 </div>
-                <div class="col-md-3 mb-3">
-                    <div class="card border-0 shadow-sm text-center">
-                        <div class="card-body">
-                            <i class="bi bi-calendar-check text-success" style="font-size: 2rem;"></i>
-                            <h3 class="mt-2 mb-0">{{ total_bookings }}</h3>
-                            <p class="text-muted">Всего бронирований</p>
+
+                <div class="admin-stats-grid">
+                    <article class="admin-stat-card">
+                        <span class="admin-stat-card__icon"><i class="bi bi-door-open"></i></span>
+                        <div>
+                            <p>Всего номеров</p>
+                            <strong>{{ total_rooms }}</strong>
                         </div>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <div class="card border-0 shadow-sm text-center">
-                        <div class="card-body">
-                            <i class="bi bi-people text-info" style="font-size: 2rem;"></i>
-                            <h3 class="mt-2 mb-0">{{ total_users }}</h3>
-                            <p class="text-muted">Зарегистрированных пользователей</p>
+                    </article>
+                    <article class="admin-stat-card">
+                        <span class="admin-stat-card__icon"><i class="bi bi-calendar-check"></i></span>
+                        <div>
+                            <p>Бронирований</p>
+                            <strong>{{ total_bookings }}</strong>
                         </div>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <div class="card border-0 shadow-sm text-center">
-                        <div class="card-body">
-                            <i class="bi bi-currency-dollar text-warning" style="font-size: 2rem;"></i>
-                            <h3 class="mt-2 mb-0">85%</h3>
-                            <p class="text-muted">Заполняемость</p>
+                    </article>
+                    <article class="admin-stat-card">
+                        <span class="admin-stat-card__icon"><i class="bi bi-people"></i></span>
+                        <div>
+                            <p>Пользователей</p>
+                            <strong>{{ total_users }}</strong>
                         </div>
+                    </article>
+                    <article class="admin-stat-card">
+                        <span class="admin-stat-card__icon"><i class="bi bi-hourglass-split"></i></span>
+                        <div>
+                            <p>Ожидают подтверждения</p>
+                            <strong>{{ pending_bookings }}</strong>
+                        </div>
+                    </article>
+                </div>
+
+                <section class="admin-panel-card admin-panel-card--table">
+                    <div class="admin-panel-card__header">
+                        <div>
+                            <p class="admin-panel-card__eyebrow">Последние события</p>
+                            <h2>Новые бронирования</h2>
+                        </div>
+                        <a href="{{ url_for('admin_bookings') }}" class="btn btn-outline-secondary admin-btn">Посмотреть все</a>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Последние бронирования -->
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Последние бронирования</h5>
-                    <a href="{{ url_for('admin_bookings') }}" class="btn btn-sm btn-outline-primary">Посмотреть все</a>
-                </div>
-                <div class="card-body p-0">
+
                     {% if recent_bookings %}
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>ID бронирования</th>
-                                        <th>Гость</th>
-                                        <th>Номер</th>
-                                        <th>Заезд</th>
-                                        <th>Выезд</th>
-                                        <th>Сумма</th>
-                                        <th>Статус</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for booking in recent_bookings %}
-                                        <tr>
-                                            <td><strong>#{{ booking.id }}</strong></td>
-                                            <td>{{ booking.user.first_name }} {{ booking.user.last_name }}</td>
-                                            <td>Номер {{ booking.room.number }}</td>
-                                            <td>{{ booking.check_in.strftime('%d.%m') }}</td>
-                                            <td>{{ booking.check_out.strftime('%d.%m') }}</td>
-                                            <td>{{ "%.0f"|format(booking.total_price) }} ₽</td>
-                                            <td>
-                                                <span class="badge bg-{{ 'success' if booking.status == 'confirmed' else 'secondary' }}">
-                                                    {% if booking.status == 'confirmed' %}Подтверждено
-                                                    {% elif booking.status == 'cancelled' %}Отменено
-                                                    {% elif booking.status == 'completed' %}Завершено
-                                                    {% else %}{{ booking.status }}{% endif %}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="admin-table-wrap">
+                        <table class="table admin-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>ID брони</th>
+                                    <th>Гость</th>
+                                    <th>Номер</th>
+                                    <th>Заезд</th>
+                                    <th>Выезд</th>
+                                    <th>Сумма</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in recent_bookings %}
+                                <tr>
+                                    <td><strong>#{{ booking.id }}</strong></td>
+                                    <td>{{ booking.user.first_name }} {{ booking.user.last_name }}</td>
+                                    <td>Номер {{ booking.room.number }}</td>
+                                    <td>{{ booking.check_in.strftime('%d.%m') }}</td>
+                                    <td>{{ booking.check_out.strftime('%d.%m') }}</td>
+                                    <td>{{ '%.0f'|format(booking.total_price) }} ₽</td>
+                                    <td>
+                                        <span class="admin-status-badge admin-status-badge--{{ 'confirmed' if booking.status == 'confirmed' else ('pending' if booking.status == 'pending' else 'neutral') }}">
+                                            {% if booking.status == 'pending' %}Ожидает подтверждения
+                                            {% elif booking.status == 'confirmed' %}Подтверждено
+                                            {% elif booking.status == 'cancelled' %}Отменено
+                                            {% elif booking.status == 'completed' %}Завершено
+                                            {% else %}{{ booking.status }}{% endif %}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                     {% else %}
-                        <div class="text-center py-4">
-                            <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
-                            <p class="text-muted mt-2">Бронирований пока нет</p>
-                        </div>
+                    <div class="admin-empty-state">
+                        <span class="admin-empty-state__icon"><i class="bi bi-calendar-x"></i></span>
+                        <h2>Бронирований пока нет</h2>
+                        <p>Когда гости начнут оформлять проживание, последние записи появятся здесь.</p>
+                    </div>
                     {% endif %}
-                </div>
+                </section>
             </div>
         </div>
     </div>
-</div>
+</section>
 {% endblock %}
+

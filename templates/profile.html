@@ -108,8 +108,9 @@
                                     <h3>Номер {{ booking.room.number }}</h3>
                                     <p>{{ booking.check_in.strftime('%d.%m.%Y') }} - {{ booking.check_out.strftime('%d.%m.%Y') }}</p>
                                 </div>
-                                <span class="account-status-badge account-status-badge--{{ 'confirmed' if booking.status == 'confirmed' else 'neutral' }}">
-                                    {% if booking.status == 'confirmed' %}Подтверждено
+                                <span class="account-status-badge account-status-badge--{{ 'confirmed' if booking.status == 'confirmed' else ('pending' if booking.status == 'pending' else 'neutral') }}">
+                                    {% if booking.status == 'pending' %}Ожидает подтверждения
+                                    {% elif booking.status == 'confirmed' %}Подтверждено
                                     {% elif booking.status == 'cancelled' %}Отменено
                                     {% elif booking.status == 'completed' %}Завершено
                                     {% else %}{{ booking.status }}{% endif %}
@@ -181,3 +182,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
+

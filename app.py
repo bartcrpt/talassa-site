@@ -832,7 +832,7 @@ class Booking(db.Model):
     children = db.Column(db.Integer, nullable=False, server_default='0')
     children_under_five = db.Column(db.Integer, nullable=False, server_default='0')
     total_price = db.Column(db.Float, nullable=False)
-    status = db.Column(db.String(20), default='confirmed')  # confirmed, cancelled, completed
+    status = db.Column(db.String(20), default='pending')  # pending, confirmed, cancelled, completed
     special_requests = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -964,7 +964,7 @@ def format_phone_for_storage(phone):
 def is_room_available(room_id, check_in, check_out):
     conflicting_bookings = Booking.query.filter(
         Booking.room_id == room_id,
-        Booking.status == 'confirmed',
+        Booking.status.in_(['pending', 'confirmed']),
         db.or_(
             db.and_(Booking.check_in <= check_in, Booking.check_out > check_in),
             db.and_(Booking.check_in < check_out, Booking.check_out >= check_out),
@@ -2348,7 +2348,8 @@ def book_room(room_id, got_check_in=None, got_check_out=None, got_adults=2, got_
             children=children,
             children_under_five=children_under_five,
             total_price=total_price,
-            special_requests=special_requests
+            special_requests=special_requests,
+            status='pending'
         )
 
         db.session.add(booking)
@@ -2372,7 +2373,7 @@ def book_room(room_id, got_check_in=None, got_check_out=None, got_adults=2, got_
         )
         notify_booking_via_telegram(notification_message)
 
-        flash('Booking confirmed successfully!', 'success')
+        flash('Бронирование создано и ожидает подтверждения.', 'success')
         return redirect(url_for('thanks'))
 
     room.price_per_night = get_room_price_for_month(room, current_month)
@@ -2454,6 +2455,7 @@ def book_room_combination():
                 children_under_five=children_under_five,
                 total_price=total_info_a['total'],
                 special_requests=special_requests,
+                status='pending',
             )
             booking_b = Booking(
                 user_id=current_user.id,
@@ -2466,6 +2468,7 @@ def book_room_combination():
                 children_under_five=0,
                 total_price=total_info_b['total'],
                 special_requests=special_requests,
+                status='pending',
             )
             db.session.add(booking_a)
             db.session.add(booking_b)
@@ -2745,6 +2748,121 @@ def login():
     return render_template('login.html', next_page=next_page)
 
 
+
+def _get_auth_payload():
+    return request.get_json(silent=True) or request.form
+
+
+def _json_error(message, status_code=400):
+    response = jsonify({'success': False, 'message': message})
+    response.status_code = status_code
+    return response
+
+
+@app.route('/auth/api/login', methods=['POST'])
+def auth_api_login():
+    payload = _get_auth_payload()
+    phone = (payload.get('phone') or '').strip()
+
+    if not validate_russian_phone(phone):
+        return _json_error('Введите корректный российский номер телефона')
+
+    formatted_phone = format_phone_for_storage(phone)
+    user = User.query.filter_by(phone=formatted_phone).first()
+
+    if not user:
+        return _json_error('Пользователь с таким номером телефона не найден. Пожалуйста, зарегистрируйтесь.', 404)
+
+    sms_code = generate_sms_code()
+    user.sms_code = sms_code
+    user.sms_code_expires = datetime.utcnow() + timedelta(minutes=5)
+    db.session.commit()
+
+    send_code(formatted_phone, sms_code)
+
+    return jsonify({
+        'success': True,
+        'phone': formatted_phone,
+        'phone_display': format_phone_for_display(formatted_phone),
+    })
+
+
+@app.route('/auth/api/register', methods=['POST'])
+def auth_api_register():
+    payload = _get_auth_payload()
+    phone = (payload.get('phone') or '').strip()
+    agreed_to_terms = str(payload.get('agreed_to_terms') or payload.get('agreedToTerms') or '').lower() in {'1', 'true', 'yes', 'on'}
+
+    if not validate_russian_phone(phone):
+        return _json_error('Введите корректный российский номер телефона')
+
+    if not agreed_to_terms:
+        return _json_error('Необходимо согласиться с условиями обслуживания')
+
+    formatted_phone = format_phone_for_storage(phone)
+
+    if User.query.filter_by(phone=formatted_phone).first():
+        return _json_error('Пользователь с таким номером уже существует. Попробуйте войти.', 409)
+
+    user = User(
+        first_name='Гость',
+        last_name='',
+        phone=formatted_phone,
+    )
+
+    db.session.add(user)
+    db.session.commit()
+
+    sms_code = generate_sms_code()
+    user.sms_code = sms_code
+    user.sms_code_expires = datetime.utcnow() + timedelta(minutes=5)
+    db.session.commit()
+
+    send_code(formatted_phone, sms_code)
+
+    return jsonify({
+        'success': True,
+        'phone': formatted_phone,
+        'phone_display': format_phone_for_display(formatted_phone),
+    })
+
+
+@app.route('/auth/api/verify', methods=['POST'])
+def auth_api_verify():
+    payload = _get_auth_payload()
+    phone = (payload.get('phone') or '').strip()
+    sms_code = (payload.get('sms_code') or payload.get('code') or '').strip()
+    next_page = (payload.get('next') or '').strip()
+
+    if not phone or not sms_code:
+        return _json_error('Введите SMS-код')
+
+    user = User.query.filter_by(phone=phone).first()
+    if not user:
+        return _json_error('Пользователь не найден', 404)
+
+    if not user.sms_code or user.sms_code != sms_code:
+        return _json_error('Неверный SMS-код', 400)
+
+    if not user.sms_code_expires or user.sms_code_expires < datetime.utcnow():
+        return _json_error('SMS-код истек. Запросите новый код.', 400)
+
+    user.is_verified = True
+    user.sms_code = None
+    user.sms_code_expires = None
+    db.session.commit()
+
+    login_user(user)
+
+    return jsonify({
+        'success': True,
+        'redirect_url': next_page or request.referrer or url_for('index'),
+        'user': {
+            'first_name': user.first_name or 'Гость',
+            'is_admin': bool(user.is_admin),
+        }
+    })
+
 @app.route('/logout')
 @login_required
 def logout():
@@ -2955,12 +3073,14 @@ def admin_dashboard():
     total_rooms = Room.query.count()
     total_bookings = Booking.query.count()
     total_users = User.query.count()
+    pending_bookings = Booking.query.filter_by(status='pending').count()
     recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(5).all()
 
     return render_template('admin/dashboard.html',
                            total_rooms=total_rooms,
                            total_bookings=total_bookings,
                            total_users=total_users,
+                           pending_bookings=pending_bookings,
                            recent_bookings=recent_bookings,
                            datetime=datetime)
 
@@ -3153,7 +3273,7 @@ def admin_delete_room(room_id):
     # Check if room has active bookings
     active_bookings = Booking.query.filter(
         Booking.room_id == room_id,
-        Booking.status == 'confirmed',
+        Booking.status.in_(['pending', 'confirmed']),
         Booking.check_out >= date.today()
     ).count()
 
@@ -3758,6 +3878,9 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=False, host='0.0.0.0', port=5000)
+
+
+
 
 
 

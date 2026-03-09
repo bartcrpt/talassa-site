@@ -38,16 +38,40 @@
                 </a>
 
                 <nav class="site-nav" data-site-nav>
-
                     <a href="{{ url_for('rooms') }}" class="{{ 'is-active' if request.path.startswith('/rooms') else '' }}">Номера</a>
                     <a href="{{ url_for('gallery') }}" class="{{ 'is-active' if request.path.startswith('/gallery') else '' }}">Галерея</a>
                     <a href="{{ url_for('wellness_page') }}" class="{{ 'is-active' if request.path.startswith('/wellness') else '' }}">ТАЛАССОТЕРАПИЯ</a>
                     <a href="{{ url_for('journal_page') }}" class="{{ 'is-active' if request.path.startswith('/journal') or request.path.startswith('/news') else '' }}">Журнал</a>
                     <a href="{{ url_for('contact_page') }}" class="{{ 'is-active' if request.path.startswith('/contact') or request.path.startswith('/contacts') else '' }}">Контакты</a>
+
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('my_bookings') }}" class="site-nav__mobile-link">Мои бронирования</a>
+                        <a href="{{ url_for('profile') }}" class="site-nav__mobile-link">Профиль</a>
+                        <a href="{{ url_for('logout') }}" class="site-nav__mobile-link">Выйти</a>
+                    {% else %}
+                        <button type="button" class="site-nav__mobile-auth" data-site-auth-open data-auth-view="login">Войти</button>
+                    {% endif %}
+
                     <a href="{{ url_for('book_landing_page') }}" class="site-nav__mobile-cta">Бронировать</a>
                 </nav>
 
                 <div class="site-header__actions">
+                    {% if current_user.is_authenticated %}
+                        <div class="site-user-menu" data-site-user-menu>
+                            <button type="button" class="site-user-menu__trigger" data-site-user-toggle aria-expanded="false">
+                                <span class="site-user-menu__avatar">{{ (current_user.first_name or 'Г')[:1]|upper }}</span>
+                                <span class="site-user-menu__label">{{ current_user.first_name or 'Гость' }}</span>
+                            </button>
+                            <div class="site-user-menu__dropdown" data-site-user-dropdown hidden>
+                                <a href="{{ url_for('my_bookings') }}">Мои бронирования</a>
+                                <a href="{{ url_for('profile') }}">Мой профиль</a>
+                                <a href="{{ url_for('logout') }}">Выйти</a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <button type="button" class="site-btn site-btn--ghost site-header__auth" data-site-auth-open data-auth-view="login">Войти</button>
+                    {% endif %}
+
                     <a href="{{ url_for('book_landing_page') }}" class="site-btn site-btn--gold site-header__book">Бронировать</a>
                 </div>
 
@@ -148,9 +172,72 @@
         <button type="button" class="site-lightbox__nav site-lightbox__nav--next" data-site-lightbox-next aria-label="Следующее фото">›</button>
     </div>
 
+    
+    {% if not current_user.is_authenticated %}
+    <div class="site-auth-modal" data-site-auth-modal data-next="{{ request.full_path[:-1] if request.full_path.endswith('?') else request.full_path }}" hidden>
+        <div class="site-auth-modal__backdrop" data-site-auth-close></div>
+        <div class="site-auth-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="site-auth-title">
+            <button type="button" class="site-auth-modal__close" data-site-auth-close aria-label="Закрыть">
+                <span></span>
+                <span></span>
+            </button>
+
+            <div class="site-auth-modal__icon-wrap">
+                <div class="site-auth-modal__icon" data-site-auth-icon>
+                    <i class="bi bi-person"></i>
+                </div>
+            </div>
+
+            <div class="site-auth-modal__copy">
+                <h2 id="site-auth-title" data-site-auth-title>Вход в систему</h2>
+                <p data-site-auth-subtitle>Введите номер телефона для получения SMS-кода</p>
+            </div>
+
+            <div class="site-auth-modal__switch" data-site-auth-switch></div>
+            <div class="site-auth-modal__error" data-site-auth-error hidden></div>
+
+            <form class="site-auth-form" data-site-auth-form="login">
+                <label class="site-auth-form__label" for="site-auth-login-phone">Номер телефона</label>
+                <input id="site-auth-login-phone" type="tel" class="site-auth-form__input" data-site-auth-phone="login" placeholder="+7 (999) 999-99-99" maxlength="18" required>
+                <p class="site-auth-form__hint">Введите номер в формате +7 (999) 999-99-99</p>
+                <button type="submit" class="site-btn site-btn--gold site-auth-form__submit" data-site-auth-submit>Получить SMS-код</button>
+            </form>
+
+            <form class="site-auth-form" data-site-auth-form="register" hidden>
+                <label class="site-auth-form__label" for="site-auth-register-phone">Номер телефона</label>
+                <input id="site-auth-register-phone" type="tel" class="site-auth-form__input" data-site-auth-phone="register" placeholder="+7 (999) 999-99-99" maxlength="18" required>
+                <p class="site-auth-form__hint">На этот номер будет отправлен SMS-код для подтверждения регистрации.</p>
+                <label class="site-auth-form__check">
+                    <input type="checkbox" data-site-auth-terms>
+                    <span>Я согласен с условиями обслуживания и политикой конфиденциальности.</span>
+                </label>
+                <button type="submit" class="site-btn site-btn--gold site-auth-form__submit" data-site-auth-submit>Получить SMS-код</button>
+            </form>
+
+            <form class="site-auth-form site-auth-form--code" data-site-auth-form="code" hidden>
+                <button type="button" class="site-auth-form__back" data-site-auth-back>← Назад</button>
+                <p class="site-auth-form__phone" data-site-auth-phone-display></p>
+                <div class="site-auth-code-grid">
+                    <input type="text" inputmode="numeric" maxlength="1" class="site-auth-code-grid__input" data-site-auth-code-input>
+                    <input type="text" inputmode="numeric" maxlength="1" class="site-auth-code-grid__input" data-site-auth-code-input>
+                    <input type="text" inputmode="numeric" maxlength="1" class="site-auth-code-grid__input" data-site-auth-code-input>
+                    <input type="text" inputmode="numeric" maxlength="1" class="site-auth-code-grid__input" data-site-auth-code-input>
+                    <input type="text" inputmode="numeric" maxlength="1" class="site-auth-code-grid__input" data-site-auth-code-input>
+                    <input type="text" inputmode="numeric" maxlength="1" class="site-auth-code-grid__input" data-site-auth-code-input>
+                </div>
+                <p class="site-auth-form__hint">Введите 6-значный код из SMS. После ввода всех цифр подтверждение выполнится автоматически.</p>
+                <div class="site-auth-form__code-actions">
+                    <button type="submit" class="site-btn site-btn--gold site-auth-form__submit" data-site-auth-submit>Подтвердить вход</button>
+                    <button type="button" class="site-btn site-btn--ghost site-auth-form__resend" data-site-auth-resend>Отправить повторно</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
     <script src="{{ url_for('static', filename='js/site.js') }}"></script>
 </body>
 </html>
+
 
 
 

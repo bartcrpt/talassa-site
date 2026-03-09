@@ -22,7 +22,7 @@
                 </span>
                 <span class="internal-brand__copy">
                     <span class="internal-brand__eyebrow">Таласса Hotel & Spa</span>
-                    <span class="internal-brand__subtitle">Кабинет гостя</span>
+                    <span class="internal-brand__subtitle">{{ "Админ-панель" if request.path.startswith("/admin") else "Кабинет гостя" }}</span>
                 </span>
             </a>
 
@@ -42,7 +42,7 @@
                 <ul class="navbar-nav internal-nav__actions align-items-lg-center gap-lg-2">
                     {% if current_user.is_authenticated %}
                         <li class="nav-item d-none d-lg-block">
-                            <a class="internal-action-link" href="{{ url_for('my_bookings') }}">Мои бронирования</a>
+                            <a class="internal-action-link" href="{{ url_for('admin_dashboard') if current_user.is_admin and request.path.startswith('/admin') else url_for('my_bookings') }}">{{ 'Панель' if current_user.is_admin and request.path.startswith('/admin') else 'Мои бронирования' }}</a>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle internal-user-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -91,7 +91,7 @@
             <div class="internal-footer__row">
                 <div>
                     <p class="internal-footer__eyebrow">Таласса Hotel & Spa</p>
-                    <p class="internal-footer__description">Личный кабинет для бронирования, подтверждения деталей проживания и управления поездкой у Чёрного моря.</p>
+                    <p class="internal-footer__description">{{ "Панель управления номерами, бронированиями, пользователями и контентом сайта." if request.path.startswith("/admin") else "Личный кабинет для бронирования, подтверждения деталей проживания и управления поездкой у Чёрного моря." }}</p>
                 </div>
                 <div class="internal-footer__contacts">
                     <a href="tel:+79385551563">+7 (938) 555-15-63</a>
@@ -121,4 +121,5 @@
     {% block scripts %}{% endblock %}
 </body>
 </html>
+
 

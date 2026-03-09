@@ -1,0 +1,38 @@
+<div class="admin-sidebar-card">
+    <div class="admin-sidebar-card__header">
+        <p class="admin-sidebar-card__eyebrow">Управление сайтом</p>
+        <h2>Talassa Admin</h2>
+        <p>Основные разделы для ежедневной работы с бронированиями, номерами и контентом.</p>
+    </div>
+
+    <nav class="admin-sidebar-nav">
+        <a href="{{ url_for('admin_dashboard') }}" class="admin-sidebar-nav__link {{ 'is-active' if active_page == 'dashboard' else '' }}">
+            <i class="bi bi-speedometer2"></i>
+            <span>Дашборд</span>
+        </a>
+        <a href="{{ url_for('admin_bookings') }}" class="admin-sidebar-nav__link {{ 'is-active' if active_page == 'bookings' else '' }}">
+            <i class="bi bi-calendar-check"></i>
+            <span>Бронирования</span>
+        </a>
+        <a href="{{ url_for('admin_rooms') }}" class="admin-sidebar-nav__link {{ 'is-active' if active_page == 'rooms' else '' }}">
+            <i class="bi bi-door-open"></i>
+            <span>Номера</span>
+        </a>
+        <a href="{{ url_for('admin_users') }}" class="admin-sidebar-nav__link {{ 'is-active' if active_page == 'users' else '' }}">
+            <i class="bi bi-people"></i>
+            <span>Пользователи</span>
+        </a>
+        <a href="{{ url_for('admin_categories') }}" class="admin-sidebar-nav__link {{ 'is-active' if active_page == 'categories' else '' }}">
+            <i class="bi bi-tags"></i>
+            <span>Категории</span>
+        </a>
+        <a href="{{ url_for('admin_news') }}" class="admin-sidebar-nav__link {{ 'is-active' if active_page == 'news' else '' }}">
+            <i class="bi bi-newspaper"></i>
+            <span>Журнал</span>
+        </a>
+        <a href="{{ url_for('admin_site_content') }}" class="admin-sidebar-nav__link {{ 'is-active' if active_page == 'site-content' else '' }}">
+            <i class="bi bi-layout-text-window"></i>
+            <span>Контент сайта</span>
+        </a>
+    </nav>
+</div>
