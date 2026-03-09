@@ -718,52 +718,48 @@ CMS_BLOCK_GUIDES = {
 
 PUBLIC_PAGE_SEO_DEFAULTS = {
     'home': {
-        'title': 'Таласса Hotel & Spa',
-        'description': 'Спа-отель на первой линии Чёрного моря в Абхазии: собственный пляж, номера с видом на море, талассотерапия и спокойный отдых у побережья.',
-        'image_url': '/static/site/images/gallery/photo_1.jpg',
-    },
-    'about': {
-        'title': 'О Таласса Hotel & Spa',
-        'description': 'История, философия и атмосфера Таласса Hotel & Spa на побережье Чёрного моря в Абхазии.',
-        'image_url': '/static/site/images/gallery/photo_3.jpg',
+        'title': 'Отель в Абхазии на берегу моря - Таласса Hotel & Spa',
+        'description': 'Таласса Hotel & Spa - отель в Абхазии на берегу моря в Цандрыпше (Гагрский район). Номера, оздоровительный отдых, талассотерапия и галечный пляж.',
+        'image_url': '/static/site/images/gallery/photo_7.jpg',
     },
     'wellness': {
-        'title': 'Оздоровление и талассотерапия',
-        'description': 'Талассотерапия, гидромассажные купели, фитобочка и оздоровительные процедуры на морской воде в Таласса Hotel & Spa.',
+        'title': 'Талассотерапия и спа',
+        'description': 'Талассотерапия в Таласса Hotel & Spa: гидрокупели на морской воде, фитобочка и оздоровительные процедуры в Цандрыпше, Абхазия.',
         'image_url': '/static/site/images/gallery/photo_6.jpg',
     },
     'rooms': {
-        'title': 'Номера Таласса Hotel & Spa',
-        'description': 'Каталог номеров Таласса Hotel & Spa: стандарты, deluxe и апартаменты с видом на море у побережья Чёрного моря.',
-        'image_url': '/static/site/images/gallery/photo_2.jpg',
+        'title': 'Номера и цены 2026 в Абхазии',
+        'description': 'Номера и цены в отеле Таласса в Абхазии: 8 категорий, размещение у моря в Цандрыпше (Гагрский район), актуальная стоимость по месяцам 2026.',
+        'image_url': '/static/site/images/gallery/photo_1.jpg',
     },
     'gallery': {
-        'title': 'Галерея Таласса Hotel & Spa',
-        'description': 'Фотографии отеля, номеров, пляжа и атмосферы отдыха в Таласса Hotel & Spa.',
+        'title': 'Галерея отеля',
+        'description': 'Фотогалерея Таласса Hotel & Spa: номера, пляж, территория, ресторан и атмосфера отдыха на Чёрном море в Абхазии.',
         'image_url': '/static/site/images/gallery/photo_7.jpg',
     },
     'accessibility': {
-        'title': 'Доступность в Таласса Hotel & Spa',
-        'description': 'Пандусы, оборудованные номера и комфортные условия отдыха для гостей с ограниченными возможностями передвижения.',
+        'title': 'Доступная среда',
+        'description': 'Доступная среда в Таласса Hotel & Spa: безбарьерная территория, адаптированные номера и оздоровительные программы для гостей с ОВЗ.',
         'image_url': '/static/site/images/gallery/photo_8.jpg',
     },
     'journal': {
-        'title': 'Журнал Таласса Hotel & Spa',
-        'description': 'Статьи о талассотерапии, здоровье, морском отдыхе и атмосфере Абхазии.',
+        'title': 'Журнал об отдыхе и здоровье',
+        'description': 'Журнал Таласса Hotel & Spa: статьи про отдых в Абхазии, отели на берегу моря, талассотерапию и оздоровительные процедуры.',
         'image_url': '/static/site/images/gallery/photo_7.jpg',
     },
     'contact': {
-        'title': 'Контакты Таласса Hotel & Spa',
-        'description': 'Контакты, адрес, режим работы и как добраться до Таласса Hotel & Spa в Цандрыпше.',
+        'title': 'Контакты и как добраться',
+        'description': 'Контакты отеля в Абхазии Таласса Hotel & Spa: +7 (938) 555-15-63, Telegram, ВКонтакте, адрес в Цандрыпше (Гагрский район) и как добраться.',
         'image_url': '/static/site/images/gallery/photo_6.jpg',
     },
     'book': {
-        'title': 'Бронирование Таласса Hotel & Spa',
-        'description': 'Свяжитесь с нами напрямую, чтобы забронировать отдых в Таласса Hotel & Spa без посредников.',
+        'title': 'Бронирование номера',
+        'description': 'Бронирование номера в Таласса Hotel & Spa: актуальные контакты, условия заселения и быстрая связь через Telegram, VK, телефон и email.',
         'image_url': '/static/site/images/gallery/photo_1.jpg',
     },
 }
 
+CMS_SEO_SYNC_PAGES = ('home', 'wellness', 'rooms', 'gallery', 'accessibility', 'journal', 'contact', 'book')
 # Add custom filter for phone formatting
 @app.template_filter('format_phone')
 def format_phone_filter(phone):
@@ -1152,8 +1148,31 @@ def sync_current_cms_block_values(page_slug, blocks):
         db.session.commit()
 
     return blocks
+
+def sync_public_page_seo_defaults(page_slug):
+    if page_slug not in CMS_SEO_SYNC_PAGES:
+        return
+
+    page = SitePage.query.filter_by(slug=page_slug).first()
+    defaults = PUBLIC_PAGE_SEO_DEFAULTS.get(page_slug)
+    if not page or not defaults:
+        return
+
+    changed = False
+    if (page.meta_title or '').strip() != defaults.get('title'):
+        page.meta_title = defaults.get('title')
+        changed = True
+    if (page.meta_description or '').strip() != defaults.get('description'):
+        page.meta_description = defaults.get('description')
+        changed = True
+
+    if changed:
+        db.session.commit()
+
+
 def get_site_page_with_blocks(page_slug):
     ensure_default_blocks_for_page(page_slug)
+    sync_public_page_seo_defaults(page_slug)
 
     page = SitePage.query.filter_by(slug=page_slug).first()
     if not page:
@@ -2199,8 +2218,8 @@ def journal_article_page(news_id):
         article_photos=article_photos,
         cover_photo_url=cover_photo_url,
         seo_override={
-            'title': article.title,
-            'description': article.summary or get_plain_text(article.content)[:160],
+            'title': f"{article.title} - журнал",
+            'description': f"{(article.summary or get_plain_text(article.content)[:160])[:150]} Читать статью в журнале Таласса Hotel & Spa.",
             'image_url': cover_photo_url,
             'og_type': 'article',
             'canonical_url': url_for('journal_article_page', news_id=article.id, _external=True),
@@ -2262,8 +2281,8 @@ def room_detail_by_slug(slug):
     return render_public_template(
         'public/room_detail.html',
         seo_override={
-            'title': room.get('name'),
-            'description': room.get('description', '')[:160] or 'Номер в Таласса Hotel & Spa у Чёрного моря.',
+            'title': f"{room.get('name')} - цены и фото",
+            'description': f"{room.get('shortDescription')} Площадь {room.get('area')} м², до {room.get('capacity', {}).get('max', room.get('capacity', {}).get('standard', 2))} гостей. Цены от {room.get('minPrice')} ₽ за ночь в отеле в Абхазии Таласса Hotel & Spa, Цандрыпш (Гагрский район).",
             'image_url': photo_items[0]['url'] if photo_items else '/static/site/images/gallery/photo_2.jpg',
             'canonical_url': url_for('room_detail_by_slug', slug=room.get('slug'), _external=True),
             'page_slug': 'rooms',
@@ -2535,6 +2554,7 @@ def thanks():
             'description': 'Бронирование в Таласса Hotel & Spa оформлено. Администратор свяжется с вами в ближайшее время.',
             'image_url': '/static/site/images/gallery/photo_1.jpg',
             'canonical_url': url_for('thanks', _external=True),
+            'page_slug': 'book',
             'noindex': True,
         },
     )
@@ -3848,9 +3868,10 @@ def not_found_page():
         'public/not_found.html',
         seo_override={
             'title': 'Страница не найдена',
-            'description': 'Запрошенная страница не найдена на сайте Таласса Hotel & Spa.',
+            'description': 'К сожалению, запрашиваемая страница не существует.',
             'image_url': '/static/site/images/gallery/photo_1.jpg',
             'canonical_url': request.base_url,
+            'page_slug': 'home',
             'noindex': True,
         },
         status_code=404,
@@ -3864,9 +3885,10 @@ def handle_not_found(error):
         'public/not_found.html',
         seo_override={
             'title': 'Страница не найдена',
-            'description': 'Запрошенная страница не найдена на сайте Таласса Hotel & Spa.',
+            'description': 'К сожалению, запрашиваемая страница не существует.',
             'image_url': '/static/site/images/gallery/photo_1.jpg',
             'canonical_url': request.base_url,
+            'page_slug': 'home',
             'noindex': True,
         },
         status_code=404,
@@ -3878,95 +3900,3 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=False, host='0.0.0.0', port=5000)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
