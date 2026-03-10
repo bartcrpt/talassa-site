@@ -5835,3 +5835,24 @@ body.is-modal-open {
 .booking-result-card__note-body p + p {
   margin-top: 9px;
 }
+
+.booking-results-group + .booking-results-group {
+  margin-top: 30px;
+}
+
+.booking-results-subhead {
+  margin-bottom: 16px;
+}
+
+.booking-results-subhead h3 {
+  margin: 0;
+  color: var(--sea);
+  font-size: 24px;
+}
+
+.booking-results-subhead p {
+  margin: 8px 0 0;
+  color: rgba(82, 110, 98, 0.84);
+  font-size: 14px;
+  line-height: 1.6;
+}

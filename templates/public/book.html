@@ -32,7 +32,6 @@
                     <span>Заезд</span>
                     <button type="button" class="booking-widget-trigger" data-booking-date-trigger="check_in">
                         <strong data-booking-check-in-label>{{ check_in if check_in else 'Выберите дату' }}</strong>
-                        <small>Дата заезда</small>
                     </button>
                 </label>
 
@@ -40,7 +39,6 @@
                     <span>Выезд</span>
                     <button type="button" class="booking-widget-trigger" data-booking-date-trigger="check_out">
                         <strong data-booking-check-out-label>{{ check_out if check_out else 'Выберите дату' }}</strong>
-                        <small>Дата выезда</small>
                     </button>
                 </label>
 
@@ -48,7 +46,6 @@
                     <span>Количество гостей</span>
                     <button type="button" class="booking-widget-trigger booking-widget-trigger--guests" data-booking-guests-toggle aria-expanded="false">
                         <strong data-booking-guests-summary></strong>
-                        <small>Взрослые, дети 6-13, дети до 5 лет</small>
                     </button>
                     <div class="booking-widget-guests-panel" data-booking-guests-panel hidden>
                         <div class="booking-widget-guests-row">
@@ -130,123 +127,139 @@
             <div class="empty-state-card centered-copy centered-copy--compact booking-results-empty">
                 <h2>{{ search_error }}</h2>
             </div>
-        {% elif booking_results %}
-            <div class="booking-results-grid">
-                {% for room in booking_results %}
-                    <article class="booking-result-card">
-                        <button type="button" class="booking-result-card__image booking-result-card__image--button" data-booking-room-open data-room-preview="{{ room.preview_payload|tojson|forceescape }}">
-                            <img src="{{ room.photo_url }}" alt="{{ room.name }}">
-                        </button>
-                        <div class="booking-result-card__body">
-                            <div class="booking-result-card__top">
-                                <div>
-                                    <p class="booking-result-card__category">{{ room.category_name }}</p>
-                                    <h3><button type="button" class="booking-result-card__title-link" data-booking-room-open data-room-preview="{{ room.preview_payload|tojson|forceescape }}">{{ room.name }}</button></h3>
-                                </div>
-                                <span class="booking-result-card__room-number">№ {{ room.number }}</span>
-                            </div>
-
-                            <div class="booking-result-card__meta">
-                                <span>Базовое размещение: {{ room.capacity }}</span>
-                                <span>Максимум: {{ room.max_capacity }}</span>
-                                {% if room.nights %}
-                                    <span>{{ room.nights }} ноч.</span>
-                                {% endif %}
-                            </div>
-
-                            <div class="booking-result-card__price">
-                                <strong>{{ '%.0f'|format(room.total_price) }} ₽</strong>
-                                <span>{{ room.price_caption }}</span>
-                            </div>
-
-                            {% if room.extra_price %}
-                                <details class="booking-result-card__note booking-result-card__note--expandable">
-                                    <summary>Включая доплату за дополнительные места: {{ '%.0f'|format(room.extra_price) }} ₽</summary>
-                                    <div class="booking-result-card__note-body">
-                                        <p><strong>* Размещение:</strong> стандартное количество гостей - 2.</p>
-                                        <p>За каждого дополнительного гостя свыше вместимости номера (2 гостей) действует доплата: с 01.11 по 30.04 - 0 руб/сутки для детей до 5 лет включительно, 1000 руб/сутки для детей от 6 до 13 лет включительно и 2000 руб/сутки для детей от 14 лет и взрослых.</p>
-                                        <p>С 01.05 по 31.10 - 0 руб/сутки для детей до 5 лет включительно, 1500 руб/сутки для детей от 6 до 13 лет включительно и 2500 руб/сутки для детей от 14 лет и взрослых. В этот период в цену включен завтрак.</p>
-                                    </div>
-                                </details>
-                            {% endif %}
-
-                            <div class="booking-result-card__links">
-                                <button type="button" class="booking-result-card__details-link" data-booking-room-open data-room-preview="{{ room.preview_payload|tojson|forceescape }}">Подробнее о номере</button>
-                            </div>
-
-                            <div class="booking-result-card__actions">
-                                {% if current_user.is_authenticated %}
-                                    <a href="{{ room.book_url }}" class="site-btn site-btn--gold">Оформить бронирование</a>
-                                {% else %}
-                                    <button type="button" class="site-btn site-btn--gold" data-site-auth-open data-auth-view="login" data-auth-next="{{ room.book_url }}">Войти для брони</button>
-                                {% endif %}
-                            </div>
+        {% elif booking_results or booking_combination_results %}
+            {% if booking_results %}
+                <div class="booking-results-group">
+                    {% if booking_combination_results %}
+                        <div class="booking-results-subhead">
+                            <h3>Один номер</h3>
+                            <p>Варианты, которые сразу подходят под ваш запрос.</p>
                         </div>
-                    </article>
-                {% endfor %}
-            </div>
-        {% elif booking_combination_results %}
-            <div class="booking-results-grid booking-results-grid--combinations">
-                {% for combination in booking_combination_results %}
-                    <article class="booking-combination-card">
-                        <div class="booking-combination-card__top">
-                            <div>
-                                <p class="booking-result-card__category">Комбинация номеров</p>
-                                <h3>2 номера для {{ combination.total_guests }} гостей</h3>
-                            </div>
-                            <span class="booking-result-card__room-number">2 номера</span>
-                        </div>
-
-                        <div class="booking-result-card__meta">
-                            <span>Вместимость: до {{ combination.total_capacity }}</span>
-                            {% if combination.nights %}
-                                <span>{{ combination.nights }} ноч.</span>
-                            {% endif %}
-                        </div>
-
-                        <div class="booking-combination-card__rooms">
-                            {% for room in combination.rooms %}
-                                <div class="booking-combination-card__room">
+                    {% endif %}
+                    <div class="booking-results-grid">
+                        {% for room in booking_results %}
+                            <article class="booking-result-card">
+                                <button type="button" class="booking-result-card__image booking-result-card__image--button" data-booking-room-open data-room-preview="{{ room.preview_payload|tojson|forceescape }}">
                                     <img src="{{ room.photo_url }}" alt="{{ room.name }}">
-                                    <div class="booking-combination-card__room-copy">
-                                        <p class="booking-result-card__category">{{ room.category_name }}</p>
-                                        <h4><button type="button" class="booking-result-card__title-link booking-result-card__title-link--small" data-booking-room-open data-room-preview="{{ room.preview_payload|tojson|forceescape }}">{{ room.name }}</button></h4>
-                                        <p>{{ room.guests_caption }}</p>
-                                        <button type="button" class="booking-result-card__details-link booking-result-card__details-link--small" data-booking-room-open data-room-preview="{{ room.preview_payload|tojson|forceescape }}">Подробнее</button>
+                                </button>
+                                <div class="booking-result-card__body">
+                                    <div class="booking-result-card__top">
+                                        <div>
+                                            <p class="booking-result-card__category">{{ room.category_name }}</p>
+                                            <h3><button type="button" class="booking-result-card__title-link" data-booking-room-open data-room-preview="{{ room.preview_payload|tojson|forceescape }}">{{ room.name }}</button></h3>
+                                        </div>
+                                        <span class="booking-result-card__room-number">№ {{ room.number }}</span>
+                                    </div>
+
+                                    <div class="booking-result-card__meta">
+                                        <span>Базовое размещение: {{ room.capacity }}</span>
+                                        <span>Максимум: {{ room.max_capacity }}</span>
+                                        {% if room.nights %}
+                                            <span>{{ room.nights }} ноч.</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="booking-result-card__price">
+                                        <strong>{{ '%.0f'|format(room.total_price) }} ₽</strong>
+                                        <span>{{ room.price_caption }}</span>
+                                    </div>
+
+                                    {% if room.extra_price %}
+                                        <details class="booking-result-card__note booking-result-card__note--expandable">
+                                            <summary>Включая доплату за дополнительные места: {{ '%.0f'|format(room.extra_price) }} ₽</summary>
+                                            <div class="booking-result-card__note-body">
+                                                <p><strong>* Размещение:</strong> стандартное количество гостей - 2.</p>
+                                                <p>За каждого дополнительного гостя свыше вместимости номера (2 гостей) действует доплата: с 01.11 по 30.04 - 0 руб/сутки для детей до 5 лет включительно, 1000 руб/сутки для детей от 6 до 13 лет включительно и 2000 руб/сутки для детей от 14 лет и взрослых.</p>
+                                                <p>С 01.05 по 31.10 - 0 руб/сутки для детей до 5 лет включительно, 1500 руб/сутки для детей от 6 до 13 лет включительно и 2500 руб/сутки для детей от 14 лет и взрослых. В этот период в цену включен завтрак.</p>
+                                            </div>
+                                        </details>
+                                    {% endif %}
+
+                                    <div class="booking-result-card__links">
+                                        <button type="button" class="booking-result-card__details-link" data-booking-room-open data-room-preview="{{ room.preview_payload|tojson|forceescape }}">Подробнее о номере</button>
+                                    </div>
+
+                                    <div class="booking-result-card__actions">
+                                        {% if current_user.is_authenticated %}
+                                            <a href="{{ room.book_url }}" class="site-btn site-btn--gold">Оформить бронирование</a>
+                                        {% else %}
+                                            <button type="button" class="site-btn site-btn--gold" data-site-auth-open data-auth-view="login" data-auth-next="{{ room.book_url }}">Войти для брони</button>
+                                        {% endif %}
                                     </div>
                                 </div>
-                            {% endfor %}
-                        </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
 
-                        <div class="booking-result-card__price booking-result-card__price--combination">
-                            <strong>{{ '%.0f'|format(combination.total_price) }} ₽</strong>
-                            <span>{{ combination.price_caption }}</span>
-                        </div>
-
-                        {% if combination.extra_price %}
-                            <details class="booking-result-card__note booking-result-card__note--expandable">
-                                <summary>Включая доплату за дополнительные места: {{ '%.0f'|format(combination.extra_price) }} ₽</summary>
-                                <div class="booking-result-card__note-body">
-                                    <p><strong>* Размещение:</strong> стандартное количество гостей - 2.</p>
-                                    <p>За каждого дополнительного гостя свыше вместимости номера (2 гостей) действует доплата: с 01.11 по 30.04 - 0 руб/сутки для детей до 5 лет включительно, 1000 руб/сутки для детей от 6 до 13 лет включительно и 2000 руб/сутки для детей от 14 лет и взрослых.</p>
-                                    <p>С 01.05 по 31.10 - 0 руб/сутки для детей до 5 лет включительно, 1500 руб/сутки для детей от 6 до 13 лет включительно и 2500 руб/сутки для детей от 14 лет и взрослых. В этот период в цену включен завтрак.</p>
+            {% if booking_combination_results %}
+                <div class="booking-results-group booking-results-group--combinations">
+                    <div class="booking-results-subhead">
+                        <h3>Комбинации из двух номеров</h3>
+                        <p>Если удобнее разместиться в двух номерах, можно выбрать один из этих вариантов.</p>
+                    </div>
+                    <div class="booking-results-grid booking-results-grid--combinations">
+                        {% for combination in booking_combination_results %}
+                            <article class="booking-combination-card">
+                                <div class="booking-combination-card__top">
+                                    <div>
+                                        <p class="booking-result-card__category">Комбинация номеров</p>
+                                        <h3>2 номера для {{ combination.total_guests }} гостей</h3>
+                                    </div>
+                                    <span class="booking-result-card__room-number">2 номера</span>
                                 </div>
-                            </details>
-                        {% endif %}
 
-                        <div class="booking-combination-card__actions">
-                            {% if current_user.is_authenticated %}
-                                <a href="{{ combination.booking_url }}" class="site-btn site-btn--gold">Оформить бронирование</a>
-                            {% else %}
-                                <button type="button" class="site-btn site-btn--gold" data-site-auth-open data-auth-view="login" data-auth-next="{{ combination.booking_url }}">Войти для брони</button>
-                            {% endif %}
-                        </div>
+                                <div class="booking-result-card__meta">
+                                    <span>Вместимость: до {{ combination.total_capacity }}</span>
+                                    {% if combination.nights %}
+                                        <span>{{ combination.nights }} ноч.</span>
+                                    {% endif %}
+                                </div>
 
+                                <div class="booking-combination-card__rooms">
+                                    {% for room in combination.rooms %}
+                                        <div class="booking-combination-card__room">
+                                            <img src="{{ room.photo_url }}" alt="{{ room.name }}">
+                                            <div class="booking-combination-card__room-copy">
+                                                <p class="booking-result-card__category">{{ room.category_name }}</p>
+                                                <h4><button type="button" class="booking-result-card__title-link booking-result-card__title-link--small" data-booking-room-open data-room-preview="{{ room.preview_payload|tojson|forceescape }}">{{ room.name }}</button></h4>
+                                                <p>{{ room.guests_caption }}</p>
+                                                <button type="button" class="booking-result-card__details-link booking-result-card__details-link--small" data-booking-room-open data-room-preview="{{ room.preview_payload|tojson|forceescape }}">Подробнее</button>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
 
-                    </article>
-                {% endfor %}
-            </div>
-{% else %}
+                                <div class="booking-result-card__price booking-result-card__price--combination">
+                                    <strong>{{ '%.0f'|format(combination.total_price) }} ₽</strong>
+                                    <span>{{ combination.price_caption }}</span>
+                                </div>
+
+                                {% if combination.extra_price %}
+                                    <details class="booking-result-card__note booking-result-card__note--expandable">
+                                        <summary>Включая доплату за дополнительные места: {{ '%.0f'|format(combination.extra_price) }} ₽</summary>
+                                        <div class="booking-result-card__note-body">
+                                            <p><strong>* Размещение:</strong> стандартное количество гостей - 2.</p>
+                                            <p>За каждого дополнительного гостя свыше вместимости номера (2 гостей) действует доплата: с 01.11 по 30.04 - 0 руб/сутки для детей до 5 лет включительно, 1000 руб/сутки для детей от 6 до 13 лет включительно и 2000 руб/сутки для детей от 14 лет и взрослых.</p>
+                                            <p>С 01.05 по 31.10 - 0 руб/сутки для детей до 5 лет включительно, 1500 руб/сутки для детей от 6 до 13 лет включительно и 2500 руб/сутки для детей от 14 лет и взрослых. В этот период в цену включен завтрак.</p>
+                                        </div>
+                                    </details>
+                                {% endif %}
+
+                                <div class="booking-combination-card__actions">
+                                    {% if current_user.is_authenticated %}
+                                        <a href="{{ combination.booking_url }}" class="site-btn site-btn--gold">Оформить бронирование</a>
+                                    {% else %}
+                                        <button type="button" class="site-btn site-btn--gold" data-site-auth-open data-auth-view="login" data-auth-next="{{ combination.booking_url }}">Войти для брони</button>
+                                    {% endif %}
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
             <div class="empty-state-card centered-copy centered-copy--compact booking-results-empty">
                 <h2>По выбранным параметрам ничего не найдено</h2>
                 <p>Попробуйте изменить даты, количество гостей или категорию. Если нужно, напишите нам напрямую и мы подберём вариант вручную.</p>

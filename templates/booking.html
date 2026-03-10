@@ -69,70 +69,32 @@
                                        value="{{ check_out or '' }}" required>
                             </div>
                         </div>
-
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <div class="mb-3">
-                                    <label class="form-label">Количество гостей *</label>
-                                    <div class="dropdown">
-                                        <button class="form-select text-start" type="button" id="guestsDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="text-align: left;">
-                                            <span id="guestsDisplay">2 взрослых, 0 детей</span>
-                                        </button>
-                                        <div class="dropdown-menu p-3" style="width: 280px; position: absolute; transform: translate3d(0px, 38px, 0px);" data-bs-popper="static">
-                                            <div class="row g-3">
-                                                <!-- Взрослые -->
-                                                <div class="col-12">
-                                                    <div class="d-flex justify-content-between align-items-center">
-                                                        <label class="form-label fw-bold mb-0">Взрослые</label>
-                                                        <small class="text-muted">От 14 лет</small>
-                                                    </div>
-                                                    <div class="input-group input-group-sm mt-2">
-                                                        <button class="btn btn-outline-primary" type="button" onclick="changeBookingGuests('adults', -1)">-</button>
-                                                        <input type="number" class="form-control text-center" id="booking_adults" name="adults" value={{ num_of_adults }} min="1" max="10"
-                                                               oninput="validateBookingManualInput('adults')" onblur="validateBookingManualInput('adults')">
-                                                        <button class="btn btn-outline-primary" type="button" onclick="changeBookingGuests('adults', 1)">+</button>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Дети -->
-                                                <div class="col-12">
-                                                    <div class="d-flex justify-content-between align-items-center">
-                                                        <label class="form-label fw-bold mb-0">Дети</label>
-                                                        <small class="text-muted">От 6 до 13 лет</small>
-                                                    </div>
-                                                    <div class="input-group input-group-sm mt-2">
-                                                        <button class="btn btn-outline-success" type="button" onclick="changeBookingGuests('children', -1)">-</button>
-                                                        <input type="number" class="form-control text-center" id="booking_children" name="children" value={{ num_of_children }} min="0" max="10"
-                                                               oninput="validateBookingManualInput('children')" onblur="validateBookingManualInput('children')">
-                                                        <button class="btn btn-outline-success" type="button" onclick="changeBookingGuests('children', 1)">+</button>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Дети до 5 -->
-                                                <div class="col-12">
-                                                    <div class="d-flex justify-content-between align-items-center">
-                                                        <label class="form-label fw-bold mb-0">Дети до 5 лет</label>
-                                                    </div>
-                                                    <div class="input-group input-group-sm mt-2">
-                                                        <button class="btn btn-outline-primary" type="button" onclick="changeBookingGuests('children_under_five', -1)">-</button>
-                                                        <input type="number" class="form-control text-center" id="booking_children_under_five" name="children_under_five" value="{{ num_of_children_under_five or 0 }}" min="0" max="10"
-                                                               oninput="validateBookingManualInput('children_under_five')" onblur="validateBookingManualInput('children_under_five')">
-                                                        <button class="btn btn-outline-primary" type="button" onclick="changeBookingGuests('children_under_five', 1)">+</button>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-12">
-                                                    <small class="text-muted">Дети до 5 лет включительно проживают бесплатно</small>
-                                                </div>
+                                    <label class="form-label">Количество гостей</label>
+                                    <div class="booking-guests-readonly">
+                                        <p class="booking-guests-readonly__headline" id="guestsDisplay">{{ num_of_adults }} взрослых{% if num_of_children %}, {{ num_of_children }} детей 6-13 лет{% endif %}{% if num_of_children_under_five %}, {{ num_of_children_under_five }} детей до 5 лет{% endif %}</p>
+                                        <div class="booking-guests-readonly__rows">
+                                            <div class="booking-guests-readonly__row">
+                                                <span>Взрослые</span>
+                                                <strong>{{ num_of_adults }}</strong>
                                             </div>
-
-                                            <div class="mt-3 pt-2 border-top">
-                                                <button type="button" class="btn btn-primary w-100" onclick="applyBookingGuests()">Применить</button>
+                                            <div class="booking-guests-readonly__row">
+                                                <span>Дети 6-13 лет</span>
+                                                <strong>{{ num_of_children }}</strong>
+                                            </div>
+                                            <div class="booking-guests-readonly__row">
+                                                <span>Дети до 5 лет</span>
+                                                <strong>{{ num_of_children_under_five or 0 }}</strong>
                                             </div>
                                         </div>
+                                        <p class="booking-guests-readonly__hint">Состав гостей фиксируется по выбранному результату поиска. На этом шаге можно изменить только даты проживания.</p>
                                     </div>
-                                    <!-- Скрытые поля для отправки формы -->
-                                    <input type="hidden" id="total_guests" name="guests" value="2" required>
+                                    <input type="hidden" id="booking_adults" name="adults" value="{{ num_of_adults }}">
+                                    <input type="hidden" id="booking_children" name="children" value="{{ num_of_children }}">
+                                    <input type="hidden" id="booking_children_under_five" name="children_under_five" value="{{ num_of_children_under_five or 0 }}">
+                                    <input type="hidden" id="total_guests" name="guests" value="{{ (num_of_adults or 0) + (num_of_children or 0) }}" required>
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">

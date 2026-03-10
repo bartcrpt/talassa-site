@@ -1056,6 +1056,21 @@ body.internal-portal .internal-flash--error {
     border-color: rgba(170, 91, 76, 0.24);
 }
 
+body.internal-portal.internal-auth .internal-flashes {
+    padding-top: 28px;
+}
+
+body.internal-portal.internal-auth .internal-flash {
+    padding: 20px 24px;
+    border-radius: 24px;
+}
+
+body.internal-portal.internal-auth .internal-flash span {
+    font-size: 1.08rem;
+    font-weight: 600;
+    line-height: 1.65;
+}
+
 body.internal-portal .internal-footer {
     padding: 34px 0 28px;
     background: var(--talassa-sea);
@@ -1184,8 +1199,8 @@ body.internal-portal .account-auth-intro__facts {
 
 body.internal-portal .account-auth-intro__fact {
     display: grid;
-    grid-template-columns: 52px 1fr;
-    gap: 16px;
+    grid-template-columns: 28px 1fr;
+    gap: 18px;
     align-items: start;
     padding: 18px 20px;
     border-radius: 22px;
@@ -1194,15 +1209,39 @@ body.internal-portal .account-auth-intro__fact {
 }
 
 body.internal-portal .account-auth-intro__fact-icon {
-    width: 52px;
-    height: 52px;
+    width: 28px;
+    min-width: 28px;
+    height: auto;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.14);
+    flex-shrink: 0;
+    border-radius: 0;
+    background: transparent;
     color: #fff;
     font-size: 1.15rem;
+    line-height: 1;
+    padding-top: 2px;
+}
+
+body.internal-portal .account-auth-intro__fact-icon i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1em;
+    height: 1em;
+    line-height: 1;
+}
+
+body.internal-portal .account-auth-intro__fact-icon i::before {
+    display: block;
+    line-height: 1;
+}
+
+body.internal-portal .account-auth-intro__fact-icon .fa-solid,
+body.internal-portal .account-auth-intro__fact-icon .fa-regular {
+    font-size: 1em;
+    transform: translateY(0.06em);
 }
 
 body.internal-portal .account-auth-intro__fact strong,
@@ -1300,11 +1339,21 @@ body.internal-portal .account-panel__meta {
     color: rgba(82, 110, 98, 0.84);
 }
 
+body.internal-portal .account-panel__footer-note {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 1rem;
+}
+
 body.internal-portal .account-panel__footer-note a,
 body.internal-portal .account-inline-link {
     color: var(--talassa-sea);
     text-decoration: none;
-    font-weight: 500;
+    font-size: 1.08rem;
+    font-weight: 600;
 }
 
 body.internal-portal .account-btn,
@@ -2305,4 +2354,63 @@ body.internal-admin .admin-empty-state__icon {
         font-size: 2.2rem;
     }
 }
+
+
+body.internal-portal .booking-guests-readonly {
+  padding: 18px 20px;
+  border: 1px solid rgba(157, 182, 191, 0.28);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+body.internal-portal .booking-guests-readonly__headline {
+  margin: 0 0 14px;
+  color: var(--sea);
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+body.internal-portal .booking-guests-readonly__rows {
+  display: grid;
+  gap: 10px;
+}
+
+body.internal-portal .booking-guests-readonly__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(157, 182, 191, 0.24);
+}
+
+body.internal-portal .booking-guests-readonly__row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+body.internal-portal .booking-guests-readonly__row span {
+  color: rgba(82, 110, 98, 0.9);
+}
+
+body.internal-portal .booking-guests-readonly__row strong {
+  color: var(--sea);
+  font-weight: 600;
+}
+
+body.internal-portal .booking-guests-readonly__hint,
+body.internal-portal .form-label--subtle {
+  color: rgba(82, 110, 98, 0.76);
+}
+
+body.internal-portal .booking-guests-readonly__hint {
+  margin: 14px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+
+
+
+
 

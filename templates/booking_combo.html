@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}Комбинированное бронирование - Таласса Hotel & Spa{% endblock %}
 
@@ -65,22 +65,51 @@
                     <p>Две брони будут созданы одновременно</p>
                 </div>
             </div>
-
             <form method="POST" class="account-form combo-booking-form">
                 <input type="hidden" name="room_a_id" value="{{ room_a.id }}">
                 <input type="hidden" name="room_b_id" value="{{ room_b.id }}">
-                <input type="hidden" name="check_in" value="{{ check_in }}">
-                <input type="hidden" name="check_out" value="{{ check_out }}">
                 <input type="hidden" name="adults_a" value="{{ adults_a }}">
                 <input type="hidden" name="children_a" value="{{ children_a }}">
                 <input type="hidden" name="adults_b" value="{{ adults_b }}">
                 <input type="hidden" name="children_b" value="{{ children_b }}">
+                <input type="hidden" name="children_under_five" value="{{ children_under_five }}">
 
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <label for="children_under_five" class="form-label">Дети до 5 лет</label>
-                        <input type="number" class="form-control" id="children_under_five" name="children_under_five" min="0" max="10" value="{{ children_under_five }}">
-                        <div class="form-text">Они не влияют на вместимость, но мы передадим эту информацию администратору при подтверждении.</div>
+                        <label class="form-label">Период проживания</label>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <label for="combo_check_in" class="form-label form-label--subtle">Дата заезда</label>
+                                <input type="date" class="form-control" id="combo_check_in" name="check_in" value="{{ check_in }}" min="{{ min_check_in_date }}" required>
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="combo_check_out" class="form-label form-label--subtle">Дата выезда</label>
+                                <input type="date" class="form-control" id="combo_check_out" name="check_out" value="{{ check_out }}" min="{{ min_check_in_date }}" required>
+                            </div>
+                        </div>
+                        <div class="form-text">Если измените даты, доступность и итоговая стоимость будут пересчитаны при подтверждении бронирования.</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Количество гостей</label>
+                        <div class="booking-guests-readonly">
+                            <p class="booking-guests-readonly__headline">{{ adults_a + adults_b }} взрослых{% if children_a + children_b %}, {{ children_a + children_b }} детей 6-13 лет{% endif %}{% if children_under_five %}, {{ children_under_five }} детей до 5 лет{% endif %}</p>
+                            <div class="booking-guests-readonly__rows">
+                                <div class="booking-guests-readonly__row">
+                                    <span>Взрослые</span>
+                                    <strong>{{ adults_a + adults_b }}</strong>
+                                </div>
+                                <div class="booking-guests-readonly__row">
+                                    <span>Дети 6-13 лет</span>
+                                    <strong>{{ children_a + children_b }}</strong>
+                                </div>
+                                <div class="booking-guests-readonly__row">
+                                    <span>Дети до 5 лет</span>
+                                    <strong>{{ children_under_five }}</strong>
+                                </div>
+                            </div>
+                            <p class="booking-guests-readonly__hint">Состав гостей и распределение по двум номерам фиксируются по результатам поиска. На этом шаге можно изменить только даты проживания.</p>
+                        </div>
                     </div>
 
                     <div class="col-12">

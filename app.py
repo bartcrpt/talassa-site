@@ -2189,7 +2189,7 @@ def book_landing_page():
                 )
                 booking_results.append(build_booking_result_data(room, total_info, book_url))
 
-            if not booking_results and len(available_rooms) >= 2:
+            if len(available_rooms) >= 2:
                 for index, room_a in enumerate(available_rooms):
                     for room_b in available_rooms[index + 1:]:
                         if get_room_max_capacity(room_a) + get_room_max_capacity(room_b) < capacity:
@@ -2229,7 +2229,7 @@ def book_landing_page():
         selected_range=selected_range,
         booking_results=booking_results,
         booking_combination_results=booking_combination_results,
-        booking_results_count=len(booking_results) if booking_results else len(booking_combination_results),
+        booking_results_count=len(booking_results) + len(booking_combination_results),
     )
 
 @app.route('/rooms', methods=['GET', 'POST'])
@@ -2613,6 +2613,7 @@ def book_room_combination():
         total_guests=guests_a + guests_b + children_under_five,
         total_price=total_price,
         special_requests=special_requests,
+        min_check_in_date=get_moscow_date().strftime('%Y-%m-%d'),
     )
 
 @app.route('/thanks')
