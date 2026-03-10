@@ -1,4 +1,4 @@
-import json
+﻿import json
 import logging
 from audioop import minmax
 
@@ -1434,6 +1434,22 @@ def get_room_main_photo(room):
     return url_for('static', filename='uploads/' + chosen_photo.filename)
 
 
+
+def get_room_photo_items(room):
+    if not room.photos:
+        fallback_name = get_room_display_name(room)
+        return [{'url': '/static/site/images/gallery/photo_2.jpg', 'alt': fallback_name}]
+
+    ordered_photos = sorted(room.photos, key=lambda photo: (0 if photo.is_main else 1, photo.id or 0))
+    room_name = get_room_display_name(room)
+    return [
+        {
+            'url': url_for('static', filename='uploads/' + photo.filename),
+            'alt': f'{room_name} - фото {index + 1}',
+        }
+        for index, photo in enumerate(ordered_photos)
+    ]
+
 def get_room_price_for_month(room, month_name=None):
     return legacy_room_service.get_room_price_for_month(room, month_name=month_name)
 
@@ -1587,13 +1603,14 @@ def get_monthly_price_items(room):
 
 
 
-def calculate_room_total_price(room, check_in, check_out, adults, children):
+def calculate_room_total_price(room, check_in, check_out, adults, children, children_under_five=0):
     return legacy_room_service.calculate_room_total_price(
         room,
         check_in,
         check_out,
         adults,
         children,
+        children_under_five=children_under_five,
         is_high_season=is_high_season,
     )
 
@@ -1604,12 +1621,44 @@ def normalize_rooms_highlights(items=None):
 
 
 def build_booking_result_data(room, total_info, book_url):
-    return legacy_room_service.build_booking_result_data(
+    result = legacy_room_service.build_booking_result_data(
         room,
         total_info=total_info,
         photo_url=get_room_main_photo(room),
         book_url=book_url,
     )
+    area = infer_room_area(room)
+    photo_items = get_room_photo_items(room)
+    result['detail_url'] = get_room_detail_url(room)
+    result['area_label'] = f'{area} м²' if area else None
+    result['short_description'] = get_room_short_description(room)
+    result['description'] = get_plain_text(room.description) or result['short_description']
+    result['feature_labels'] = get_room_feature_labels(room)
+    result['amenities_list'] = get_room_amenities_list(room)[:10]
+    result['extra_bed'] = get_room_extra_bed_label(room)
+    result['photo_items'] = photo_items
+    result['photo_count'] = len(photo_items)
+    result['preview_payload'] = {
+        'id': result['id'],
+        'name': result['name'],
+        'number': result['number'],
+        'category_name': result['category_name'],
+        'photo_url': result['photo_url'],
+        'detail_url': result['detail_url'],
+        'book_url': result['book_url'] or result['detail_url'],
+        'capacity': result['capacity'],
+        'max_capacity': result['max_capacity'],
+        'area_label': result['area_label'],
+        'short_description': result['short_description'],
+        'description': result['description'],
+        'feature_labels': result['feature_labels'],
+        'amenities_list': result['amenities_list'],
+        'extra_bed': result['extra_bed'],
+        'photo_items': result['photo_items'],
+        'photo_count': result['photo_count'],
+    }
+    return result
+
 
 
 def format_price_rub(value):
@@ -1705,7 +1754,7 @@ def find_two_room_guest_split(room_a, room_b, adults, children):
     return best_split
 
 
-def build_booking_combination_data(room_a, room_b, parsed_check_in, parsed_check_out, adults, children, check_in, check_out):
+def build_booking_combination_data(room_a, room_b, parsed_check_in, parsed_check_out, adults, children, children_under_five, check_in, check_out):
     guest_split = find_two_room_guest_split(room_a, room_b, adults, children)
     if not guest_split:
         return None
@@ -1715,8 +1764,8 @@ def build_booking_combination_data(room_a, room_b, parsed_check_in, parsed_check
     total_info_a = None
     total_info_b = None
     if parsed_check_in and parsed_check_out:
-        total_info_a = calculate_room_total_price(room_a, parsed_check_in, parsed_check_out, adults_a, children_a)
-        total_info_b = calculate_room_total_price(room_b, parsed_check_in, parsed_check_out, adults_b, children_b)
+        total_info_a = calculate_room_total_price(room_a, parsed_check_in, parsed_check_out, adults_a, children_a, 0)
+        total_info_b = calculate_room_total_price(room_b, parsed_check_in, parsed_check_out, adults_b, children_b, 0)
 
     room_result_a = build_booking_result_data(room_a, total_info_a, book_url='')
     room_result_b = build_booking_result_data(room_b, total_info_b, book_url='')
@@ -1733,13 +1782,14 @@ def build_booking_combination_data(room_a, room_b, parsed_check_in, parsed_check
         children_a=children_a,
         adults_b=adults_b,
         children_b=children_b,
+        children_under_five=children_under_five,
     )
 
     nights = total_info_a['nights'] if total_info_a else None
     return {
         'rooms': [room_result_a, room_result_b],
         'booking_url': combo_booking_url,
-        'total_guests': adults + children,
+        'total_guests': adults + children + children_under_five,
         'total_capacity': room_result_a['max_capacity'] + room_result_b['max_capacity'],
         'nights': nights,
         'total_price': room_result_a['total_price'] + room_result_b['total_price'],
@@ -2078,6 +2128,7 @@ def book_landing_page():
     min_check_in_date = get_moscow_date().strftime('%Y-%m-%d')
     adults = request.args.get('adults', 2, type=int)
     children = request.args.get('children', 0, type=int)
+    children_under_five = request.args.get('children_under_five', 0, type=int)
     selected_category_id = request.args.get('category_id', type=int)
     search_requested = len(request.args) > 0
     search_error = None
@@ -2124,7 +2175,7 @@ def book_landing_page():
             for room in single_room_results:
                 total_info = None
                 if parsed_check_in and parsed_check_out:
-                    total_info = calculate_room_total_price(room, parsed_check_in, parsed_check_out, adults, children)
+                    total_info = calculate_room_total_price(room, parsed_check_in, parsed_check_out, adults, children, children_under_five)
 
                 book_url = url_for(
                     'book_room',
@@ -2133,6 +2184,8 @@ def book_landing_page():
                     got_check_out=check_out,
                     got_adults=adults,
                     got_children=children,
+                    got_children_under_five=children_under_five,
+                    got_category_id=selected_category_id,
                 )
                 booking_results.append(build_booking_result_data(room, total_info, book_url))
 
@@ -2148,6 +2201,7 @@ def book_landing_page():
                             parsed_check_out,
                             adults,
                             children,
+                            children_under_five,
                             check_in,
                             check_out,
                         )
@@ -2167,6 +2221,7 @@ def book_landing_page():
         check_out=check_out,
         adults=adults,
         children=children,
+        children_under_five=children_under_five,
         selected_category_id=selected_category_id,
         selected_category_name=selected_category.name if selected_category else None,
         search_requested=search_requested,
@@ -2312,10 +2367,14 @@ def room_detail(room_id):
     return redirect(url_for('rooms'))
 @app.route('/book/<int:room_id>', methods=['GET', 'POST'])
 @login_required
-def book_room(room_id, got_check_in=None, got_check_out=None, got_adults=2, got_children=0):
+def book_room(room_id, got_check_in=None, got_check_out=None, got_adults=2, got_children=0, got_children_under_five=0, got_category_id=None):
 
-    got_adults = request.args.get('got_adults', 2, type=int)
-    got_children = request.args.get('got_children', 0, type=int)
+    got_check_in = request.args.get('got_check_in') or request.args.get('check_in') or got_check_in
+    got_check_out = request.args.get('got_check_out') or request.args.get('check_out') or got_check_out
+    got_adults = request.args.get('got_adults', request.args.get('adults', 2), type=int)
+    got_children = request.args.get('got_children', request.args.get('children', 0), type=int)
+    got_children_under_five = request.args.get('got_children_under_five', request.args.get('children_under_five', 0), type=int)
+    got_category_id = request.args.get('got_category_id', request.args.get('category_id'), type=int)
 
     room = Room.query.get_or_404(room_id)
 
@@ -2354,7 +2413,7 @@ def book_room(room_id, got_check_in=None, got_check_out=None, got_adults=2, got_
             room.price_per_night = get_room_price_for_month(room, current_month)
             return render_template('booking.html', room=room)
 
-        total_info = calculate_room_total_price(room, check_in, check_out, adults, children)
+        total_info = calculate_room_total_price(room, check_in, check_out, adults, children, children_under_five)
         total_price = total_info['total']
 
         booking = Booking(
@@ -2397,8 +2456,19 @@ def book_room(room_id, got_check_in=None, got_check_out=None, got_adults=2, got_
 
     room.price_per_night = get_room_price_for_month(room, current_month)
 
+    return_to = url_for(
+        'book_landing_page',
+        check_in=got_check_in,
+        check_out=got_check_out,
+        adults=got_adults,
+        children=got_children,
+        children_under_five=got_children_under_five,
+        category_id=got_category_id,
+    )
+
     return render_template('booking.html', room=room, check_in=got_check_in,
-                           check_out=got_check_out, num_of_adults=got_adults, num_of_children=got_children)
+                           check_out=got_check_out, num_of_adults=got_adults, num_of_children=got_children,
+                           num_of_children_under_five=got_children_under_five, return_to=return_to)
 
 @app.route('/book/combination', methods=['GET', 'POST'])
 @login_required
@@ -2429,11 +2499,11 @@ def book_room_combination():
 
     if check_in <= get_moscow_date():
         flash('Дата заезда должна быть в будущем.', 'error')
-        return redirect(url_for('book_landing_page', check_in=check_in_str, check_out=check_out_str))
+        return redirect(url_for('book_landing_page', check_in=check_in_str, check_out=check_out_str, adults=adults_a + adults_b, children=children_a + children_b, children_under_five=children_under_five))
 
     if check_out <= check_in:
         flash('Дата выезда должна быть позже даты заезда.', 'error')
-        return redirect(url_for('book_landing_page', check_in=check_in_str, check_out=check_out_str))
+        return redirect(url_for('book_landing_page', check_in=check_in_str, check_out=check_out_str, adults=adults_a + adults_b, children=children_a + children_b, children_under_five=children_under_five))
 
     stay_days = (check_out - check_in).days
     if stay_days > 31:
@@ -2446,14 +2516,14 @@ def book_room_combination():
 
     if guests_a > get_room_max_capacity(room_a) or guests_b > get_room_max_capacity(room_b):
         flash('Один из выбранных номеров не вмещает указанное количество гостей.', 'error')
-        return redirect(url_for('book_landing_page', check_in=check_in_str, check_out=check_out_str, adults=adults_a + adults_b, children=children_a + children_b))
+        return redirect(url_for('book_landing_page', check_in=check_in_str, check_out=check_out_str, adults=adults_a + adults_b, children=children_a + children_b, children_under_five=children_under_five))
 
     if not is_room_available(room_a.id, check_in, check_out) or not is_room_available(room_b.id, check_in, check_out):
         flash('Один из выбранных номеров уже недоступен на эти даты.', 'error')
-        return redirect(url_for('book_landing_page', check_in=check_in_str, check_out=check_out_str, adults=adults_a + adults_b, children=children_a + children_b))
+        return redirect(url_for('book_landing_page', check_in=check_in_str, check_out=check_out_str, adults=adults_a + adults_b, children=children_a + children_b, children_under_five=children_under_five))
 
-    total_info_a = calculate_room_total_price(room_a, check_in, check_out, adults_a, children_a)
-    total_info_b = calculate_room_total_price(room_b, check_in, check_out, adults_b, children_b)
+    total_info_a = calculate_room_total_price(room_a, check_in, check_out, adults_a, children_a, 0)
+    total_info_b = calculate_room_total_price(room_b, check_in, check_out, adults_b, children_b, 0)
     total_price = total_info_a['total'] + total_info_b['total']
 
     room_a_summary = build_booking_result_data(room_a, total_info_a, book_url='')
@@ -2540,7 +2610,7 @@ def book_room_combination():
         adults_b=adults_b,
         children_b=children_b,
         children_under_five=children_under_five,
-        total_guests=guests_a + guests_b,
+        total_guests=guests_a + guests_b + children_under_five,
         total_price=total_price,
         special_requests=special_requests,
     )
@@ -2586,11 +2656,12 @@ def calcPrice():
         check_out = datetime.strptime(check_out_str, '%Y-%m-%d').date()
         adults = data.get('adults', 2)
         children = data.get('children', 0)
+        children_under_five = data.get('childrenUnderFive', 0)
         total_guests = adults + children
 
-        app.logger.debug(f"Calculating for: {check_in} to {check_out}, guests: {adults}a/{children}c")
+        app.logger.debug(f'Calculating for: {check_in} to {check_out}, guests: {adults}a/{children}c/{children_under_five}u5')
 
-        total_info = calculate_room_total_price(room, check_in, check_out, adults, children)
+        total_info = calculate_room_total_price(room, check_in, check_out, adults, children, children_under_five)
         base_price = total_info['base_price']
         total_price = total_info['total']
         app.logger.debug(f"Base price: {base_price}")

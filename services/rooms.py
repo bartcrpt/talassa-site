@@ -274,7 +274,10 @@ class LegacyRoomService:
             })
         return items
 
-    def calculate_room_total_price(self, room, check_in, check_out, adults, children, is_high_season):
+    def calculate_room_total_price(self, room, check_in, check_out, adults, children, children_under_five=0, is_high_season=None):
+        if is_high_season is None:
+            is_high_season = self.is_high_season
+
         prices = self.get_room_prices(room)
         base_price = 0
         current_date = check_in
@@ -365,6 +368,3 @@ class LegacyRoomService:
         elif 'Шустрый WiFi' not in result:
             result.append('Шустрый WiFi')
         return result
-
-
-

@@ -1,4 +1,4 @@
-{% extends "public/base_public.html" %}
+﻿{% extends "public/base_public.html" %}
 
 {% block content %}
 {% set hero = blocks.get('hero') %}
@@ -21,33 +21,85 @@
             <div class="search-panel__heading search-panel__heading--book">
                 <p>Укажите даты и состав гостей, а мы покажем доступные номера прямо на этой странице.</p>
             </div>
-            <form action="{{ url_for('book_landing_page') }}" method="GET" class="rooms-search-form rooms-search-form--book">
-                <label>
+            <form action="{{ url_for('book_landing_page') }}" method="GET" class="rooms-search-form rooms-search-form--book" data-booking-widget>
+                <input type="hidden" name="check_in" value="{{ check_in }}" data-booking-input="check_in">
+                <input type="hidden" name="check_out" value="{{ check_out }}" data-booking-input="check_out">
+                <input type="hidden" name="adults" value="{{ adults }}" data-booking-input="adults">
+                <input type="hidden" name="children" value="{{ children }}" data-booking-input="children">
+                <input type="hidden" name="children_under_five" value="{{ children_under_five }}" data-booking-input="children_under_five">
+
+                <label class="booking-widget-field booking-widget-field--date">
                     <span>Заезд</span>
-                    <input type="date" name="check_in" value="{{ check_in }}" min="{{ min_check_in_date }}">
+                    <button type="button" class="booking-widget-trigger" data-booking-date-trigger="check_in">
+                        <strong data-booking-check-in-label>{{ check_in if check_in else 'Выберите дату' }}</strong>
+                        <small>Дата заезда</small>
+                    </button>
                 </label>
-                <label>
+
+                <label class="booking-widget-field booking-widget-field--date">
                     <span>Выезд</span>
-                    <input type="date" name="check_out" value="{{ check_out }}" min="{{ min_check_in_date }}">
+                    <button type="button" class="booking-widget-trigger" data-booking-date-trigger="check_out">
+                        <strong data-booking-check-out-label>{{ check_out if check_out else 'Выберите дату' }}</strong>
+                        <small>Дата выезда</small>
+                    </button>
                 </label>
-                <label>
-                    <span>Взрослые</span>
-                    <input type="number" name="adults" min="1" max="10" value="{{ adults }}">
-                </label>
-                <label>
-                    <span>Дети</span>
-                    <input type="number" name="children" min="0" max="10" value="{{ children }}">
-                </label>
-                <label>
+
+                <div class="booking-widget-field booking-widget-field--guests" data-booking-guests>
+                    <span>Количество гостей</span>
+                    <button type="button" class="booking-widget-trigger booking-widget-trigger--guests" data-booking-guests-toggle aria-expanded="false">
+                        <strong data-booking-guests-summary></strong>
+                        <small>Взрослые, дети 6-13, дети до 5 лет</small>
+                    </button>
+                    <div class="booking-widget-guests-panel" data-booking-guests-panel hidden>
+                        <div class="booking-widget-guests-row">
+                            <div>
+                                <h3>Взрослые</h3>
+                                <p>От 14 лет</p>
+                            </div>
+                            <div class="booking-widget-stepper">
+                                <button type="button" data-booking-stepper="adults" data-change="-1">-</button>
+                                <span data-booking-stepper-value="adults">{{ adults }}</span>
+                                <button type="button" data-booking-stepper="adults" data-change="1">+</button>
+                            </div>
+                        </div>
+                        <div class="booking-widget-guests-row">
+                            <div>
+                                <h3>Дети</h3>
+                                <p>От 6 до 13 лет</p>
+                            </div>
+                            <div class="booking-widget-stepper booking-widget-stepper--mint">
+                                <button type="button" data-booking-stepper="children" data-change="-1">-</button>
+                                <span data-booking-stepper-value="children">{{ children }}</span>
+                                <button type="button" data-booking-stepper="children" data-change="1">+</button>
+                            </div>
+                        </div>
+                        <div class="booking-widget-guests-row">
+                            <div>
+                                <h3>Дети до 5 лет</h3>
+                                <p>Включительно проживают бесплатно</p>
+                            </div>
+                            <div class="booking-widget-stepper">
+                                <button type="button" data-booking-stepper="children_under_five" data-change="-1">-</button>
+                                <span data-booking-stepper-value="children_under_five">{{ children_under_five }}</span>
+                                <button type="button" data-booking-stepper="children_under_five" data-change="1">+</button>
+                            </div>
+                        </div>
+                        <button type="button" class="site-btn site-btn--gold booking-widget-guests-apply" data-booking-guests-apply>Применить</button>
+                    </div>
+                </div>
+
+                <label class="booking-widget-field booking-widget-field--category">
                     <span>Категория</span>
-                    <select name="category_id">
-                        <option value="">Все категории</option>
-                        {% for category in booking_categories %}
-                            <option value="{{ category.id }}" {{ 'selected' if selected_category_id == category.id else '' }}>{{ category.name }}</option>
-                        {% endfor %}
-                    </select>
+                    <div class="booking-widget-select-wrap">
+                        <select name="category_id" class="booking-widget-select">
+                            <option value="">Все категории</option>
+                            {% for category in booking_categories %}
+                                <option value="{{ category.id }}" {{ 'selected' if selected_category_id == category.id else '' }}>{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </label>
-                <button type="submit" class="site-btn site-btn--gold">Показать номера</button>
+                <button type="submit" class="site-btn site-btn--gold booking-widget-submit">Показать номера</button>
             </form>
         </div>
     </div>
@@ -63,7 +115,7 @@
                     {% if selected_range %}
                         Период: {{ selected_range }}.
                     {% endif %}
-                    Гости: {{ adults }} взр.{% if children %}, {{ children }} дет.{% endif %}
+                    Гости: {{ adults }} взр.{% if children %}, {{ children }} дет. 6-13{% endif %}{% if children_under_five %}, {{ children_under_five }} дет. до 5 лет{% endif %}.
                     {% if selected_category_name %}
                         Категория: {{ selected_category_name }}.
                     {% endif %}
@@ -82,14 +134,14 @@
             <div class="booking-results-grid">
                 {% for room in booking_results %}
                     <article class="booking-result-card">
-                        <div class="booking-result-card__image">
+                        <button type="button" class="booking-result-card__image booking-result-card__image--button" data-booking-room-open data-room-preview="{{ room.preview_payload|tojson|forceescape }}">
                             <img src="{{ room.photo_url }}" alt="{{ room.name }}">
-                        </div>
+                        </button>
                         <div class="booking-result-card__body">
                             <div class="booking-result-card__top">
                                 <div>
                                     <p class="booking-result-card__category">{{ room.category_name }}</p>
-                                    <h3>{{ room.name }}</h3>
+                                    <h3><button type="button" class="booking-result-card__title-link" data-booking-room-open data-room-preview="{{ room.preview_payload|tojson|forceescape }}">{{ room.name }}</button></h3>
                                 </div>
                                 <span class="booking-result-card__room-number">№ {{ room.number }}</span>
                             </div>
@@ -108,14 +160,25 @@
                             </div>
 
                             {% if room.extra_price %}
-                                <p class="booking-result-card__note">Включая доплату за дополнительные места: {{ '%.0f'|format(room.extra_price) }} ₽</p>
+                                <details class="booking-result-card__note booking-result-card__note--expandable">
+                                    <summary>Включая доплату за дополнительные места: {{ '%.0f'|format(room.extra_price) }} ₽</summary>
+                                    <div class="booking-result-card__note-body">
+                                        <p><strong>* Размещение:</strong> стандартное количество гостей - 2.</p>
+                                        <p>За каждого дополнительного гостя свыше вместимости номера (2 гостей) действует доплата: с 01.11 по 30.04 - 0 руб/сутки для детей до 5 лет включительно, 1000 руб/сутки для детей от 6 до 13 лет включительно и 2000 руб/сутки для детей от 14 лет и взрослых.</p>
+                                        <p>С 01.05 по 31.10 - 0 руб/сутки для детей до 5 лет включительно, 1500 руб/сутки для детей от 6 до 13 лет включительно и 2500 руб/сутки для детей от 14 лет и взрослых. В этот период в цену включен завтрак.</p>
+                                    </div>
+                                </details>
                             {% endif %}
+
+                            <div class="booking-result-card__links">
+                                <button type="button" class="booking-result-card__details-link" data-booking-room-open data-room-preview="{{ room.preview_payload|tojson|forceescape }}">Подробнее о номере</button>
+                            </div>
 
                             <div class="booking-result-card__actions">
                                 {% if current_user.is_authenticated %}
-                                    <a href="{{ room.book_url }}" class="site-btn site-btn--gold">Забронировать</a>
+                                    <a href="{{ room.book_url }}" class="site-btn site-btn--gold">Оформить бронирование</a>
                                 {% else %}
-                                    <a href="{{ url_for('login') }}" class="site-btn site-btn--gold">Войти для брони</a>
+                                    <button type="button" class="site-btn site-btn--gold" data-site-auth-open data-auth-view="login" data-auth-next="{{ room.book_url }}">Войти для брони</button>
                                 {% endif %}
                             </div>
                         </div>
@@ -147,8 +210,9 @@
                                     <img src="{{ room.photo_url }}" alt="{{ room.name }}">
                                     <div class="booking-combination-card__room-copy">
                                         <p class="booking-result-card__category">{{ room.category_name }}</p>
-                                        <h4>{{ room.name }}</h4>
+                                        <h4><button type="button" class="booking-result-card__title-link booking-result-card__title-link--small" data-booking-room-open data-room-preview="{{ room.preview_payload|tojson|forceescape }}">{{ room.name }}</button></h4>
                                         <p>{{ room.guests_caption }}</p>
+                                        <button type="button" class="booking-result-card__details-link booking-result-card__details-link--small" data-booking-room-open data-room-preview="{{ room.preview_payload|tojson|forceescape }}">Подробнее</button>
                                     </div>
                                 </div>
                             {% endfor %}
@@ -160,22 +224,29 @@
                         </div>
 
                         {% if combination.extra_price %}
-                            <p class="booking-result-card__note">Включая доплату за дополнительные места: {{ '%.0f'|format(combination.extra_price) }} ₽</p>
+                            <details class="booking-result-card__note booking-result-card__note--expandable">
+                                <summary>Включая доплату за дополнительные места: {{ '%.0f'|format(combination.extra_price) }} ₽</summary>
+                                <div class="booking-result-card__note-body">
+                                    <p><strong>* Размещение:</strong> стандартное количество гостей - 2.</p>
+                                    <p>За каждого дополнительного гостя свыше вместимости номера (2 гостей) действует доплата: с 01.11 по 30.04 - 0 руб/сутки для детей до 5 лет включительно, 1000 руб/сутки для детей от 6 до 13 лет включительно и 2000 руб/сутки для детей от 14 лет и взрослых.</p>
+                                    <p>С 01.05 по 31.10 - 0 руб/сутки для детей до 5 лет включительно, 1500 руб/сутки для детей от 6 до 13 лет включительно и 2500 руб/сутки для детей от 14 лет и взрослых. В этот период в цену включен завтрак.</p>
+                                </div>
+                            </details>
                         {% endif %}
 
                         <div class="booking-combination-card__actions">
                             {% if current_user.is_authenticated %}
-                                <a href="{{ combination.booking_url }}" class="site-btn site-btn--gold">Оформить две брони</a>
+                                <a href="{{ combination.booking_url }}" class="site-btn site-btn--gold">Оформить бронирование</a>
                             {% else %}
-                                <a href="{{ url_for('login', next=combination.booking_url) }}" class="site-btn site-btn--gold">Войти для брони</a>
+                                <button type="button" class="site-btn site-btn--gold" data-site-auth-open data-auth-view="login" data-auth-next="{{ combination.booking_url }}">Войти для брони</button>
                             {% endif %}
                         </div>
 
-                        <p class="booking-combination-card__hint">Система откроет один общий экран подтверждения и затем создаст две отдельные брони.</p>
+
                     </article>
                 {% endfor %}
             </div>
-        {% else %}
+{% else %}
             <div class="empty-state-card centered-copy centered-copy--compact booking-results-empty">
                 <h2>По выбранным параметрам ничего не найдено</h2>
                 <p>Попробуйте изменить даты, количество гостей или категорию. Если нужно, напишите нам напрямую и мы подберём вариант вручную.</p>
@@ -235,7 +306,459 @@
         <a href="{{ rooms_cta.button_url if rooms_cta and rooms_cta.button_url else '/rooms' }}" class="site-btn site-btn--gold">{{ rooms_cta.button_label if rooms_cta and rooms_cta.button_label else 'Смотреть номера' }}</a>
     </div>
 </section>
+
+<div class="booking-room-modal" data-booking-room-modal hidden>
+    <div class="booking-room-modal__backdrop" data-booking-room-close></div>
+    <div class="booking-room-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="booking-room-modal-title">
+        <button type="button" class="booking-room-modal__close" data-booking-room-close aria-label="Закрыть">×</button>
+        <div class="booking-room-modal__grid">
+            <div class="booking-room-modal__media">
+                <div class="booking-room-modal__main-image-wrap">
+                    <img src="" alt="" class="booking-room-modal__main-image" data-booking-room-main-image>
+                    <span class="booking-room-modal__counter" data-booking-room-counter></span>
+                </div>
+                <div class="booking-room-modal__thumbs" data-booking-room-thumbs></div>
+            </div>
+            <div class="booking-room-modal__content">
+                <p class="booking-room-modal__category" data-booking-room-category></p>
+                <h2 id="booking-room-modal-title" data-booking-room-title></h2>
+                <p class="booking-room-modal__description" data-booking-room-description></p>
+                <div class="booking-room-modal__tags" data-booking-room-tags></div>
+                <div class="booking-room-modal__facts">
+                    <div>
+                        <span>Базовое размещение</span>
+                        <strong data-booking-room-capacity></strong>
+                    </div>
+                    <div>
+                        <span>Максимум</span>
+                        <strong data-booking-room-max-capacity></strong>
+                    </div>
+                    <div>
+                        <span>Площадь</span>
+                        <strong data-booking-room-area></strong>
+                    </div>
+                </div>
+                <div class="booking-room-modal__extra" data-booking-room-extra-wrap hidden>
+                    <span>Доп. место</span>
+                    <strong data-booking-room-extra></strong>
+                </div>
+                <div class="booking-room-modal__amenities-wrap" data-booking-room-amenities-wrap hidden>
+                    <h3>Удобства</h3>
+                    <div class="booking-room-modal__amenities" data-booking-room-amenities></div>
+                </div>
+</div>
+        </div>
+    </div>
+</div>
+
+<div class="booking-calendar-modal" data-booking-calendar-modal hidden>
+    <div class="booking-calendar-modal__backdrop" data-booking-calendar-close></div>
+    <div class="booking-calendar-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="booking-calendar-title">
+        <button type="button" class="booking-calendar-modal__close" data-booking-calendar-close aria-label="Закрыть">×</button>
+        <div class="booking-calendar-modal__head">
+            <p class="booking-calendar-modal__eyebrow">Выбор дат</p>
+            <h2 id="booking-calendar-title" data-booking-calendar-title>Выберите дату</h2>
+            <p data-booking-calendar-subtitle>Выберите удобный день для начала отдыха.</p>
+        </div>
+        <div class="booking-calendar-modal__nav">
+            <button type="button" class="booking-calendar-modal__nav-btn" data-booking-calendar-nav="prev">‹</button>
+            <strong data-booking-calendar-month></strong>
+            <button type="button" class="booking-calendar-modal__nav-btn" data-booking-calendar-nav="next">›</button>
+        </div>
+        <div class="booking-calendar-grid__weekdays">
+            <span>Пн</span>
+            <span>Вт</span>
+            <span>Ср</span>
+            <span>Чт</span>
+            <span>Пт</span>
+            <span>Сб</span>
+            <span>Вс</span>
+        </div>
+        <div class="booking-calendar-grid" data-booking-calendar-grid></div>
+        <div class="booking-calendar-modal__footer">
+            <strong data-booking-calendar-selection>Даты ещё не выбраны</strong>
+            <span>Месяц выезда автоматически открывается в том же периоде, что и дата заезда.</span>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const widget = document.querySelector('[data-booking-widget]');
+    if (!widget) return;
+
+    const minDateString = {{ min_check_in_date|tojson }};
+    const minDate = new Date(minDateString + 'T00:00:00');
+    const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+
+    const state = {
+        checkIn: parseDate(widget.querySelector('[data-booking-input="check_in"]').value),
+        checkOut: parseDate(widget.querySelector('[data-booking-input="check_out"]').value),
+        adults: parseInt(widget.querySelector('[data-booking-input="adults"]').value || '2', 10),
+        children: parseInt(widget.querySelector('[data-booking-input="children"]').value || '0', 10),
+        childrenUnderFive: parseInt(widget.querySelector('[data-booking-input="children_under_five"]').value || '0', 10),
+        activeField: 'check_in',
+        viewDate: null,
+    };
+
+    const elements = {
+        checkInInput: widget.querySelector('[data-booking-input="check_in"]'),
+        checkOutInput: widget.querySelector('[data-booking-input="check_out"]'),
+        adultsInput: widget.querySelector('[data-booking-input="adults"]'),
+        childrenInput: widget.querySelector('[data-booking-input="children"]'),
+        childrenUnderFiveInput: widget.querySelector('[data-booking-input="children_under_five"]'),
+        checkInLabel: widget.querySelector('[data-booking-check-in-label]'),
+        checkOutLabel: widget.querySelector('[data-booking-check-out-label]'),
+        guestsSummary: widget.querySelector('[data-booking-guests-summary]'),
+        guestsToggle: widget.querySelector('[data-booking-guests-toggle]'),
+        guestsPanel: widget.querySelector('[data-booking-guests-panel]'),
+        guestsApply: widget.querySelector('[data-booking-guests-apply]'),
+        modal: document.querySelector('[data-booking-calendar-modal]'),
+        modalTitle: document.querySelector('[data-booking-calendar-title]'),
+        modalSubtitle: document.querySelector('[data-booking-calendar-subtitle]'),
+        modalMonth: document.querySelector('[data-booking-calendar-month]'),
+        modalGrid: document.querySelector('[data-booking-calendar-grid]'),
+        modalSelection: document.querySelector('[data-booking-calendar-selection]'),
+    };
+
+    function parseDate(value) {
+        if (!value) return null;
+        const date = new Date(value + 'T00:00:00');
+        return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function formatIso(date) {
+        if (!date) return '';
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function formatDisplay(date) {
+        if (!date) return 'Выберите дату';
+        return date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
+    }
+
+    function guestWord(value, forms) {
+        const mod10 = value % 10;
+        const mod100 = value % 100;
+        if (mod10 === 1 && mod100 !== 11) return forms[0];
+        if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return forms[1];
+        return forms[2];
+    }
+
+    function buildGuestSummary() {
+        const parts = [`${state.adults} ${guestWord(state.adults, ['взрослый', 'взрослых', 'взрослых'])}`];
+        if (state.children > 0) {
+            parts.push(`${state.children} ${guestWord(state.children, ['ребёнок 6-13 лет', 'ребёнка 6-13 лет', 'детей 6-13 лет'])}`);
+        }
+        if (state.childrenUnderFive > 0) {
+            parts.push(`${state.childrenUnderFive} ${guestWord(state.childrenUnderFive, ['ребёнок до 5 лет', 'ребёнка до 5 лет', 'детей до 5 лет'])}`);
+        }
+        return parts.join(', ');
+    }
+
+    function syncGuestValues() {
+        elements.adultsInput.value = state.adults;
+        elements.childrenInput.value = state.children;
+        elements.childrenUnderFiveInput.value = state.childrenUnderFive;
+        widget.querySelector('[data-booking-stepper-value="adults"]').textContent = state.adults;
+        widget.querySelector('[data-booking-stepper-value="children"]').textContent = state.children;
+        widget.querySelector('[data-booking-stepper-value="children_under_five"]').textContent = state.childrenUnderFive;
+        elements.guestsSummary.textContent = buildGuestSummary();
+    }
+
+    function syncDateValues() {
+        elements.checkInInput.value = formatIso(state.checkIn);
+        elements.checkOutInput.value = formatIso(state.checkOut);
+        elements.checkInLabel.textContent = formatDisplay(state.checkIn);
+        elements.checkOutLabel.textContent = formatDisplay(state.checkOut);
+        if (state.checkIn && state.checkOut) {
+            elements.modalSelection.textContent = `${formatDisplay(state.checkIn)} - ${formatDisplay(state.checkOut)}`;
+        } else if (state.checkIn) {
+            elements.modalSelection.textContent = `Заезд: ${formatDisplay(state.checkIn)}`;
+        } else {
+            elements.modalSelection.textContent = 'Даты ещё не выбраны';
+        }
+    }
+
+    function sameDate(a, b) {
+        return a && b && formatIso(a) === formatIso(b);
+    }
+
+    function isBeforeMin(date) {
+        return date < minDate;
+    }
+
+    function openCalendar(field) {
+        state.activeField = field;
+        if (field === 'check_out') {
+            state.viewDate = state.checkOut || state.checkIn || minDate;
+            elements.modalTitle.textContent = 'Выберите дату выезда';
+            elements.modalSubtitle.textContent = 'Месяц открывается по дате заезда, чтобы продолжить выбор в том же периоде.';
+        } else {
+            state.viewDate = state.checkIn || minDate;
+            elements.modalTitle.textContent = 'Выберите дату заезда';
+            elements.modalSubtitle.textContent = 'Выберите удобный день для начала отдыха.';
+        }
+        renderCalendar();
+        elements.modal.hidden = false;
+        document.body.classList.add('is-modal-open');
+    }
+
+    function closeCalendar() {
+        elements.modal.hidden = true;
+        document.body.classList.remove('is-modal-open');
+    }
+
+    function renderCalendar() {
+        const year = state.viewDate.getFullYear();
+        const month = state.viewDate.getMonth();
+        elements.modalMonth.textContent = `${monthNames[month]} ${year}`;
+
+        const firstDay = new Date(year, month, 1);
+        const start = new Date(firstDay);
+        const day = firstDay.getDay();
+        const mondayOffset = day === 0 ? -6 : 1 - day;
+        start.setDate(firstDay.getDate() + mondayOffset);
+
+        const cells = [];
+        for (let i = 0; i < 42; i += 1) {
+            const current = new Date(start);
+            current.setDate(start.getDate() + i);
+            const muted = current.getMonth() !== month;
+            const disabled = isBeforeMin(current) || (state.activeField === 'check_out' && state.checkIn && current <= state.checkIn);
+            const selected = sameDate(current, state.activeField === 'check_out' ? state.checkOut : state.checkIn);
+            const inRange = state.checkIn && state.checkOut && current > state.checkIn && current < state.checkOut;
+            const classes = ['booking-calendar-grid__day'];
+            if (muted) classes.push('is-muted');
+            if (disabled) classes.push('is-disabled');
+            if (selected) classes.push('is-selected');
+            if (inRange) classes.push('is-in-range');
+            cells.push(`<button type="button" class="${classes.join(' ')}" data-booking-day="${formatIso(current)}" ${disabled ? 'disabled' : ''}>${current.getDate()}</button>`);
+        }
+        elements.modalGrid.innerHTML = cells.join('');
+    }
+
+    function setDateFromSelection(value) {
+        const selected = parseDate(value);
+        if (!selected) return;
+        if (state.activeField === 'check_in') {
+            state.checkIn = selected;
+            if (state.checkOut && state.checkOut <= selected) {
+                state.checkOut = null;
+            }
+            syncDateValues();
+            closeCalendar();
+            return;
+        }
+        if (state.checkIn && selected <= state.checkIn) return;
+        state.checkOut = selected;
+        syncDateValues();
+        closeCalendar();
+    }
+
+    widget.querySelectorAll('[data-booking-date-trigger]').forEach((trigger) => {
+        trigger.addEventListener('click', function () {
+            openCalendar(this.dataset.bookingDateTrigger);
+        });
+    });
+
+    elements.modal.addEventListener('click', function (event) {
+        if (event.target.matches('[data-booking-calendar-close]')) {
+            closeCalendar();
+            return;
+        }
+        if (event.target.matches('[data-booking-calendar-nav="prev"]')) {
+            const next = new Date(state.viewDate);
+            next.setMonth(next.getMonth() - 1);
+            if (next.getFullYear() < minDate.getFullYear() || (next.getFullYear() === minDate.getFullYear() && next.getMonth() < minDate.getMonth())) {
+                state.viewDate = new Date(minDate);
+            } else {
+                state.viewDate = next;
+            }
+            renderCalendar();
+            return;
+        }
+        if (event.target.matches('[data-booking-calendar-nav="next"]')) {
+            const next = new Date(state.viewDate);
+            next.setMonth(next.getMonth() + 1);
+            state.viewDate = next;
+            renderCalendar();
+            return;
+        }
+        if (event.target.matches('[data-booking-day]')) {
+            setDateFromSelection(event.target.dataset.bookingDay);
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !elements.modal.hidden) {
+            closeCalendar();
+        }
+    });
+
+    widget.querySelectorAll('[data-booking-stepper]').forEach((button) => {
+        button.addEventListener('click', function () {
+            const field = this.dataset.bookingStepper;
+            const change = parseInt(this.dataset.change, 10);
+            if (field === 'adults') {
+                state.adults = Math.min(10, Math.max(1, state.adults + change));
+            } else if (field === 'children') {
+                state.children = Math.min(10, Math.max(0, state.children + change));
+            } else {
+                state.childrenUnderFive = Math.min(10, Math.max(0, state.childrenUnderFive + change));
+            }
+            syncGuestValues();
+        });
+    });
+
+    elements.guestsToggle.addEventListener('click', function () {
+        const isHidden = elements.guestsPanel.hidden;
+        elements.guestsPanel.hidden = !isHidden;
+        this.setAttribute('aria-expanded', String(isHidden));
+    });
+
+    elements.guestsApply.addEventListener('click', function () {
+        elements.guestsPanel.hidden = true;
+        elements.guestsToggle.setAttribute('aria-expanded', 'false');
+    });
+
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest('[data-booking-guests]')) {
+            elements.guestsPanel.hidden = true;
+            elements.guestsToggle.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    syncGuestValues();
+    syncDateValues();
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.querySelector('[data-booking-room-modal]');
+    if (!modal) return;
+
+    const mainImage = modal.querySelector('[data-booking-room-main-image]');
+    const counter = modal.querySelector('[data-booking-room-counter]');
+    const thumbs = modal.querySelector('[data-booking-room-thumbs]');
+    const category = modal.querySelector('[data-booking-room-category]');
+    const title = modal.querySelector('[data-booking-room-title]');
+    const description = modal.querySelector('[data-booking-room-description]');
+    const tags = modal.querySelector('[data-booking-room-tags]');
+    const capacity = modal.querySelector('[data-booking-room-capacity]');
+    const maxCapacity = modal.querySelector('[data-booking-room-max-capacity]');
+    const area = modal.querySelector('[data-booking-room-area]');
+    const extraWrap = modal.querySelector('[data-booking-room-extra-wrap]');
+    const extra = modal.querySelector('[data-booking-room-extra]');
+    const amenitiesWrap = modal.querySelector('[data-booking-room-amenities-wrap]');
+    const amenities = modal.querySelector('[data-booking-room-amenities]');
+
+    let currentPhotos = [];
+
+    function renderPhoto(index) {
+        const photo = currentPhotos[index];
+        if (!photo) return;
+        mainImage.src = photo.url;
+        mainImage.alt = photo.alt || '';
+        counter.textContent = `${index + 1} / ${currentPhotos.length}`;
+        Array.from(thumbs.querySelectorAll('button')).forEach((thumb, thumbIndex) => {
+            thumb.classList.toggle('is-active', thumbIndex === index);
+        });
+    }
+
+    function openModal(payload) {
+        currentPhotos = Array.isArray(payload.photo_items) && payload.photo_items.length ? payload.photo_items : [{ url: payload.photo_url, alt: payload.name }];
+        category.textContent = payload.category_name || '';
+        title.textContent = payload.name || '';
+        description.textContent = payload.description || payload.short_description || '';
+        capacity.textContent = `${payload.capacity || 0} гост.`;
+        maxCapacity.textContent = `${payload.max_capacity || 0} гост.`;
+        area.textContent = payload.area_label || 'Не указана';
+
+        tags.innerHTML = '';
+        (payload.feature_labels || []).forEach((item) => {
+            const span = document.createElement('span');
+            span.textContent = item;
+            tags.appendChild(span);
+        });
+        if (payload.area_label) {
+            const span = document.createElement('span');
+            span.textContent = payload.area_label;
+            tags.appendChild(span);
+        }
+
+        if (payload.extra_bed) {
+            extraWrap.hidden = false;
+            extra.textContent = payload.extra_bed;
+        } else {
+            extraWrap.hidden = true;
+            extra.textContent = '';
+        }
+
+        amenities.innerHTML = '';
+        if (payload.amenities_list && payload.amenities_list.length) {
+            amenitiesWrap.hidden = false;
+            payload.amenities_list.forEach((item) => {
+                const span = document.createElement('span');
+                span.textContent = item;
+                amenities.appendChild(span);
+            });
+        } else {
+            amenitiesWrap.hidden = true;
+        }
+
+        thumbs.innerHTML = '';
+        currentPhotos.forEach((photo, index) => {
+            const button = document.createElement('button');
+            const image = document.createElement('img');
+            button.type = 'button';
+            button.className = 'booking-room-modal__thumb' + (index === 0 ? ' is-active' : '');
+            image.src = photo.url;
+            image.alt = photo.alt || '';
+            button.appendChild(image);
+            button.addEventListener('click', function () {
+                renderPhoto(index);
+            });
+            thumbs.appendChild(button);
+        });
+
+        renderPhoto(0);
+        modal.hidden = false;
+        document.body.classList.add('is-modal-open');
+    }
+
+    function closeModal() {
+        modal.hidden = true;
+        document.body.classList.remove('is-modal-open');
+    }
+
+    document.querySelectorAll('[data-booking-room-open]').forEach((trigger) => {
+        trigger.addEventListener('click', function () {
+            const raw = this.getAttribute('data-room-preview');
+            if (!raw) return;
+            try {
+                openModal(JSON.parse(raw));
+            } catch (error) {
+                console.error('Failed to parse room preview payload', error);
+            }
+        });
+    });
+
+    modal.addEventListener('click', function (event) {
+        if (event.target.matches('[data-booking-room-close]')) {
+            closeModal();
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !modal.hidden) {
+            closeModal();
+        }
+    });
+});
+</script>
 {% endblock %}
-
-
-

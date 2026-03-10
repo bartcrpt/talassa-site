@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+﻿document.addEventListener('DOMContentLoaded', () => {
   initSiteNav();
   initSiteUserMenu();
   initSiteAuth();
@@ -330,7 +330,7 @@ function initSiteAuth() {
   const subtitle = modal.querySelector('[data-site-auth-subtitle]');
   const switchBox = modal.querySelector('[data-site-auth-switch]');
   const errorBox = modal.querySelector('[data-site-auth-error]');
-  const nextPage = modal.getAttribute('data-next') || window.location.pathname;
+  const defaultNextPage = modal.getAttribute('data-next') || window.location.pathname;
   const forms = {
     login: modal.querySelector('[data-site-auth-form="login"]'),
     register: modal.querySelector('[data-site-auth-form="register"]'),
@@ -357,6 +357,7 @@ function initSiteAuth() {
     phone: '',
     phoneDisplay: '',
     loading: false,
+    nextPage: defaultNextPage,
   };
 
   const viewConfig = {
@@ -462,8 +463,9 @@ function initSiteAuth() {
     }
   };
 
-  const openModal = (view = 'login') => {
+  const openModal = (view = 'login', nextPage = defaultNextPage) => {
     state.codeSource = view === 'register' ? 'register' : 'login';
+    state.nextPage = nextPage || defaultNextPage;
     if (view === 'login' || view === 'register') {
       state.phone = '';
       state.phoneDisplay = '';
@@ -552,7 +554,7 @@ function initSiteAuth() {
       const data = await requestJson('/auth/api/verify', {
         phone: state.phone,
         sms_code: code,
-        next: nextPage,
+        next: state.nextPage,
       });
 
       window.location.href = data.redirect_url || window.location.href;
@@ -585,7 +587,8 @@ function initSiteAuth() {
         navToggle?.setAttribute('aria-expanded', 'false');
         document.body.classList.remove('site-nav-open');
       }
-      openModal(view);
+      const next = button.getAttribute('data-auth-next') || defaultNextPage;
+      openModal(view, next);
     });
   });
 

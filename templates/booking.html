@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}Бронирование номера {{ room.number }} - Таласса Hotel & Spa{% endblock %}
 
@@ -59,14 +59,14 @@
                                 <input type="text" class="form-control date-picker" id="check_in_display"
                                        placeholder="Выберите дату" readonly data-bs-toggle="modal" data-bs-target="#dateRangeModal">
                                 <input type="hidden" id="check_in" name="check_in"
-                                       value="{{ request.args.get('check_in', '') }}" required>
+                                       value="{{ check_in or '' }}" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="check_out_display" class="form-label">Дата выезда *</label>
                                 <input type="text" class="form-control date-picker" id="check_out_display"
                                        placeholder="Выберите дату" readonly data-bs-toggle="modal" data-bs-target="#dateRangeModal">
                                 <input type="hidden" id="check_out" name="check_out"
-                                       value="{{ request.args.get('check_out', '') }}" required>
+                                       value="{{ check_out or '' }}" required>
                             </div>
                         </div>
 
@@ -115,7 +115,7 @@
                                                     </div>
                                                     <div class="input-group input-group-sm mt-2">
                                                         <button class="btn btn-outline-primary" type="button" onclick="changeBookingGuests('children_under_five', -1)">-</button>
-                                                        <input type="number" class="form-control text-center" id="booking_children_under_five" name="children_under_five" value=0 min="0" max="10"
+                                                        <input type="number" class="form-control text-center" id="booking_children_under_five" name="children_under_five" value="{{ num_of_children_under_five or 0 }}" min="0" max="10"
                                                                oninput="validateBookingManualInput('children_under_five')" onblur="validateBookingManualInput('children_under_five')">
                                                         <button class="btn btn-outline-primary" type="button" onclick="changeBookingGuests('children_under_five', 1)">+</button>
                                                     </div>
@@ -176,8 +176,8 @@
 
                         <!-- Submit Button -->
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="{{ url_for('room_detail', room_id=room.id) }}" class="btn btn-outline-secondary me-md-2">
-                                <i class="bi bi-arrow-left"></i> Назад к номеру
+                            <a href="{{ return_to }}" class="btn btn-outline-secondary me-md-2">
+                                <i class="bi bi-arrow-left"></i> Вернуться к результатам
                             </a>
                             <button type="submit" class="btn btn-primary btn-lg px-4" id="submitBtn">
                                 <i class="bi bi-credit-card"></i> Подтвердить бронирование
@@ -467,15 +467,46 @@ document.addEventListener('DOMContentLoaded', function() {
     const dateRangeModal = new bootstrap.Modal(document.getElementById('dateRangeModal'));
 
     // Initialize display with existing values
-    if (checkInInput.value) {
-        const date = new Date(checkInInput.value);
-        checkInDisplay.value = date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
-    }
-    if (checkOutInput.value) {
-        const date = new Date(checkOutInput.value);
-        checkOutDisplay.value = date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+    function parseLocalDate(value) {
+        if (!value) return null;
+        return new Date(value + 'T00:00:00');
     }
 
+    function formatShortDate(date) {
+        return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+    }
+
+    const initialCheckIn = parseLocalDate(checkInInput.value);
+    const initialCheckOut = parseLocalDate(checkOutInput.value);
+    if (initialCheckIn) {
+        checkInDisplay.value = formatShortDate(initialCheckIn);
+    }
+    if (initialCheckOut) {
+        checkOutDisplay.value = formatShortDate(initialCheckOut);
+    }
+
+    if (initialCheckIn && initialCheckOut) {
+        const options = { day: 'numeric', month: 'short', year: 'numeric' };
+        const initialNights = Math.ceil((initialCheckOut - initialCheckIn) / (1000 * 60 * 60 * 24));
+        selectedDatesDisplay.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="bi bi-calendar-check text-primary"></i>
+                    <strong>Заезд:</strong> ${initialCheckIn.toLocaleDateString('ru-RU', options)}
+                </div>
+                <div>
+                    <i class="bi bi-calendar-x text-primary"></i>
+                    <strong>Выезд:</strong> ${initialCheckOut.toLocaleDateString('ru-RU', options)}
+                </div>
+            </div>
+            <div class="text-center mt-2">
+                <small class="text-muted">
+                    ${initialNights}
+                    ${initialNights === 1 ? 'ночь' : initialNights < 5 ? 'ночи' : 'ночей'}
+                </small>
+            </div>
+        `;
+    }
     const calendar = new DateRangeCalendar('dateRangeCalendar', {
         minDate: today,
         onDateSelect: function(startDate, endDate) {
@@ -607,8 +638,8 @@ function updateBookingGuestsDisplay() {
         childrenInput.addEventListener('change', calculatePrice);
     }
 
-    // Сбрасываем выбор гостей при загрузке страницы
-    resetGuestsToDefault();
+    // Сохраняем переданные даты и состав гостей при переходе из поиска
+    updateBookingGuestsDisplay();
 
     // Initial calculation
     calculatePrice();
@@ -627,6 +658,7 @@ async function calculatePrice() {
 
         const adults = parseInt(document.getElementById('booking_adults').value) || 0;
         const children = parseInt(document.getElementById('booking_children').value) || 0;
+        const childrenUnderFive = parseInt(document.getElementById('booking_children_under_five').value) || 0;
 
         if (nights > 0) {
             totalPriceEl.innerHTML = 'Расчёт стоимости...';
@@ -641,6 +673,7 @@ async function calculatePrice() {
                         checkOut: checkOutInput.value,
                         adults: adults,
                         children: children,
+                        childrenUnderFive: childrenUnderFive,
                         room_id: {{ room.id }}
                     })
                 });
@@ -870,7 +903,3 @@ function validateBookingForm(event) {
 
 </script>
 {% endblock %}
-
-
-
-
