@@ -55,7 +55,6 @@ TELEGRAM_GROUP_ID = os.getenv('TELEGRAM_GROUP_ID')
 SMS_API_GATEWAY = os.getenv('SMS_API_GATEWAY')
 SMS_API_KEY = os.getenv('SMS_API_KEY')
 
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
 app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
@@ -102,7 +101,7 @@ HOME_PAGE_DEFAULT_BLOCKS = {
     'philosophy': {
         'name': 'Философия',
         'title': 'Философия Таласса',
-        'body': 'Отель «Таласса» располагается на первой линии побережья Чёрного моря и обладает собственным пляжем. Из окон каждого номера открывается вид на море: только в части номеров это морская панорама, где даже принимая ванну, вы можете любоваться прибоем, а в других номерах из окон видны ещё и горы.\n\nВ наших номерах вас ожидает особая атмосфера уюта. Начиная с ортопедического матраса, мягких пуфов и дизайнерской мебели, заканчивая красивой ванной комнатой, оформленной в современном стиле и оборудованной тропическим душем, феном и мягкими душевыми и пляжными полотенцами. Мы старались продумать каждую деталь нашего отеля, чтобы ваше пребывание на побережье было комфортным. И, конечно, не забыли про лифт, чтобы вы, утомлённые солнцем, поднимались в свой номер легко.\n\nНаш галечный немноголюдный пляж с кристально чистой водой и удобным заходом в море создает идеальные условия для спокойного отдыха.\n\nОтель идеально подходит самым ленивым любителям морских закатов. Для всех остальных у нас есть прокат Supzero (sup board и принадлежности).\n\nДля тех, кто любит совмещать полезное с полезным, в нашем отеле находится оздоровительный центр. Здесь вы сможете пройти комплекс талассотерапевтических процедур: от фитобочки до гидромассажных купелей на морской воде (после предварительной консультации у специалиста). Также мы не забыли о людях с ограниченными возможностями передвижения: пандус, оборудованные номера для инвалидов, программы оздоровительного центра.',
+        'body': 'Отель «Таласса» располагается на первой линии побережья Чёрного моря (буквально в 30 метрах) и обладает собственным пляжем. Из окон каждого номера открывается вид на море: только в части номеров это морская панорама, где даже принимая ванну, вы можете любоваться прибоем, а в других номерах из окон видны ещё и горы.\n\nВ наших номерах вас ожидает особая атмосфера уюта. Начиная с ортопедического матраса, мягких пуфов и дизайнерской мебели, заканчивая красивой ванной комнатой, оформленной в современном стиле и оборудованной тропическим душем, феном и мягкими душевыми и пляжными полотенцами. Мы старались продумать каждую деталь нашего отеля, чтобы ваше пребывание на побережье было комфортным. И, конечно, не забыли про лифт, чтобы вы, утомлённые солнцем, поднимались в свой номер легко.\n\nНаш галечный немноголюдный пляж с кристально чистой водой и удобным заходом в море создает идеальные условия для спокойного отдыха.\n\nОтель идеально подходит самым ленивым любителям морских закатов. Для всех остальных у нас есть прокат Supzero (sup board и принадлежности).\n\nДля тех, кто любит совмещать полезное с полезным, в нашем отеле находится оздоровительный центр. Здесь вы сможете пройти комплекс талассотерапевтических процедур: от фитобочки до гидромассажных купелей на морской воде (после предварительной консультации у специалиста). Также мы не забыли о людях с ограниченными возможностями передвижения: пандус, оборудованные номера для инвалидов, программы оздоровительного центра.',
         'image_url': '/static/site/images/gallery/photo_3.jpg',
         'button_label': 'О талассотерапии',
         'button_url': '/wellness',
@@ -168,7 +167,6 @@ HOME_PAGE_DEFAULT_BLOCKS = {
         'sort_order': 70,
     },
 }
-
 
 ABOUT_PAGE_DEFAULT_BLOCKS = {
     'hero': {
@@ -396,7 +394,6 @@ ACCESSIBILITY_PAGE_DEFAULT_BLOCKS = {
     },
 }
 
-
 CONTACT_PAGE_DEFAULT_BLOCKS = {
     'hero': {
         'name': 'Hero',
@@ -516,7 +513,6 @@ BOOK_PAGE_DEFAULT_BLOCKS = {
     },
 }
 
-
 ROOMS_PAGE_DEFAULT_BLOCKS = {
     'hero': {
         'name': 'Hero',
@@ -565,7 +561,6 @@ GALLERY_PAGE_DEFAULT_BLOCKS = {
     },
 }
 
-
 PAGE_DEFAULT_BLOCKS = {
     'home': HOME_PAGE_DEFAULT_BLOCKS,
     'about': ABOUT_PAGE_DEFAULT_BLOCKS,
@@ -589,6 +584,15 @@ PAGE_DEFAULT_BLOCKS = {
                 'replace_if': [None, '', '/static/site/images/gallery/photo_1.jpg'],
             },
         },
+        'philosophy': {
+            'body': {
+                'target': HOME_PAGE_DEFAULT_BLOCKS['philosophy']['body'],
+                'replace_if': [
+                    'Отель «Таласса» располагается на первой линии побережья Чёрного моря и обладает собственным пляжем. Из окон каждого номера открывается вид на море: только в части номеров это морская панорама, где даже принимая ванну, вы можете любоваться прибоем, а в других номерах из окон видны ещё и горы.\n\nВ наших номерах вас ожидает особая атмосфера уюта. Начиная с ортопедического матраса, мягких пуфов и дизайнерской мебели, заканчивая красивой ванной комнатой, оформленной в современном стиле и оборудованной тропическим душем, феном и мягкими душевыми и пляжными полотенцами. Мы старались продумать каждую деталь нашего отеля, чтобы ваше пребывание на побережье было комфортным. И, конечно, не забыли про лифт, чтобы вы, утомлённые солнцем, поднимались в свой номер легко.\n\nНаш галечный немноголюдный пляж с кристально чистой водой и удобным заходом в море создает идеальные условия для спокойного отдыха.\n\nОтель идеально подходит самым ленивым любителям морских закатов. Для всех остальных у нас есть прокат Supzero (sup board и принадлежности).\n\nДля тех, кто любит совмещать полезное с полезным, в нашем отеле находится оздоровительный центр. Здесь вы сможете пройти комплекс талассотерапевтических процедур: от фитобочки до гидромассажных купелей на морской воде (после предварительной консультации у специалиста). Также мы не забыли о людях с ограниченными возможностями передвижения: пандус, оборудованные номера для инвалидов, программы оздоровительного центра.',
+                ],
+            },
+        },
+
         'highlights': {
             'payload': {
                 'target': HOME_PAGE_DEFAULT_BLOCKS['highlights']['payload'],
@@ -664,6 +668,7 @@ PAGE_DEFAULT_BLOCKS = {
                 'replace_if': [None, ''],
             },
         },
+
         'highlights': {
             'payload': {
                 'target': ROOMS_PAGE_DEFAULT_BLOCKS['highlights']['payload'],
@@ -708,6 +713,7 @@ CMS_BLOCK_GUIDES = {
     'home': {
         'hero': {'description': 'Первый экран главной: подпись, заголовок, подзаголовок, фоновое изображение и две кнопки.', 'payload_example': {'eyebrow': 'Абхазия • Чёрное море', 'secondary_button_label': 'Смотреть номера', 'secondary_button_url': '/rooms'}},
         'philosophy': {'description': 'Блок Философия Таласса. Основной текст лучше разделять пустой строкой на абзацы.'},
+
         'highlights': {'description': 'Карточки Почему Таласса. В payload хранится список элементов, у которых может быть desc или items.', 'payload_example': {'items': [{'title': 'Галечный пляж', 'desc': 'Краткое описание'}, {'title': 'Комфорт на месте', 'items': ['Свой пляж', 'Шустрый WiFi']}]}},
         'rooms_preview': {'description': 'Вводный блок перед превью номеров на главной.'},
         'wellness': {'description': 'Короткий блок про оздоровление на главной.', 'payload_example': {'eyebrow': 'Оздоровление'}},
@@ -754,6 +760,7 @@ CMS_BLOCK_GUIDES = {
     },
     'rooms': {
         'hero': {'description': 'Верхний заголовок страницы номеров.'},
+
         'highlights': {'description': 'Короткий список преимуществ над каталогом.', 'payload_example': {'items': ['Шустрый WiFi', 'Подогреваемый бассейн', 'Территория с парковкой']}},
     },
     'journal': {
@@ -813,7 +820,6 @@ CMS_SEO_SYNC_PAGES = ('home', 'wellness', 'rooms', 'gallery', 'accessibility', '
 def format_phone_filter(phone):
     return format_phone_for_display(phone)
 
-
 # Models
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -829,7 +835,6 @@ class User(UserMixin, db.Model):
 
     bookings = db.relationship('Booking', backref='user', lazy=True)
 
-
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -837,7 +842,6 @@ class Category(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     rooms = db.relationship('Room', backref='category', lazy=True)
-
 
 class Room(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -855,7 +859,6 @@ class Room(db.Model):
     photos = db.relationship('RoomPhoto', backref='room', lazy=True, cascade='all, delete-orphan')
     bookings = db.relationship('Booking', backref='room', lazy=True)
 
-
 class RoomPhoto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     room_id = db.Column(db.Integer, db.ForeignKey('room.id'), nullable=False)
@@ -863,7 +866,6 @@ class RoomPhoto(db.Model):
     original_filename = db.Column(db.String(255), nullable=False)
     is_main = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
 
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -880,7 +882,6 @@ class Booking(db.Model):
     special_requests = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-
 class News(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
@@ -894,14 +895,12 @@ class News(db.Model):
     author = db.relationship('User', backref='news_articles')
     photos = db.relationship('NewsPhoto', backref='news', lazy=True, cascade='all, delete-orphan')
 
-
 class NewsPhoto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     news_id = db.Column(db.Integer, db.ForeignKey('news.id'), nullable=False)
     filename = db.Column(db.String(255), nullable=False)
     original_filename = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
 
 class SitePage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -915,7 +914,6 @@ class SitePage(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     blocks = db.relationship('SiteBlock', backref='page', lazy=True, cascade='all, delete-orphan', order_by='SiteBlock.sort_order')
-
 
 class SiteBlock(db.Model):
     __table_args__ = (db.UniqueConstraint('page_id', 'block_key', name='uq_site_block_page_key'),)
@@ -940,18 +938,15 @@ class SiteBlock(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-
 # Helper functions
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
 
-
 def resize_image(image_path, max_size=(800, 600)):
     with Image.open(image_path) as img:
         img.thumbnail(max_size, Image.Resampling.LANCZOS)
         img.save(image_path, optimize=True, quality=85)
-
 
 def validate_russian_phone(phone):
     """Валидация российского номера телефона"""
@@ -985,7 +980,6 @@ def validate_russian_phone(phone):
 
     return operator_code in valid_codes
 
-
 def format_phone_for_storage(phone):
     """Форматирует телефон для сохранения в базе данных в чистом виде"""
     if not phone:
@@ -1004,7 +998,6 @@ def format_phone_for_storage(phone):
 
     return phone  # Возвращаем как есть, если не удалось отформатировать
 
-
 def is_room_available(room_id, check_in, check_out):
     conflicting_bookings = Booking.query.filter(
         Booking.room_id == room_id,
@@ -1016,7 +1009,6 @@ def is_room_available(room_id, check_in, check_out):
         )
     ).first()
     return conflicting_bookings is None
-
 
 def format_phone_for_display(phone):
     """Форматирует телефон для отображения в шаблонах"""
@@ -1032,22 +1024,18 @@ def format_phone_for_display(phone):
 
     return phone  # Возвращаем как есть, если не российский формат
 
-
 def get_moscow_time():
     """Получить текущее московское время"""
     moscow_tz = pytz.timezone('Europe/Moscow')
     return datetime.now(moscow_tz)
 
-
 def get_moscow_date():
     """Получить текущую московскую дату"""
     return get_moscow_time().date()
 
-
 def generate_sms_code():
     """Генерирует 6-значный SMS код"""
     return ''.join(random.choices(string.digits, k=6))
-
 
 def send_code(phone, code, api_key=SMS_API_KEY, sms_api_gateway=SMS_API_GATEWAY):
     sms_login, sms_passwd = api_key.split(':')
@@ -1077,12 +1065,10 @@ def send_code(phone, code, api_key=SMS_API_KEY, sms_api_gateway=SMS_API_GATEWAY)
         ]
     }
 
-
     """Отправляет SMS код (пока выводит в консоль)"""
     app.logger.info(text_for_send_sms)
     send_tg_message(text_for_send_sms, TELEGRAM_GROUP_ID)
     send_sms_message(phone, sms_json, sms_api_gateway=sms_api_gateway)
-
 
 
 def ensure_home_page_blocks_exist():
@@ -1118,7 +1104,6 @@ def ensure_home_page_blocks_exist():
         db.session.commit()
 
 
-
 def ensure_about_page_blocks_exist():
     ensure_site_pages_exist()
     about_page = SitePage.query.filter_by(slug='about').first()
@@ -1151,7 +1136,6 @@ def ensure_about_page_blocks_exist():
     if created:
         db.session.commit()
 
-
 def normalize_block_payload(payload):
     if isinstance(payload, dict):
         return payload
@@ -1165,7 +1149,6 @@ def normalize_block_payload(payload):
         except json.JSONDecodeError:
             return {}
     return {}
-
 
 def sync_current_cms_block_values(page_slug, blocks):
     sync_rules = CURRENT_CMS_BLOCK_SYNC.get(page_slug)
@@ -1224,7 +1207,6 @@ def sync_public_page_seo_defaults(page_slug):
     if changed:
         db.session.commit()
 
-
 def get_site_page_with_blocks(page_slug):
     ensure_default_blocks_for_page(page_slug)
     sync_public_page_seo_defaults(page_slug)
@@ -1247,7 +1229,6 @@ def split_block_body(block):
     if not block or not block.body:
         return []
     return [paragraph.strip() for paragraph in block.body.split('\n\n') if paragraph.strip()]
-
 
 def ensure_wellness_page_blocks_exist():
     ensure_site_pages_exist()
@@ -1281,7 +1262,6 @@ def ensure_wellness_page_blocks_exist():
     if created:
         db.session.commit()
 
-
 def ensure_accessibility_page_blocks_exist():
     ensure_site_pages_exist()
     accessibility_page = SitePage.query.filter_by(slug='accessibility').first()
@@ -1314,7 +1294,6 @@ def ensure_accessibility_page_blocks_exist():
     if created:
         db.session.commit()
 
-
 def ensure_contact_page_blocks_exist():
     ensure_site_pages_exist()
     contact_page = SitePage.query.filter_by(slug='contact').first()
@@ -1346,7 +1325,6 @@ def ensure_contact_page_blocks_exist():
 
     if created:
         db.session.commit()
-
 
 def ensure_book_page_blocks_exist():
     ensure_site_pages_exist()
@@ -1381,7 +1359,6 @@ def ensure_book_page_blocks_exist():
         db.session.commit()
 
 
-
 def ensure_journal_page_blocks_exist():
     ensure_site_pages_exist()
     journal_page = SitePage.query.filter_by(slug='journal').first()
@@ -1413,7 +1390,6 @@ def ensure_journal_page_blocks_exist():
 
     if created:
         db.session.commit()
-
 
 def ensure_gallery_page_blocks_exist():
     ensure_site_pages_exist()
@@ -1479,7 +1455,6 @@ def ensure_rooms_page_blocks_exist():
     if created:
         db.session.commit()
 
-
 def get_room_main_photo(room):
     if not room.photos:
         return '/static/site/images/gallery/photo_2.jpg'
@@ -1487,7 +1462,6 @@ def get_room_main_photo(room):
     main_photo = next((photo for photo in room.photos if photo.is_main), None)
     chosen_photo = main_photo or room.photos[0]
     return url_for('static', filename='uploads/' + chosen_photo.filename)
-
 
 
 def get_room_photo_items(room):
@@ -1509,45 +1483,36 @@ def get_room_price_for_month(room, month_name=None):
     return legacy_room_service.get_room_price_for_month(room, month_name=month_name)
 
 
-
 def get_room_max_capacity(room):
     return legacy_room_service.get_room_max_capacity(room)
-
 
 
 def get_room_prices(room):
     return legacy_room_service.get_room_prices(room)
 
 
-
 def get_plain_text(value):
     return legacy_room_service.get_plain_text(value)
-
 
 
 def load_next_rooms_data():
     return legacy_room_service.load_next_rooms_data()
 
 
-
 def get_next_room_by_slug(slug):
     return legacy_room_service.get_next_room_by_slug(slug)
-
 
 
 def get_next_room_by_number(number):
     return legacy_room_service.get_next_room_by_number(number)
 
 
-
 def get_next_room_feature_labels(room):
     return legacy_room_service.get_next_room_feature_labels(room)
 
 
-
 def get_next_room_price_bands(room):
     return legacy_room_service.get_next_room_price_bands(room)
-
 
 
 def build_next_room_card_data(room):
@@ -1555,10 +1520,8 @@ def build_next_room_card_data(room):
     return legacy_room_service.build_next_room_card_data(room, detail_url=detail_url)
 
 
-
 def get_next_room_monthly_price_items(room):
     return legacy_room_service.get_next_room_monthly_price_items(room)
-
 
 MONTH_LABELS_RU = [
     ('January', 'Январь'),
@@ -1584,20 +1547,16 @@ legacy_room_service = LegacyRoomService(
 )
 
 
-
 def get_room_category_group_from_name(name):
     return legacy_room_service.get_room_category_group_from_name(name)
-
 
 
 def get_room_display_name(room):
     return legacy_room_service.get_room_display_name(room)
 
 
-
 def get_room_display_category(room):
     return legacy_room_service.get_room_display_category(room)
-
 
 
 def get_room_detail_url(room):
@@ -1607,35 +1566,28 @@ def get_room_detail_url(room):
     return url_for('room_detail', room_id=room.id)
 
 
-
 def infer_room_area(room):
     return legacy_room_service.infer_room_area(room)
-
 
 
 def get_room_short_description(room):
     return legacy_room_service.get_room_short_description(room)
 
 
-
 def get_room_amenities_list(room):
     return legacy_room_service.get_room_amenities_list(room)
-
 
 
 def get_room_feature_labels(room):
     return legacy_room_service.get_room_feature_labels(room)
 
 
-
 def get_room_extra_bed_label(room):
     return legacy_room_service.get_room_extra_bed_label(room)
 
 
-
 def get_room_price_bands(room):
     return legacy_room_service.get_room_price_bands(room)
-
 
 
 def build_room_card_data(room, check_in='', check_out='', adults=2, children=0):
@@ -1652,10 +1604,8 @@ def build_room_card_data(room, check_in='', check_out='', adults=2, children=0):
     return legacy_room_service.build_legacy_room_card_data(room, detail_url=detail_url, photo_url=photo_url)
 
 
-
 def get_monthly_price_items(room):
     return legacy_room_service.get_monthly_price_items(room)
-
 
 
 def calculate_room_total_price(room, check_in, check_out, adults, children, children_under_five=0):
@@ -1670,10 +1620,8 @@ def calculate_room_total_price(room, check_in, check_out, adults, children, chil
     )
 
 
-
 def normalize_rooms_highlights(items=None):
     return legacy_room_service.normalize_rooms_highlights(items)
-
 
 def build_booking_result_data(room, total_info, book_url):
     result = legacy_room_service.build_booking_result_data(
@@ -1715,7 +1663,6 @@ def build_booking_result_data(room, total_info, book_url):
     return result
 
 
-
 def format_price_rub(value):
     try:
         amount = float(value)
@@ -1723,11 +1670,9 @@ def format_price_rub(value):
         return str(value)
     return f"{amount:,.0f}".replace(",", " ") + " ₽"
 
-
 def get_user_display_name(user):
     full_name = f"{(user.first_name or '').strip()} {(user.last_name or '').strip()}".strip()
     return full_name or f"Пользователь #{user.id}"
-
 
 def build_booking_notification_message(user, booking_items, total_price, special_requests=''):
     lines = [
@@ -1759,7 +1704,6 @@ def build_booking_notification_message(user, booking_items, total_price, special
 
     return "\n".join(lines)
 
-
 def notify_booking_via_telegram(message):
     if not TELEGRAM_GROUP_ID:
         app.logger.warning("TELEGRAM_GROUP_ID is not configured, booking notification skipped")
@@ -1770,7 +1714,6 @@ def notify_booking_via_telegram(message):
     except Exception:
         app.logger.exception("Failed to send Telegram booking notification")
         return False
-
 
 def find_two_room_guest_split(room_a, room_b, adults, children):
     max_capacity_a = get_room_max_capacity(room_a)
@@ -1807,7 +1750,6 @@ def find_two_room_guest_split(room_a, room_b, adults, children):
                 best_split = ((adults_a, children_a), (adults_b, children_b))
 
     return best_split
-
 
 def build_booking_combination_data(room_a, room_b, parsed_check_in, parsed_check_out, adults, children, children_under_five, check_in, check_out):
     guest_split = find_two_room_guest_split(room_a, room_b, adults, children)
@@ -1852,13 +1794,11 @@ def build_booking_combination_data(room_a, room_b, parsed_check_in, parsed_check
         'price_caption': f'за {nights} ноч.' if nights else 'за ночь в текущем месяце',
     }
 
-
 def get_news_cover_photo(article):
     if article.photos:
         first_photo = article.photos[0]
         return url_for('static', filename='uploads/' + first_photo.filename)
     return '/static/site/images/gallery/photo_7.jpg'
-
 
 def get_public_gallery_images():
     gallery_dir = os.path.join(app.static_folder, 'site', 'images', 'gallery')
@@ -1882,7 +1822,6 @@ def get_public_gallery_images():
         })
     return items
 
-
 def ensure_site_pages_exist():
     created = False
 
@@ -1900,7 +1839,6 @@ def ensure_site_pages_exist():
 
     if created:
         db.session.commit()
-
 
 def ensure_default_blocks_for_page(page_slug):
     ensure_site_pages_exist()
@@ -1935,28 +1873,23 @@ def ensure_default_blocks_for_page(page_slug):
     if created:
         db.session.commit()
 
-
 def ensure_all_default_site_blocks():
     for page_slug in PAGE_DEFAULT_BLOCKS:
         ensure_default_blocks_for_page(page_slug)
 
-
 def get_page_block_guides(page_slug):
     return CMS_BLOCK_GUIDES.get(page_slug, {})
-
 
 def get_default_block_template(page_slug, block_key):
     if not block_key:
         return None
     return PAGE_DEFAULT_BLOCKS.get(page_slug, {}).get(block_key)
 
-
 def get_page_preview_url(page_slug):
     endpoint = PAGE_PREVIEW_ENDPOINTS.get(page_slug)
     if not endpoint:
         return None
     return url_for(endpoint)
-
 
 def absolute_public_url(path_or_url):
     if not path_or_url:
@@ -1967,7 +1900,6 @@ def absolute_public_url(path_or_url):
     if path_or_url.startswith('/'):
         return base_url + path_or_url
     return base_url + '/' + path_or_url.lstrip('/')
-
 
 def build_public_seo(page=None, blocks=None, seo_override=None):
     seo_override = seo_override or {}
@@ -1992,17 +1924,14 @@ def build_public_seo(page=None, blocks=None, seo_override=None):
         'page_slug': page_slug or fallback_slug,
     }
 
-
 def render_public_template(template_name, page=None, blocks=None, seo_override=None, status_code=200, **context):
     seo = build_public_seo(page=page, blocks=blocks, seo_override=seo_override)
     return render_template(template_name, page=page, blocks=blocks or {}, seo=seo, **context), status_code
-
 
 def serialize_site_payload(payload):
     if not payload:
         return ''
     return json.dumps(payload, ensure_ascii=False, indent=2)
-
 
 def parse_site_payload(raw_payload):
     raw_payload = (raw_payload or '').strip()
@@ -2030,7 +1959,6 @@ def index():
     if rooms_preview_block:
         rooms_preview_block.subtitle = 'Для наших гостей мы предлагаем 8 типов номеров, в которых есть всё необходимое для максимального удобства'
 
-
     featured_room_categories = ['Стандарт', 'Deluxe', 'Апартаменты']
     featured_rooms = []
     next_rooms = load_next_rooms_data()
@@ -2056,7 +1984,6 @@ def index():
 @app.route('/about')
 def about_page():
     abort(404)
-
 
 @app.route('/wellness')
 def wellness_page():
@@ -2087,7 +2014,6 @@ def wellness_page():
         beach_paragraphs=beach_paragraphs,
     )
 
-
 @app.route('/accessibility')
 def accessibility_page():
     page, blocks = get_site_page_with_blocks('accessibility')
@@ -2099,7 +2025,6 @@ def accessibility_page():
         blocks=blocks,
         intro_paragraphs=intro_paragraphs,
     )
-
 
 @app.route('/contact')
 def contact_page():
@@ -2147,7 +2072,6 @@ def contact_page():
         map_embed_url=map_embed_url,
     )
 
-
 @app.route('/journal')
 def journal_page():
     page_config, blocks = get_site_page_with_blocks('journal')
@@ -2167,11 +2091,9 @@ def journal_page():
         news_articles=news_articles,
     )
 
-
 @app.route('/news')
 def news():
     return journal_page()
-
 
 @app.route('/book')
 def book_landing_page():
@@ -2337,11 +2259,9 @@ def journal_article_page(news_id):
         },
     )
 
-
 @app.route('/news/<int:news_id>')
 def news_detail(news_id):
     return journal_article_page(news_id)
-
 
 @app.route('/contacts')
 def contacts():
@@ -2350,7 +2270,6 @@ def contacts():
 @app.route('/next-assets/<path:filename>')
 def next_assets(filename):
     return send_from_directory(NEXT_PUBLIC_DIR, filename)
-
 
 @app.route('/gallery')
 def gallery():
@@ -2415,7 +2334,6 @@ def room_detail_by_slug(slug):
         amenities_list=room.get('amenities', []),
         book_url=url_for('book_landing_page'),
     )
-
 
 @app.route('/room/<int:room_id>')
 def room_detail(room_id):
@@ -2772,7 +2690,6 @@ def is_high_season(date):
     else:
         return False
 
-
 def count_high_season_days(check_in, check_out):
     """Считает количество дней высокого сезона в периоде"""
     high_season_days = 0
@@ -2784,7 +2701,6 @@ def count_high_season_days(check_in, check_out):
         current_date += timedelta(days=1)
 
     return high_season_days
-
 
 def count_low_season_days(check_in, check_out):
     """Считает количество дней низкого сезона в периоде"""
@@ -2822,7 +2738,6 @@ def check_availability():
 
     except ValueError:
         return jsonify({'available': False, 'error': 'Invalid date format'})
-
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -2862,7 +2777,6 @@ def register():
         return redirect(url_for('verify_sms', phone=formatted_phone))
     return render_template('register.html')
 
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     next_page = request.args.get('next') or request.form.get('next')
@@ -2895,16 +2809,13 @@ def login():
     return render_template('login.html', next_page=next_page)
 
 
-
 def _get_auth_payload():
     return request.get_json(silent=True) or request.form
-
 
 def _json_error(message, status_code=400):
     response = jsonify({'success': False, 'message': message})
     response.status_code = status_code
     return response
-
 
 @app.route('/auth/api/login', methods=['POST'])
 def auth_api_login():
@@ -2933,18 +2844,18 @@ def auth_api_login():
         'phone_display': format_phone_for_display(formatted_phone),
     })
 
-
 @app.route('/auth/api/register', methods=['POST'])
 def auth_api_register():
     payload = _get_auth_payload()
     phone = (payload.get('phone') or '').strip()
-    agreed_to_terms = str(payload.get('agreed_to_terms') or payload.get('agreedToTerms') or '').lower() in {'1', 'true', 'yes', 'on'}
+    accepted_user_agreement = str(payload.get('accepted_user_agreement') or payload.get('acceptedUserAgreement') or '').lower() in {'1', 'true', 'yes', 'on'}
+    accepted_personal_data_policy = str(payload.get('accepted_personal_data_policy') or payload.get('acceptedPersonalDataPolicy') or '').lower() in {'1', 'true', 'yes', 'on'}
 
     if not validate_russian_phone(phone):
         return _json_error('Введите корректный российский номер телефона')
 
-    if not agreed_to_terms:
-        return _json_error('Необходимо согласиться с условиями обслуживания')
+    if not accepted_user_agreement or not accepted_personal_data_policy:
+        return _json_error('Необходимо принять документы и согласие на обработку персональных данных')
 
     formatted_phone = format_phone_for_storage(phone)
 
@@ -2972,7 +2883,6 @@ def auth_api_register():
         'phone': formatted_phone,
         'phone_display': format_phone_for_display(formatted_phone),
     })
-
 
 @app.route('/auth/api/verify', methods=['POST'])
 def auth_api_verify():
@@ -3017,10 +2927,8 @@ def logout():
     return redirect(url_for('index'))
 
 
-
 def allow_debug_login_routes():
     return os.getenv('ENABLE_DEBUG_LOGIN_ROUTES', '1') == '1'
-
 
 def login_debug_user(is_admin=False):
     if not allow_debug_login_routes():
@@ -3043,11 +2951,9 @@ def login_debug_user(is_admin=False):
 
     return redirect(next_page) if next_page else redirect(url_for('profile'))
 
-
 @app.route('/debug/login-admin')
 def debug_login_admin():
     return login_debug_user(is_admin=True)
-
 
 @app.route('/debug/login-user')
 def debug_login_user():
@@ -3062,7 +2968,6 @@ def verify_sms():
         return redirect(url_for('login', next=next_page))
 
     return render_template('verify_sms.html', phone=phone, next_page=next_page)
-
 
 @app.route('/verify-sms', methods=['POST'])
 def verify_sms_post():
@@ -3101,7 +3006,6 @@ def verify_sms_post():
 
     return redirect(next_page) if next_page else redirect(url_for('index'))
 
-
 @app.route('/resend-sms', methods=['POST'])
 def resend_sms():
     phone = request.form.get('phone')
@@ -3134,7 +3038,6 @@ def resend_sms():
     flash('Новый SMS-код отправлен', 'success')
     return render_template('verify_sms.html', phone=phone)
 
-
 @app.route('/my-bookings')
 @login_required
 def my_bookings():
@@ -3144,7 +3047,6 @@ def my_bookings():
         if booking.status != "cancelled":
             actual_bookings.append(booking)
     return render_template('my_bookings.html', bookings=actual_bookings, datetime=datetime)
-
 
 @app.route('/my-bookings/delete/<int:booking_id>', methods=['POST'])
 @login_required
@@ -3209,7 +3111,6 @@ def profile():
 
     return render_template('profile.html')
 
-
 # Admin routes
 @app.route('/admin')
 @login_required
@@ -3231,7 +3132,6 @@ def admin_dashboard():
                            recent_bookings=recent_bookings,
                            datetime=datetime)
 
-
 @app.route('/admin/rooms')
 @login_required
 def admin_rooms():
@@ -3245,7 +3145,6 @@ def admin_rooms():
         room.price_per_night = get_room_price_for_month(room, current_month)
 
     return render_template('admin/rooms.html', rooms=rooms)
-
 
 @app.route('/admin/rooms/add', methods=['GET', 'POST'])
 @login_required
@@ -3320,7 +3219,6 @@ def admin_add_room():
     categories = Category.query.all()
     return render_template('admin/add_room.html', categories=categories)
 
-
 @app.route('/admin/rooms/<int:room_id>/photos', methods=['GET', 'POST'])
 @login_required
 def admin_room_photos(room_id):
@@ -3354,7 +3252,6 @@ def admin_room_photos(room_id):
         return redirect(url_for('admin_room_photos', room_id=room_id))
 
     return render_template('admin/room_photos.html', room=room)
-
 
 @app.route('/admin/rooms/<int:room_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -3408,7 +3305,6 @@ def admin_edit_room(room_id):
     categories = Category.query.all()
     return render_template('admin/edit_room.html', room=room, categories=categories)
 
-
 @app.route('/admin/rooms/<int:room_id>/delete', methods=['POST'])
 @login_required
 def admin_delete_room(room_id):
@@ -3440,7 +3336,6 @@ def admin_delete_room(room_id):
     flash('Номер успешно удален!', 'success')
     return redirect(url_for('admin_rooms'))
 
-
 @app.route('/admin/photos/<int:photo_id>/delete', methods=['POST'])
 @login_required
 def admin_delete_photo(photo_id):
@@ -3461,7 +3356,6 @@ def admin_delete_photo(photo_id):
     flash('Photo deleted successfully!', 'success')
     return redirect(url_for('admin_room_photos', room_id=room_id))
 
-
 @app.route('/admin/categories')
 @login_required
 def admin_categories():
@@ -3469,7 +3363,6 @@ def admin_categories():
         abort(403)
     categories = Category.query.all()
     return render_template('admin/categories.html', categories=categories)
-
 
 @app.route('/admin/categories/add', methods=['GET', 'POST'])
 @login_required
@@ -3491,7 +3384,6 @@ def admin_add_category():
 
     return render_template('admin/add_category.html')
 
-
 @app.route('/admin/bookings')
 @login_required
 def admin_bookings():
@@ -3500,7 +3392,6 @@ def admin_bookings():
     bookings = Booking.query.order_by(Booking.created_at.desc()).all()
     return render_template('admin/bookings.html', bookings=bookings)
 
-
 @app.route('/admin/users')
 @login_required
 def admin_users():
@@ -3508,7 +3399,6 @@ def admin_users():
         abort(403)
     users = User.query.all()
     return render_template('admin/users.html', users=users)
-
 
 @app.route('/admin/users/<int:user_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -3539,7 +3429,6 @@ def admin_edit_user(user_id):
 
     return render_template('admin/edit_user.html', user=user)
 
-
 @app.route('/admin/bookings/<int:booking_id>/edit', methods=['GET', 'POST'])
 @login_required
 def admin_edit_booking(booking_id):
@@ -3558,7 +3447,6 @@ def admin_edit_booking(booking_id):
 
     return render_template('admin/edit_booking.html', booking=booking)
 
-
 @app.route('/admin/news')
 @login_required
 def admin_news():
@@ -3572,7 +3460,6 @@ def admin_news():
         .paginate(page=page, per_page=per_page, error_out=False)
 
     return render_template('admin/news.html', news_articles=news_articles)
-
 
 @app.route('/admin/news/add', methods=['GET', 'POST'])
 @login_required
@@ -3618,7 +3505,6 @@ def admin_add_news():
 
     return render_template('admin/add_news.html')
 
-
 @app.route('/admin/news/<int:news_id>/edit', methods=['GET', 'POST'])
 @login_required
 def admin_edit_news(news_id):
@@ -3659,7 +3545,6 @@ def admin_edit_news(news_id):
 
     return render_template('admin/edit_news.html', article=article)
 
-
 @app.route('/admin/news/<int:news_id>/delete', methods=['POST'])
 @login_required
 def admin_delete_news(news_id):
@@ -3679,7 +3564,6 @@ def admin_delete_news(news_id):
 
     flash('Новость успешно удалена!', 'success')
     return redirect(url_for('admin_news'))
-
 
 @app.route('/admin/news/<int:news_id>/photos', methods=['GET', 'POST'])
 @login_required
@@ -3715,7 +3599,6 @@ def admin_news_photos(news_id):
 
     return render_template('admin/news_photos.html', article=article)
 
-
 @app.route('/admin/news/photos/<int:photo_id>/delete', methods=['POST'])
 @login_required
 def admin_delete_news_photo(photo_id):
@@ -3736,7 +3619,6 @@ def admin_delete_news_photo(photo_id):
     flash('Фотография успешно удалена!', 'success')
     return redirect(url_for('admin_news_photos', news_id=news_id))
 
-
 @app.route('/admin/site-content')
 @login_required
 def admin_site_content():
@@ -3747,7 +3629,6 @@ def admin_site_content():
     pages = SitePage.query.order_by(SitePage.sort_order.asc(), SitePage.name.asc()).all()
     preview_urls = {page.slug: get_page_preview_url(page.slug) for page in pages}
     return render_template('admin/site_content.html', pages=pages, preview_urls=preview_urls)
-
 
 @app.route('/admin/site-content/<string:page_slug>')
 @login_required
@@ -3771,7 +3652,6 @@ def admin_site_page_content(page_slug):
         existing_block_keys=existing_block_keys,
     )
 
-
 @app.route('/admin/site-content/<string:page_slug>/edit', methods=['GET', 'POST'])
 @login_required
 def admin_edit_site_page(page_slug):
@@ -3793,7 +3673,6 @@ def admin_edit_site_page(page_slug):
         return redirect(url_for('admin_site_page_content', page_slug=page.slug))
 
     return render_template('admin/site_page_form.html', page=page)
-
 
 @app.route('/admin/site-content/<string:page_slug>/blocks/add', methods=['GET', 'POST'])
 @login_required
@@ -3889,7 +3768,6 @@ def admin_add_site_block(page_slug):
         initial_sort_order=default_template.get('sort_order') if default_template else 0,
     )
 
-
 @app.route('/admin/site-content/blocks/<int:block_id>/edit', methods=['GET', 'POST'])
 @login_required
 def admin_edit_site_block(block_id):
@@ -3973,7 +3851,6 @@ def admin_edit_site_block(block_id):
         preview_url=get_page_preview_url(page.slug),
     )
 
-
 @app.route('/admin/site-content/blocks/<int:block_id>/delete', methods=['POST'])
 @login_required
 def admin_delete_site_block(block_id):
@@ -3987,7 +3864,6 @@ def admin_delete_site_block(block_id):
 
     flash('Блок удалён.', 'success')
     return redirect(url_for('admin_site_page_content', page_slug=page_slug))
-
 
 @app.route('/404')
 def not_found_page():
@@ -4005,7 +3881,6 @@ def not_found_page():
         missing_path=request.path,
     )
 
-
 @app.errorhandler(404)
 def handle_not_found(error):
     return render_public_template(
@@ -4022,11 +3897,12 @@ def handle_not_found(error):
         missing_path=request.path,
     )
 
-
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=False, host='0.0.0.0', port=5000)
+
+
 
 
 

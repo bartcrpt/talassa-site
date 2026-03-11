@@ -1,9 +1,8 @@
-﻿document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
   initSiteNav();
   initSiteUserMenu();
   initSiteAuth();
   initPhilosophyToggle();
-  initRoomsFilter();
   initSiteLightbox();
   initRoomGallery();
 });
@@ -56,74 +55,6 @@ function initPhilosophyToggle() {
     collapse.hidden = true;
     expand.hidden = false;
   });
-}
-
-function initRoomsFilter() {
-  const root = document.querySelector('[data-rooms-filter]');
-  if (!root) {
-    return;
-  }
-
-  const cards = Array.from(root.querySelectorAll('[data-room-card]'));
-  const grid = root.querySelector('[data-rooms-grid]');
-  const count = root.querySelector('[data-visible-count]');
-  const categoryButtons = Array.from(root.querySelectorAll('[data-room-category]'));
-  const sortButtons = Array.from(root.querySelectorAll('[data-room-sort]'));
-
-  let activeCategory = root.getAttribute('data-initial-category') || 'Все';
-  let sortBy = 'price';
-
-  const render = () => {
-    const filtered = cards.filter((card) => {
-      if (activeCategory === 'Все') {
-        return true;
-      }
-      return card.getAttribute('data-category') === activeCategory;
-    });
-
-    filtered.sort((a, b) => {
-      const aValue = Number(a.getAttribute(`data-${sortBy}`) || 0);
-      const bValue = Number(b.getAttribute(`data-${sortBy}`) || 0);
-      return sortBy === 'area' ? bValue - aValue : aValue - bValue;
-    });
-
-    cards.forEach((card) => {
-      card.hidden = true;
-    });
-
-    filtered.forEach((card) => {
-      card.hidden = false;
-      grid.appendChild(card);
-    });
-
-    if (count) {
-      count.textContent = String(filtered.length);
-    }
-  };
-
-  categoryButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      activeCategory = button.getAttribute('data-room-category') || 'Все';
-      categoryButtons.forEach((item) => item.classList.toggle('is-active', item === button));
-      render();
-    });
-  });
-
-  sortButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      sortBy = button.getAttribute('data-room-sort') || 'price';
-      sortButtons.forEach((item) => item.classList.toggle('is-active', item === button));
-      render();
-    });
-  });
-
-  const activeCategoryButton = categoryButtons.find((button) => button.getAttribute('data-room-category') === activeCategory);
-  if (!activeCategoryButton && categoryButtons[0]) {
-    categoryButtons[0].classList.add('is-active');
-    activeCategory = categoryButtons[0].getAttribute('data-room-category') || 'Все';
-  }
-
-  render();
 }
 
 function initSiteLightbox() {
@@ -341,7 +272,12 @@ function initSiteAuth() {
     register: modal.querySelector('[data-site-auth-phone="register"]'),
   };
   const phoneDisplay = modal.querySelector('[data-site-auth-phone-display]');
-  const termsInput = modal.querySelector('[data-site-auth-terms]');
+  const agreementInput = modal.querySelector('[data-site-auth-agreement]');
+  const policyInput = modal.querySelector('[data-site-auth-policy]');
+  const docModal = document.querySelector('[data-site-doc-modal]');
+  const docTitle = docModal?.querySelector('[data-site-doc-title]');
+  const docEyebrow = docModal?.querySelector('[data-site-doc-eyebrow]');
+  const docContent = docModal?.querySelector('[data-site-doc-content]');
   const codeInputs = Array.from(modal.querySelectorAll('[data-site-auth-code-input]'));
   const backButton = modal.querySelector('[data-site-auth-back]');
   const resendButton = modal.querySelector('[data-site-auth-resend]');
@@ -471,7 +407,8 @@ function initSiteAuth() {
       state.phoneDisplay = '';
       if (phoneInputs.login) phoneInputs.login.value = '';
       if (phoneInputs.register) phoneInputs.register.value = '';
-      if (termsInput) termsInput.checked = false;
+      if (agreementInput) agreementInput.checked = false;
+      if (policyInput) policyInput.checked = false;
     }
     switchView(view);
     modal.hidden = false;
@@ -515,8 +452,8 @@ function initSiteAuth() {
       return;
     }
 
-    if (mode === 'register' && termsInput && !termsInput.checked) {
-      setError('Необходимо согласиться с условиями обслуживания');
+    if (mode === 'register' && ((!agreementInput || !agreementInput.checked) || (!policyInput || !policyInput.checked))) {
+      setError('Необходимо принять документы и согласие на обработку персональных данных');
       return;
     }
 
@@ -526,7 +463,8 @@ function initSiteAuth() {
       const endpoint = mode === 'register' ? '/auth/api/register' : '/auth/api/login';
       const data = await requestJson(endpoint, {
         phone: '+7' + extractDigits(rawPhone),
-        agreed_to_terms: mode === 'register' ? Boolean(termsInput && termsInput.checked) : undefined,
+        accepted_user_agreement: mode === 'register' ? Boolean(agreementInput && agreementInput.checked) : undefined,
+        accepted_personal_data_policy: mode === 'register' ? Boolean(policyInput && policyInput.checked) : undefined,
       });
 
       state.codeSource = mode;
@@ -577,6 +515,60 @@ function initSiteAuth() {
     await sendCode(state.codeSource);
   };
 
+  const docs = {
+    agreement: {
+      eyebrow: 'Документ',
+      title: 'Пользовательское соглашение и Правила использования сайта',
+      content: `
+        <p>Используя сайт «Таласса Hotel & Spa», вы подтверждаете, что используете его добросовестно и только для получения информации об отеле, выбора номера, отправки заявок и оформления бронирования.</p>
+        <p>Пользователь обязуется указывать достоверные данные при регистрации и бронировании, не предпринимать действий, нарушающих работу сайта, и не использовать сайт для размещения ложных заявок или недобросовестных обращений.</p>
+        <p>Администрация сайта вправе обновлять информацию о номерах, стоимости, услугах и правилах проживания без отдельного уведомления. Итоговые условия бронирования считаются подтверждёнными после связи с администратором и подтверждения заявки.</p>
+        <p>Все материалы сайта, включая тексты, фотографии, дизайн и элементы интерфейса, используются только в информационных целях и не подлежат копированию или распространению без согласия правообладателя.</p>
+      `,
+    },
+    policy: {
+      eyebrow: 'Документ',
+      title: 'Политика обработки персональных данных',
+      content: `
+        <p>Оставляя свои данные на сайте, вы соглашаетесь на их обработку для связи с вами, подтверждения регистрации, оформления бронирования, уточнения деталей проживания и направления сервисных уведомлений, связанных с вашей заявкой.</p>
+        <p>К персональным данным могут относиться номер телефона, имя, адрес электронной почты и иные сведения, которые вы добровольно указываете при регистрации или бронировании.</p>
+        <p>Данные используются только для работы отеля и не передаются третьим лицам без законных оснований. Администрация принимает разумные меры для защиты полученной информации от утраты, неправомерного доступа и раскрытия.</p>
+        <p>Пользователь вправе запросить уточнение, обновление или удаление своих персональных данных, обратившись в отель по официальным контактам, указанным на сайте.</p>
+      `,
+    },
+  };
+
+  const openDocModal = (key) => {
+    if (!docModal || !docTitle || !docContent || !docs[key]) {
+      return;
+    }
+    docEyebrow.textContent = docs[key].eyebrow;
+    docTitle.textContent = docs[key].title;
+    docContent.innerHTML = docs[key].content;
+    docModal.hidden = false;
+    body.classList.add('site-doc-open');
+  };
+
+  const closeDocModal = () => {
+    if (!docModal) {
+      return;
+    }
+    docModal.hidden = true;
+    body.classList.remove('site-doc-open');
+  };
+
+  modal.querySelectorAll('[data-site-auth-doc-open]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const key = button.getAttribute('data-site-auth-doc-open');
+      if (key) {
+        openDocModal(key);
+      }
+    });
+  });
+
+  docModal?.querySelectorAll('[data-site-doc-close]').forEach((button) => {
+    button.addEventListener('click', closeDocModal);
+  });
   openButtons.forEach((button) => {
     button.addEventListener('click', () => {
       const view = button.getAttribute('data-auth-view') || 'login';
@@ -603,6 +595,10 @@ function initSiteAuth() {
   });
 
   document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && docModal && !docModal.hidden) {
+      closeDocModal();
+      return;
+    }
     if (modal.hidden) {
       return;
     }
@@ -681,4 +677,8 @@ function initSiteAuth() {
 
   updateSwitchActions();
 }
+
+
+
+
 

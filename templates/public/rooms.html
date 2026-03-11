@@ -17,35 +17,10 @@
 
 <section class="section section--tight-top rooms-section-next">
     <div class="site-container">
-        <div class="rooms-filter" data-rooms-filter data-initial-category="{{ initial_category }}">
-            <div class="rooms-toolbar">
-                <div class="rooms-toolbar__group rooms-toolbar__group--sort">
-                    <span class="rooms-toolbar__label">Сортировка:</span>
-                    <button type="button" class="rooms-sort-button is-active" data-room-sort="price">По стоимости</button>
-                    <button type="button" class="rooms-sort-button" data-room-sort="area">По площади</button>
-                </div>
-                <div class="rooms-toolbar__group rooms-toolbar__group--categories">
-                    {% for category in ['Все', 'Стандарт', 'Deluxe', 'Апартаменты'] %}
-                        <button
-                            type="button"
-                            class="rooms-pill {{ 'is-active' if category == initial_category else '' }}"
-                            data-room-category="{{ category }}"
-                        >
-                            {{ category }}
-                        </button>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="rooms-grid rooms-grid--next" data-rooms-grid>
+        <div class="rooms-filter">
+            <div class="rooms-grid rooms-grid--next">
                 {% for room in room_cards %}
-                    <article
-                        class="room-card room-card--next"
-                        data-room-card
-                        data-category="{{ room.category_group }}"
-                        data-area="{{ room.area }}"
-                        data-price="{{ room.price_sort }}"
-                    >
+                    <article class="room-card room-card--next">
                         <a href="{{ room.detail_url }}" class="room-card__image room-card__image--next">
                             <img src="{{ room.photo_url }}" alt="{{ room.name }}">
                             <span class="room-card__badge room-card__badge--next">{{ room.category_group }}</span>
@@ -80,10 +55,11 @@
                 {% endfor %}
             </div>
 
-            <p class="rooms-count"><span data-visible-count>{{ room_cards|length }}</span> из {{ total_rooms }} номеров</p>
+            <p class="rooms-count">{{ total_rooms }} из {{ total_rooms }} номеров</p>
         </div>
     </div>
 </section>
 {% endblock %}
+
 
 
