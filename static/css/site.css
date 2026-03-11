@@ -5805,7 +5805,7 @@ body.is-modal-open {
 .site-doc-modal {
   position: fixed;
   inset: 0;
-  z-index: 120;
+  z-index: 220;
 }
 
 .site-doc-modal__backdrop {
@@ -5880,4 +5880,34 @@ body.is-modal-open {
   }
 }
 
+
+
+
+.site-auth-form__check.site-auth-form__check--stacked {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+}
+
+.site-auth-form__check.site-auth-form__check--stacked input {
+  margin-top: 4px;
+  flex: 0 0 auto;
+}
+
+.site-auth-form__check.site-auth-form__check--stacked .site-auth-form__check-text {
+  display: block;
+  min-width: 0;
+  flex: 1 1 auto;
+  text-align: left !important;
+  line-height: 1.55;
+}
+
+.site-auth-form__check.site-auth-form__check--stacked .site-auth-form__link {
+  display: inline !important;
+  width: auto !important;
+  max-width: none !important;
+  white-space: normal;
+  text-align: left !important;
+}
 

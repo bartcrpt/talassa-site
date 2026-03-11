@@ -362,7 +362,8 @@ function initSiteAuth() {
     switchBox.innerHTML = viewConfig[state.view].switchHtml;
 
     switchBox.querySelectorAll('[data-site-auth-switch-view]').forEach((button) => {
-      button.addEventListener('click', () => {
+      button.addEventListener('click', (event) => {
+      event.preventDefault();
         const target = button.getAttribute('data-site-auth-switch-view');
         if (target) {
           switchView(target);
@@ -558,7 +559,8 @@ function initSiteAuth() {
   };
 
   modal.querySelectorAll('[data-site-auth-doc-open]').forEach((button) => {
-    button.addEventListener('click', () => {
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
       const key = button.getAttribute('data-site-auth-doc-open');
       if (key) {
         openDocModal(key);
@@ -570,7 +572,8 @@ function initSiteAuth() {
     button.addEventListener('click', closeDocModal);
   });
   openButtons.forEach((button) => {
-    button.addEventListener('click', () => {
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
       const view = button.getAttribute('data-auth-view') || 'login';
       const nav = document.querySelector('[data-site-nav]');
       const navToggle = document.querySelector('[data-site-nav-toggle]');
@@ -677,6 +680,7 @@ function initSiteAuth() {
 
   updateSwitchActions();
 }
+
 
 
 
