@@ -1,6 +1,6 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
-{% block title %}Бронирование номера {{ room.number }} - Таласса Hotel & Spa{% endblock %}
+{% block title %}Бронирование - {{ room_display_name }} - Таласса Hotel & Spa{% endblock %}
 
 {% block content %}
 <section class="account-page account-page--booking">
@@ -8,7 +8,7 @@
     <div class="account-page__header">
         <div>
             <p class="account-page__eyebrow">Подтверждение проживания</p>
-            <h1>Бронирование номера {{ room.number }}</h1>
+            <h1>{{ room_display_name }}</h1>
             <p class="account-page__lead">Проверьте даты проживания, состав гостей и стоимость, чтобы завершить оформление поездки в Таласса Hotel & Spa.</p>
         </div>
     </div>
@@ -16,7 +16,7 @@
         <div class="col-lg-8">
             <div class="card border-0 shadow-lg booking-layout-card">
                 <div class="card-header booking-layout-card__header">
-                    <h3 class="mb-0"><i class="bi bi-calendar-check"></i> Бронирование номера {{ room.number }}</h3>
+                    <h3 class="mb-0"><i class="bi bi-calendar-check"></i> Подтверждение бронирования</h3>
                 </div>
                 <div class="card-body booking-layout-card__body p-4">
                     <!-- Room Summary -->
@@ -24,7 +24,7 @@
                         <div class="col-md-3">
                             {% if room.photos %}
                                 <img src="{{ url_for('static', filename='uploads/' + room.photos[0].filename) }}"
-                                     class="img-fluid rounded" alt="Room {{ room.number }}">
+                                     class="img-fluid rounded" alt="{{ room_display_name }}">
                             {% else %}
                                 <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 150px;">
                                     <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
@@ -32,7 +32,8 @@
                             {% endif %}
                         </div>
                         <div class="col-md-9">
-                            <h4>Номер {{ room.number }} - {{ room.category.name }}</h4>
+                            <h4>{{ room_display_name }}</h4>
+                            <p class="booking-layout-card__room-meta">№ {{ room.number }} • {{ room_display_category }}</p>
                             <div class="row">
                                 <div class="col-md-6-book">
                                     <p class="mb-1"><strong>Вместимость:</strong> До {{ room.capacity }} гостей</p>
@@ -865,3 +866,6 @@ function validateBookingForm(event) {
 
 </script>
 {% endblock %}
+
+
+

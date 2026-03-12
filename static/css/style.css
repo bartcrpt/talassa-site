@@ -2414,3 +2414,99 @@ body.internal-portal .booking-guests-readonly__hint {
 
 
 
+
+body.internal-admin .admin-room-type-cell {
+    display: grid;
+    gap: 4px;
+}
+
+body.internal-admin .admin-room-type-cell strong {
+    color: var(--admin-sea);
+    font-weight: 600;
+}
+
+body.internal-admin .admin-room-preview-modal {
+    border: 1px solid rgba(49, 78, 111, 0.08);
+    border-radius: 28px;
+    overflow: hidden;
+}
+
+body.internal-admin .admin-room-preview-modal__header {
+    padding: 24px 28px 16px;
+    border-bottom: 1px solid var(--admin-line);
+    background: rgba(243, 239, 230, 0.68);
+}
+
+body.internal-admin .admin-room-preview-modal__header h2 {
+    margin: 0;
+    color: var(--admin-sea);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.3rem;
+}
+
+body.internal-admin .admin-room-preview-modal__eyebrow {
+    margin: 0 0 6px;
+    color: var(--admin-gold);
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+body.internal-admin .admin-room-preview-modal__meta {
+    margin: 8px 0 0;
+    color: rgba(82, 110, 98, 0.78);
+}
+
+body.internal-admin .admin-room-preview-modal__body {
+    display: grid;
+    grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+    gap: 24px;
+    padding: 24px 28px 30px;
+}
+
+body.internal-admin .admin-room-preview-modal__media img {
+    width: 100%;
+    height: 100%;
+    max-height: 360px;
+    object-fit: cover;
+    border-radius: 24px;
+}
+
+body.internal-admin .admin-room-preview-modal__content {
+    display: grid;
+    gap: 18px;
+    color: var(--admin-moss);
+}
+
+body.internal-admin .admin-room-preview-modal__chips,
+body.internal-admin .admin-room-preview-modal__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+body.internal-admin .admin-room-preview-modal__fact {
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(243, 239, 230, 0.84);
+    color: var(--admin-sea);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+body.internal-admin .admin-room-preview-modal__amenities {
+    margin: 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 8px;
+}
+
+@media (max-width: 991px) {
+    body.internal-admin .admin-room-preview-modal__body {
+        grid-template-columns: 1fr;
+    }
+}

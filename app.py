@@ -6,7 +6,7 @@ from audioop import minmax
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, abort, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
-from sqlalchemy import case, cast, Integer
+from sqlalchemy import case, cast, Integer, inspect, text
 # from sqlalchemy.testing.util import total_size
 from werkzeug.utils import secure_filename
 from datetime import datetime, date, timedelta
@@ -48,6 +48,7 @@ NEXT_ROOM_NUMBER_BY_SLUG = {
     'apartment-accessible': 'NX08',
 }
 NEXT_ROOM_SLUG_BY_NUMBER = {value: key for key, value in NEXT_ROOM_NUMBER_BY_SLUG.items()}
+_RUNTIME_SCHEMA_ENSURED = False
 
 # Загрузка токена и ID группы из .env
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
@@ -71,9 +72,29 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+
+def ensure_runtime_schema():
+    global _RUNTIME_SCHEMA_ENSURED
+    if _RUNTIME_SCHEMA_ENSURED:
+        return
+
+    inspector = inspect(db.engine)
+    table_names = set(inspector.get_table_names())
+    if 'room' in table_names:
+        room_columns = {column['name'] for column in inspector.get_columns('room')}
+        if 'room_type_slug' not in room_columns:
+            db.session.execute(text("ALTER TABLE room ADD COLUMN IF NOT EXISTS room_type_slug VARCHAR(120)"))
+            db.session.commit()
+
+    _RUNTIME_SCHEMA_ENSURED = True
+
+
+@app.before_request
+def ensure_runtime_schema_before_request():
+    ensure_runtime_schema()
+
 CMS_DEFAULT_PAGES = [
     {'slug': 'home', 'name': 'Главная', 'sort_order': 10},
-    {'slug': 'about', 'name': 'О нас', 'sort_order': 20},
     {'slug': 'wellness', 'name': 'Оздоровление', 'sort_order': 30},
     {'slug': 'rooms', 'name': 'Номера', 'sort_order': 40},
     {'slug': 'gallery', 'name': 'Галерея', 'sort_order': 50},
@@ -564,7 +585,6 @@ GALLERY_PAGE_DEFAULT_BLOCKS = {
 
 PAGE_DEFAULT_BLOCKS = {
     'home': HOME_PAGE_DEFAULT_BLOCKS,
-    'about': ABOUT_PAGE_DEFAULT_BLOCKS,
     'wellness': WELLNESS_PAGE_DEFAULT_BLOCKS,
     'accessibility': ACCESSIBILITY_PAGE_DEFAULT_BLOCKS,
     'contact': CONTACT_PAGE_DEFAULT_BLOCKS,
@@ -573,7 +593,8 @@ PAGE_DEFAULT_BLOCKS = {
     'journal': JOURNAL_PAGE_DEFAULT_BLOCKS,
     'gallery': GALLERY_PAGE_DEFAULT_BLOCKS,
 }
-CURRENT_CMS_BLOCK_SYNC = {
+
+CURRENT_CMS_BLOCK_SYNC = {
     'home': {
         'hero': {
             'body': {
@@ -591,6 +612,14 @@ PAGE_DEFAULT_BLOCKS = {
                 'replace_if': [
                     'Отель «Таласса» располагается на первой линии побережья Чёрного моря и обладает собственным пляжем. Из окон каждого номера открывается вид на море: только в части номеров это морская панорама, где даже принимая ванну, вы можете любоваться прибоем, а в других номерах из окон видны ещё и горы.\n\nВ наших номерах вас ожидает особая атмосфера уюта. Начиная с ортопедического матраса, мягких пуфов и дизайнерской мебели, заканчивая красивой ванной комнатой, оформленной в современном стиле и оборудованной тропическим душем, феном и мягкими душевыми и пляжными полотенцами. Мы старались продумать каждую деталь нашего отеля, чтобы ваше пребывание на побережье было комфортным. И, конечно, не забыли про лифт, чтобы вы, утомлённые солнцем, поднимались в свой номер легко.\n\nНаш галечный немноголюдный пляж с кристально чистой водой и удобным заходом в море создает идеальные условия для спокойного отдыха.\n\nОтель идеально подходит самым ленивым любителям морских закатов. Для всех остальных у нас есть прокат Supzero (sup board и принадлежности).\n\nДля тех, кто любит совмещать полезное с полезным, в нашем отеле находится оздоровительный центр. Здесь вы сможете пройти комплекс талассотерапевтических процедур: от фитобочки до гидромассажных купелей на морской воде (после предварительной консультации у специалиста). Также мы не забыли о людях с ограниченными возможностями передвижения: пандус, оборудованные номера для инвалидов, программы оздоровительного центра.',
                 ],
+            },
+            'button_label': {
+                'target': '',
+                'replace_if': ['Узнать историю', 'О талассотерапии'],
+            },
+            'button_url': {
+                'target': '',
+                'replace_if': ['/about', '/wellness'],
             },
         },
 
@@ -700,7 +729,6 @@ PAGE_DEFAULT_BLOCKS = {
 }
 PAGE_PREVIEW_ENDPOINTS = {
     'home': 'index',
-    'about': 'about_page',
     'wellness': 'wellness_page',
     'rooms': 'rooms',
     'gallery': 'gallery',
@@ -720,15 +748,6 @@ CMS_BLOCK_GUIDES = {
         'wellness': {'description': 'Короткий блок про оздоровление на главной.', 'payload_example': {'eyebrow': 'Оздоровление'}},
         'gallery': {'description': 'Превью галереи на главной. В payload можно перечислить изображения для сетки.', 'payload_example': {'images': ['/static/site/images/gallery/photo_1.jpg', '/static/site/images/gallery/photo_2.jpg']}},
         'cta': {'description': 'Финальный призыв к действию внизу главной страницы.'},
-    },
-    'about': {
-        'hero': {'description': 'Первый экран страницы О нас.'},
-        'story': {'description': 'История отеля. Основной текст разбивается на абзацы пустой строкой.'},
-        'pillars': {'description': 'Карточки с основными принципами отеля.', 'payload_example': {'items': [{'title': 'Море как терапия', 'description': 'Описание', 'icon': '🌊'}]}},
-        'location': {'description': 'Блок о расположении и природе вокруг отеля.'},
-        'values': {'description': 'Список ценностей и подходов отеля.', 'payload_example': {'items': [{'title': 'Осознанный подход', 'description': 'Описание'}]}},
-        'restaurant': {'description': 'Ресторанный блок. В payload можно добавить короткую служебную подпись.', 'payload_example': {'eyebrow': 'Ресторан', 'meta': 'Открытие - Июнь 2026'}},
-        'cta': {'description': 'Финальный CTA с двумя кнопками.', 'payload_example': {'secondary_button_label': 'Смотреть номера', 'secondary_button_url': '/rooms'}},
     },
     'wellness': {
         'hero': {'description': 'Первый экран страницы оздоровления.'},
@@ -848,6 +867,7 @@ class Room(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     number = db.Column(db.String(10), unique=True, nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
+    room_type_slug = db.Column(db.String(120), index=True)
     price_per_night = db.Column(db.JSON, nullable=False)
     capacity = db.Column(db.Integer, nullable=False)
     has_small_sofa = db.Column(db.Boolean, nullable=False)
@@ -1105,38 +1125,6 @@ def ensure_home_page_blocks_exist():
         db.session.commit()
 
 
-def ensure_about_page_blocks_exist():
-    ensure_site_pages_exist()
-    about_page = SitePage.query.filter_by(slug='about').first()
-    if not about_page:
-        return
-
-    created = False
-    for block_key, block_data in ABOUT_PAGE_DEFAULT_BLOCKS.items():
-        existing_block = SiteBlock.query.filter_by(page_id=about_page.id, block_key=block_key).first()
-        if existing_block:
-            continue
-
-        block = SiteBlock(
-            page_id=about_page.id,
-            block_key=block_key,
-            name=block_data.get('name', block_key),
-            title=block_data.get('title'),
-            subtitle=block_data.get('subtitle'),
-            body=block_data.get('body'),
-            image_url=block_data.get('image_url'),
-            button_label=block_data.get('button_label'),
-            button_url=block_data.get('button_url'),
-            payload=block_data.get('payload'),
-            sort_order=block_data.get('sort_order', 0),
-            is_enabled=True,
-        )
-        db.session.add(block)
-        created = True
-
-    if created:
-        db.session.commit()
-
 def normalize_block_payload(payload):
     if isinstance(payload, dict):
         return payload
@@ -1168,6 +1156,20 @@ def sync_current_cms_block_values(page_slug, blocks):
             if current_image_url in image_rule.get('replace_if', []):
                 block.image_url = image_rule.get('target')
                 updated = True
+        button_label_rule = block_rules.get('button_label')
+        if button_label_rule:
+            current_button_label = block.button_label or ''
+            if current_button_label in button_label_rule.get('replace_if', []):
+                block.button_label = button_label_rule.get('target') or None
+                updated = True
+
+        button_url_rule = block_rules.get('button_url')
+        if button_url_rule:
+            current_button_url = block.button_url or ''
+            if current_button_url in button_url_rule.get('replace_if', []):
+                block.button_url = button_url_rule.get('target') or None
+                updated = True
+
 
         body_rule = block_rules.get('body')
         if body_rule:
@@ -1507,6 +1509,9 @@ def get_next_room_by_slug(slug):
 def get_next_room_by_number(number):
     return legacy_room_service.get_next_room_by_number(number)
 
+def get_next_room_by_room(room):
+    return legacy_room_service.get_next_room_by_room(room)
+
 
 def get_next_room_feature_labels(room):
     return legacy_room_service.get_next_room_feature_labels(room)
@@ -1524,6 +1529,34 @@ def build_next_room_card_data(room):
 def get_next_room_monthly_price_items(room):
     return legacy_room_service.get_next_room_monthly_price_items(room)
 
+
+def get_room_type_options():
+    return [
+        {
+            'slug': room.get('slug'),
+            'name': room.get('name'),
+            'category': room.get('category'),
+        }
+        for room in load_next_rooms_data()
+    ]
+
+
+def get_room_type_option(room_type_slug):
+    if not room_type_slug:
+        return None
+    return get_next_room_by_slug(room_type_slug)
+
+
+def get_category_id_for_room_type(room_type_slug, categories=None):
+    room_type = get_room_type_option(room_type_slug)
+    if not room_type:
+        return None
+
+    if categories is None:
+        categories = Category.query.all()
+
+    category = next((category for category in categories if category.name == room_type.get('category')), None)
+    return category.id if category else None
 MONTH_LABELS_RU = [
     ('January', 'Январь'),
     ('February', 'Февраль'),
@@ -1561,7 +1594,7 @@ def get_room_display_category(room):
 
 
 def get_room_detail_url(room):
-    next_room = get_next_room_by_number(room.number)
+    next_room = get_next_room_by_room(room)
     if next_room and next_room.get('slug'):
         return url_for('room_detail_by_slug', slug=next_room['slug'])
     return url_for('room_detail', room_id=room.id)
@@ -1590,6 +1623,23 @@ def get_room_extra_bed_label(room):
 def get_room_price_bands(room):
     return legacy_room_service.get_room_price_bands(room)
 
+
+def render_booking_page(room, **context):
+    return render_template(
+        'booking.html',
+        room=room,
+        room_display_name=get_room_display_name(room),
+        room_display_category=get_room_display_category(room),
+        **context,
+    )
+
+
+@app.context_processor
+def inject_room_display_helpers():
+    return {
+        'get_room_display_name': get_room_display_name,
+        'get_room_display_category': get_room_display_category,
+    }
 
 def build_room_card_data(room, check_in='', check_out='', adults=2, children=0):
     detail_params = {}
@@ -1794,6 +1844,100 @@ def build_booking_combination_data(room_a, room_b, parsed_check_in, parsed_check
         'extra_price': (room_result_a['extra_price'] or 0) + (room_result_b['extra_price'] or 0),
         'price_caption': f'за {nights} ноч.' if nights else 'за ночь в текущем месяце',
     }
+
+def get_room_search_group_key(room):
+    return room.room_type_slug or f'room-{room.id}'
+
+
+def get_room_type_sort_order_map():
+    return {
+        room.get('slug'): index
+        for index, room in enumerate(load_next_rooms_data())
+        if room.get('slug')
+    }
+
+
+def build_grouped_booking_results(available_rooms, parsed_check_in, parsed_check_out, adults, children, children_under_five, check_in, check_out, selected_category_id):
+    order_map = get_room_type_sort_order_map()
+    grouped_rooms = {}
+
+    for room in available_rooms:
+        group_key = get_room_search_group_key(room)
+        existing_room = grouped_rooms.get(group_key)
+        if not existing_room or str(room.number) < str(existing_room.number):
+            grouped_rooms[group_key] = room
+
+    booking_results = []
+    for group_key, room in sorted(grouped_rooms.items(), key=lambda item: (order_map.get(item[0], 10_000), str(item[1].number))):
+        total_info = None
+        if parsed_check_in and parsed_check_out:
+            total_info = calculate_room_total_price(room, parsed_check_in, parsed_check_out, adults, children, children_under_five)
+
+        book_url = url_for(
+            'book_room',
+            room_id=room.id,
+            got_check_in=check_in,
+            got_check_out=check_out,
+            got_adults=adults,
+            got_children=children,
+            got_children_under_five=children_under_five,
+            got_category_id=selected_category_id,
+        )
+        booking_results.append(build_booking_result_data(room, total_info, book_url))
+
+    return booking_results
+
+
+def build_unique_booking_combination_results(available_rooms, capacity, parsed_check_in, parsed_check_out, adults, children, children_under_five, check_in, check_out):
+    order_map = get_room_type_sort_order_map()
+    combinations_by_key = {}
+
+    for index, room_a in enumerate(available_rooms):
+        for room_b in available_rooms[index + 1:]:
+            if get_room_max_capacity(room_a) + get_room_max_capacity(room_b) < capacity:
+                continue
+
+            combination = build_booking_combination_data(
+                room_a,
+                room_b,
+                parsed_check_in,
+                parsed_check_out,
+                adults,
+                children,
+                children_under_five,
+                check_in,
+                check_out,
+            )
+            if not combination:
+                continue
+
+            pair_key = tuple(sorted((get_room_search_group_key(room_a), get_room_search_group_key(room_b)), key=lambda value: (order_map.get(value, 10_000), value)))
+            replacement_score = (
+                combination['total_price'],
+                combination['total_capacity'],
+                str(room_a.number),
+                str(room_b.number),
+            )
+            existing_combination = combinations_by_key.get(pair_key)
+            if not existing_combination or replacement_score < existing_combination['_replacement_score']:
+                combination['_pair_key'] = pair_key
+                combination['_replacement_score'] = replacement_score
+                combinations_by_key[pair_key] = combination
+
+    results = sorted(
+        combinations_by_key.values(),
+        key=lambda item: (
+            0 if item['_pair_key'][0] == item['_pair_key'][1] else 1,
+            order_map.get(item['_pair_key'][0], 10_000),
+            order_map.get(item['_pair_key'][1], 10_000),
+        ),
+    )
+
+    for item in results:
+        item.pop('_pair_key', None)
+        item.pop('_replacement_score', None)
+
+    return results
 
 def get_news_cover_photo(article):
     if article.photos:
@@ -2149,45 +2293,30 @@ def book_landing_page():
 
         if not search_error:
             single_room_results = [room for room in available_rooms if get_room_max_capacity(room) >= capacity]
-
-            for room in single_room_results:
-                total_info = None
-                if parsed_check_in and parsed_check_out:
-                    total_info = calculate_room_total_price(room, parsed_check_in, parsed_check_out, adults, children, children_under_five)
-
-                book_url = url_for(
-                    'book_room',
-                    room_id=room.id,
-                    got_check_in=check_in,
-                    got_check_out=check_out,
-                    got_adults=adults,
-                    got_children=children,
-                    got_children_under_five=children_under_five,
-                    got_category_id=selected_category_id,
-                )
-                booking_results.append(build_booking_result_data(room, total_info, book_url))
+            booking_results = build_grouped_booking_results(
+                single_room_results,
+                parsed_check_in,
+                parsed_check_out,
+                adults,
+                children,
+                children_under_five,
+                check_in,
+                check_out,
+                selected_category_id,
+            )
 
             if len(available_rooms) >= 2:
-                for index, room_a in enumerate(available_rooms):
-                    for room_b in available_rooms[index + 1:]:
-                        if get_room_max_capacity(room_a) + get_room_max_capacity(room_b) < capacity:
-                            continue
-                        combination = build_booking_combination_data(
-                            room_a,
-                            room_b,
-                            parsed_check_in,
-                            parsed_check_out,
-                            adults,
-                            children,
-                            children_under_five,
-                            check_in,
-                            check_out,
-                        )
-                        if combination:
-                            booking_combination_results.append(combination)
-
-                booking_combination_results.sort(key=lambda item: (item['total_price'], item['total_capacity']))
-                booking_combination_results = booking_combination_results[:6]
+                booking_combination_results = build_unique_booking_combination_results(
+                    available_rooms,
+                    capacity,
+                    parsed_check_in,
+                    parsed_check_out,
+                    adults,
+                    children,
+                    children_under_five,
+                    check_in,
+                    check_out,
+                )
 
     return render_public_template(
         'public/book.html',
@@ -2366,11 +2495,11 @@ def book_room(room_id, got_check_in=None, got_check_out=None, got_adults=2, got_
 
         if check_in <= get_moscow_date():
             flash('Check-in date must be in the future', 'error')
-            return render_template('booking.html', room=room)
+            return render_booking_page(room)
 
         if check_out <= check_in:
             flash('Check-out date must be after check-in date', 'error')
-            return render_template('booking.html', room=room)
+            return render_booking_page(room)
 
         stay_days = (check_out - check_in).days
         if stay_days > 31:
@@ -2380,12 +2509,12 @@ def book_room(room_id, got_check_in=None, got_check_out=None, got_adults=2, got_
         if total_guests > max_capacity:
             flash(f'Maximum capacity is {max_capacity} guests', 'error')
             room.price_per_night = get_room_price_for_month(room, current_month)
-            return render_template('booking.html', room=room)
+            return render_booking_page(room)
 
         if not is_room_available(room_id, check_in, check_out):
             flash('Room is not available for selected dates', 'error')
             room.price_per_night = get_room_price_for_month(room, current_month)
-            return render_template('booking.html', room=room)
+            return render_booking_page(room)
 
         total_info = calculate_room_total_price(room, check_in, check_out, adults, children, children_under_five)
         total_price = total_info['total']
@@ -2440,9 +2569,9 @@ def book_room(room_id, got_check_in=None, got_check_out=None, got_adults=2, got_
         category_id=got_category_id,
     )
 
-    return render_template('booking.html', room=room, check_in=got_check_in,
-                           check_out=got_check_out, num_of_adults=got_adults, num_of_children=got_children,
-                           num_of_children_under_five=got_children_under_five, return_to=return_to)
+    return render_booking_page(room, check_in=got_check_in,
+                               check_out=got_check_out, num_of_adults=got_adults, num_of_children=got_children,
+                               num_of_children_under_five=got_children_under_five, return_to=return_to)
 
 @app.route('/book/combination', methods=['GET', 'POST'])
 @login_required
@@ -3138,12 +3267,15 @@ def admin_dashboard():
 def admin_rooms():
     if not current_user.is_admin:
         abort(403)
-    rooms = Room.query.all()
+    rooms = Room.query.order_by(Room.number.asc()).all()
 
     current_month = datetime.now().strftime("%B")
 
     for room in rooms:
-        room.price_per_night = get_room_price_for_month(room, current_month)
+        room.current_price = get_room_price_for_month(room, current_month)
+        room.display_name = get_room_display_name(room)
+        room.display_category = get_room_display_category(room)
+        room.preview_payload = build_booking_result_data(room, total_info=None, book_url='').get('preview_payload')
 
     return render_template('admin/rooms.html', rooms=rooms)
 
@@ -3169,6 +3301,10 @@ def admin_add_room():
             if not rooms_data:
                 flash('Необходимо указать хотя бы один номер комнаты!', 'error')
                 return redirect(url_for('admin_add_room'))
+
+            categories = Category.query.all()
+            room_type_slug = request.form.get('room_type_slug', '').strip() or None
+            resolved_category_id = get_category_id_for_room_type(room_type_slug, categories) or int(request.form['category_id'])
 
             # Создаем комнаты
             for room_number in rooms_data:
@@ -3199,7 +3335,8 @@ def admin_add_room():
 
                 room = Room(
                     number=room_number,
-                    category_id=int(request.form['category_id']),
+                    category_id=resolved_category_id,
+                    room_type_slug=room_type_slug,
                     price_per_night=json.dumps(prices),
                     capacity=int(request.form['capacity']),
                     has_small_sofa=bool(small_sofa),
@@ -3218,7 +3355,8 @@ def admin_add_room():
             flash(f'Ошибка при добавлении комнат: {str(e)}', 'error')
 
     categories = Category.query.all()
-    return render_template('admin/add_room.html', categories=categories)
+    room_type_options = get_room_type_options()
+    return render_template('admin/add_room.html', categories=categories, room_type_options=room_type_options)
 
 @app.route('/admin/rooms/<int:room_id>/photos', methods=['GET', 'POST'])
 @login_required
@@ -3287,8 +3425,13 @@ def admin_edit_room(room_id):
         except (Exception):
             large_sofa = 0
 
+        categories = Category.query.all()
+        room_type_slug = request.form.get('room_type_slug', '').strip() or None
+        resolved_category_id = get_category_id_for_room_type(room_type_slug, categories) or int(request.form['category_id'])
+
         room.number = request.form['number']
-        room.category_id = int(request.form['category_id'])
+        room.category_id = resolved_category_id
+        room.room_type_slug = room_type_slug
         room.price_per_night = json.dumps(prices)
         room.capacity = int(request.form['capacity'])
         room.has_small_sofa = bool(small_sofa)
@@ -3304,7 +3447,8 @@ def admin_edit_room(room_id):
     room.price_per_night = get_room_prices(room)
 
     categories = Category.query.all()
-    return render_template('admin/edit_room.html', room=room, categories=categories)
+    room_type_options = get_room_type_options()
+    return render_template('admin/edit_room.html', room=room, categories=categories, room_type_options=room_type_options)
 
 @app.route('/admin/rooms/<int:room_id>/delete', methods=['POST'])
 @login_required
@@ -3901,7 +4045,17 @@ def handle_not_found(error):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        ensure_runtime_schema()
     app.run(debug=False, host='0.0.0.0', port=5000)
+
+
+
+
+
+
+
+
+
 
 
 

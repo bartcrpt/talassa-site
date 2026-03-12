@@ -34,8 +34,8 @@
                     <div class="booking-card-next__top">
                         <div>
                             <p class="booking-card-next__eyebrow">Бронирование #{{ booking.id }}</p>
-                            <h2>Номер {{ booking.room.number }}</h2>
-                            <p class="booking-card-next__category">{{ booking.room.category.name }}</p>
+                            <h2>{{ get_room_display_name(booking.room) }}</h2>
+                            <p class="booking-card-next__category">№ {{ booking.room.number }} • {{ get_room_display_category(booking.room) }}</p>
                         </div>
                         <span class="account-status-badge account-status-badge--{{ 'confirmed' if booking.status == 'confirmed' else ('pending' if booking.status == 'pending' else 'neutral') }}">
                             {% if booking.status == 'pending' %}Ожидает подтверждения
@@ -120,4 +120,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
+
 

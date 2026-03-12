@@ -59,7 +59,8 @@
                                             <p class="mb-1"><strong>Телефон:</strong> {{ booking.user.phone|format_phone }}</p>
                                         </div>
                                         <div class="col-md-6">
-                                            <p class="mb-1"><strong>Номер:</strong> {{ booking.room.number }} ({{ booking.room.category.name }})</p>
+                                            <p class="mb-1"><strong>Номер:</strong> {{ get_room_display_name(booking.room) }}</p>
+                                            <p class="mb-1"><strong>Физический номер:</strong> № {{ booking.room.number }} • {{ get_room_display_category(booking.room) }}</p>
                                             <p class="mb-1"><strong>Даты:</strong> {{ booking.check_in.strftime('%d.%m.%Y') }} - {{ booking.check_out.strftime('%d.%m.%Y') }}</p>
                                             <p class="mb-1"><strong>Гостей всего:</strong> {{ booking.guests }}</p>
                                             <p class="mb-1"><strong>Взрослых:</strong> {{ booking.adults }}</p>
@@ -144,3 +145,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
+

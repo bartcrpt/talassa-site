@@ -16,7 +16,7 @@
                     <div>
                         <p class="admin-page-header__eyebrow">Фонд размещения</p>
                         <h1>Управление номерами</h1>
-                        <p>Контролируйте категории, вместимость, стоимость, доступность и медиаматериалы по каждому номеру.</p>
+                        <p>Контролируйте категории, вид номера, вместимость, стоимость, доступность и медиаматериалы по каждому физическому номеру.</p>
                     </div>
                     <a href="{{ url_for('admin_add_room') }}" class="btn btn-primary admin-btn">
                         <i class="bi bi-plus-circle"></i> Добавить номер
@@ -31,6 +31,7 @@
                                 <tr>
                                     <th>Номер</th>
                                     <th>Категория</th>
+                                    <th>Вид номера</th>
                                     <th>Вместимость</th>
                                     <th>Цена/ночь</th>
                                     <th>Статус</th>
@@ -43,8 +44,13 @@
                                 <tr>
                                     <td><strong>{{ room.number }}</strong></td>
                                     <td>{{ room.category.name }}</td>
+                                    <td>
+                                        <div class="admin-room-type-cell">
+                                            <strong>{{ room.display_name }}</strong>
+                                        </div>
+                                    </td>
                                     <td>{{ room.capacity }} {% if room.capacity == 1 %}гость{% elif room.capacity < 5 %}гостя{% else %}гостей{% endif %}</td>
-                                    <td>{{ '%.0f'|format(room.price_per_night|float) }} ₽</td>
+                                    <td>{{ '%.0f'|format(room.current_price|float) }} ₽</td>
                                     <td>
                                         <span class="admin-status-badge admin-status-badge--{{ 'confirmed' if room.is_available else 'danger' }}">
                                             {{ 'Доступен' if room.is_available else 'Недоступен' }}
@@ -53,9 +59,9 @@
                                     <td><span class="admin-chip">{{ room.photos|length }} фото</span></td>
                                     <td>
                                         <div class="admin-action-group">
-                                            <a href="{{ url_for('room_detail', room_id=room.id) }}" class="btn btn-outline-secondary admin-btn admin-btn--icon" title="Просмотр">
+                                            <button type="button" class="btn btn-outline-secondary admin-btn admin-btn--icon" title="Просмотр" data-admin-room-preview='{{ room.preview_payload|tojson|forceescape }}'>
                                                 <i class="bi bi-eye"></i>
-                                            </a>
+                                            </button>
                                             <a href="{{ url_for('admin_edit_room', room_id=room.id) }}" class="btn btn-outline-secondary admin-btn admin-btn--icon" title="Редактировать">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
@@ -87,4 +93,89 @@
         </div>
     </div>
 </section>
+
+<div class="modal fade" id="adminRoomPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content admin-room-preview-modal">
+            <div class="modal-header admin-room-preview-modal__header">
+                <div>
+                    <p class="admin-room-preview-modal__eyebrow" id="adminRoomPreviewCategory"></p>
+                    <h2 id="adminRoomPreviewTitle"></h2>
+                    <p class="admin-room-preview-modal__meta" id="adminRoomPreviewMeta"></p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body admin-room-preview-modal__body">
+                <div class="admin-room-preview-modal__media">
+                    <img id="adminRoomPreviewImage" src="" alt="">
+                </div>
+                <div class="admin-room-preview-modal__content">
+                    <p id="adminRoomPreviewDescription"></p>
+                    <div class="admin-room-preview-modal__chips" id="adminRoomPreviewFeatures"></div>
+                    <div class="admin-room-preview-modal__facts" id="adminRoomPreviewFacts"></div>
+                    <div>
+                        <h3>Удобства</h3>
+                        <ul id="adminRoomPreviewAmenities" class="admin-room-preview-modal__amenities"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modalElement = document.getElementById('adminRoomPreviewModal');
+    const modal = modalElement ? new bootstrap.Modal(modalElement) : null;
+    if (!modal) return;
+
+    const image = document.getElementById('adminRoomPreviewImage');
+    const title = document.getElementById('adminRoomPreviewTitle');
+    const category = document.getElementById('adminRoomPreviewCategory');
+    const meta = document.getElementById('adminRoomPreviewMeta');
+    const description = document.getElementById('adminRoomPreviewDescription');
+    const features = document.getElementById('adminRoomPreviewFeatures');
+    const facts = document.getElementById('adminRoomPreviewFacts');
+    const amenities = document.getElementById('adminRoomPreviewAmenities');
+
+    document.querySelectorAll('[data-admin-room-preview]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const payload = JSON.parse(button.getAttribute('data-admin-room-preview'));
+            title.textContent = payload.name || '';
+            category.textContent = payload.category_name || '';
+            meta.textContent = payload.number ? 'Физический номер № ' + payload.number : '';
+            description.textContent = payload.description || payload.short_description || '';
+            image.src = payload.photo_url || '';
+            image.alt = payload.name || '';
+
+            features.innerHTML = '';
+            (payload.feature_labels || []).forEach(function (item) {
+                const chip = document.createElement('span');
+                chip.className = 'admin-chip';
+                chip.textContent = item;
+                features.appendChild(chip);
+            });
+
+            facts.innerHTML = '';
+            [payload.area_label, payload.max_capacity ? ('До ' + payload.max_capacity + ' гостей') : '', payload.extra_bed || ''].filter(Boolean).forEach(function (item) {
+                const fact = document.createElement('span');
+                fact.className = 'admin-room-preview-modal__fact';
+                fact.textContent = item;
+                facts.appendChild(fact);
+            });
+
+            amenities.innerHTML = '';
+            (payload.amenities_list || []).forEach(function (item) {
+                const li = document.createElement('li');
+                li.textContent = item;
+                amenities.appendChild(li);
+            });
+
+            modal.show();
+        });
+    });
+});
+</script>
 {% endblock %}

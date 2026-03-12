@@ -45,7 +45,7 @@
                                         <div>{{ booking.user.first_name }} {{ booking.user.last_name }}</div>
                                         <small>{{ booking.user.email or booking.user.phone|format_phone }}</small>
                                     </td>
-                                    <td>Номер {{ booking.room.number }}</td>
+                                    <td><div>{{ get_room_display_name(booking.room) }}</div><small>№ {{ booking.room.number }} • {{ get_room_display_category(booking.room) }}</small></td>
                                     <td>
                                         <div>{{ booking.check_in.strftime('%d.%m.%Y') }}</div>
                                         <small>{{ booking.check_out.strftime('%d.%m.%Y') }}</small>
@@ -90,4 +90,5 @@
     </div>
 </section>
 {% endblock %}
+
 

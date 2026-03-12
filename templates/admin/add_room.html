@@ -77,6 +77,16 @@
                                                 {% endfor %}
                                             </select>
                                         </div>
+                                        <div class="mb-3">
+                                            <label for="room_type_slug" class="form-label">Вид номера</label>
+                                            <select class="form-select" id="room_type_slug" name="room_type_slug">
+                                                <option value="">Выберите вид номера</option>
+                                                {% for option in room_type_options %}
+                                                    <option value="{{ option.slug }}">{{ option.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="form-text">Контент публичной страницы номера будет подтягиваться из выбранного вида.</div>
+                                        </div>
                                         <div>
                                             <label>Дополнительное спальное место</label>
                                         </div>

@@ -8,3 +8,4 @@ __pycache__
 # Local database dumps
 talassahoteldb_complete_dump.sql
 cms_*.sql
+talassa_current_dump.sql

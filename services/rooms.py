@@ -60,6 +60,18 @@ class LegacyRoomService:
             return None
         return self.get_next_room_by_slug(slug)
 
+    def get_room_type_slug(self, room):
+        room_type_slug = getattr(room, 'room_type_slug', None)
+        if room_type_slug:
+            return room_type_slug
+        return self.next_room_slug_by_number.get((getattr(room, 'number', '') or '').upper())
+
+    def get_next_room_by_room(self, room):
+        slug = self.get_room_type_slug(room)
+        if not slug:
+            return None
+        return self.get_next_room_by_slug(slug)
+
     def get_next_room_feature_labels(self, room):
         features = room.get('features', {})
         labels = []
@@ -128,13 +140,13 @@ class LegacyRoomService:
         return 'Стандарт'
 
     def get_room_display_name(self, room):
-        next_room = self.get_next_room_by_number(room.number)
+        next_room = self.get_next_room_by_room(room)
         if next_room and next_room.get('name'):
             return next_room['name']
         return room.category.name if room.category else f'Номер {room.number}'
 
     def get_room_display_category(self, room):
-        next_room = self.get_next_room_by_number(room.number)
+        next_room = self.get_next_room_by_room(room)
         if next_room and next_room.get('category'):
             return next_room['category']
         return room.category.name if room.category else 'Номер'
@@ -368,3 +380,4 @@ class LegacyRoomService:
         elif 'Шустрый WiFi' not in result:
             result.append('Шустрый WiFi')
         return result
+

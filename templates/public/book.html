@@ -1,4 +1,4 @@
-﻿{% extends "public/base_public.html" %}
+{% extends "public/base_public.html" %}
 
 {% block content %}
 {% set hero = blocks.get('hero') %}
@@ -148,7 +148,7 @@
                                             <p class="booking-result-card__category">{{ room.category_name }}</p>
                                             <h3><button type="button" class="booking-result-card__title-link" data-booking-room-open data-room-preview="{{ room.preview_payload|tojson|forceescape }}">{{ room.name }}</button></h3>
                                         </div>
-                                        <span class="booking-result-card__room-number">№ {{ room.number }}</span>
+
                                     </div>
 
                                     <div class="booking-result-card__meta">
@@ -775,3 +775,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 {% endblock %}
+
