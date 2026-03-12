@@ -31,6 +31,7 @@ DB_NAME = os.getenv('DB_NAME')
 DB_HOST = os.getenv('DB_HOST')
 DB_PORT = os.getenv('DB_PORT', '5432')
 UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER')
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
 NEXT_PUBLIC_DIR = os.path.join(PROJECT_ROOT, 'public')
@@ -3901,6 +3902,12 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=False, host='0.0.0.0', port=5000)
+
+
+
+
+
+
 
 
 

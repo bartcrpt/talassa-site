@@ -66,16 +66,12 @@ def upsert_articles() -> None:
 
     with app.app_context():
         for index, source_article in enumerate(articles):
-            article = News.query.filter_by(source_slug=source_article['slug']).first()
-            if article is None:
-                article = News.query.filter_by(title=source_article['title']).first()
+            article = News.query.filter_by(title=source_article['title']).first()
             is_new = article is None
 
             if is_new:
                 article = News(
                     title=source_article['title'],
-                    source_slug=source_article['slug'],
-                    category=source_article.get('category'),
                     author_id=None,
                     created_at=now - timedelta(minutes=index),
                 )
@@ -83,8 +79,6 @@ def upsert_articles() -> None:
 
             article.title = source_article['title']
             article.summary = source_article['excerpt']
-            article.source_slug = source_article['slug']
-            article.category = source_article.get('category')
             article.content = render_article_html(source_article)
             article.is_published = True
             article.updated_at = now

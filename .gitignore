@@ -4,3 +4,7 @@ node_modules
 venv
 static/uploads
 __pycache__
+
+# Local database dumps
+talassahoteldb_complete_dump.sql
+cms_*.sql
