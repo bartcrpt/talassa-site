@@ -19,16 +19,6 @@
             <a href="{{ hero.button_url if hero and hero.button_url else '/rooms' }}" class="site-btn site-btn--gold">{{ hero.button_label if hero and hero.button_label else 'Забронировать' }}</a>
             <a href="{{ hero.payload.get('secondary_button_url') if hero and hero.payload and hero.payload.get('secondary_button_url') else '/rooms' }}" class="site-btn site-btn--ghost">{{ hero.payload.get('secondary_button_label') if hero and hero.payload and hero.payload.get('secondary_button_label') else 'Смотреть номера' }}</a>
         </div>
-        <div class="hero__reviews">
-            <iframe
-                src="https://yandex.ru/sprav/widget/rating-badge/14710009769?type=rating"
-                width="150"
-                height="50"
-                frameborder="0"
-                loading="lazy"
-                title="Рейтинг Таласса Hotel & Spa на Яндекс"
-            ></iframe>
-        </div>
     </div>
 </section>
 
@@ -52,11 +42,22 @@
                         {% else %}
                             <p>Контент блока пока не заполнен.</p>
                         {% endif %}
-                    </div>                </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="section-image section-image--tall">
+        <div class="section-image section-image--tall philosophy-image">
             <img src="{{ philosophy.image_url if philosophy and philosophy.image_url else '/static/site/images/gallery/photo_3.jpg' }}" alt="Территория отеля Таласса">
+            <div class="philosophy-image__reviews">
+                <iframe
+                    src="https://yandex.ru/sprav/widget/rating-badge/14710009769?type=rating"
+                    width="150"
+                    height="50"
+                    frameborder="0"
+                    loading="lazy"
+                    title="Рейтинг Таласса Hotel & Spa на Яндекс"
+                ></iframe>
+            </div>
         </div>
     </div>
 </section>
@@ -162,13 +163,3 @@
     </div>
 </section>
 {% endblock %}
-
-
-
-
-
-
-
-
-
-
