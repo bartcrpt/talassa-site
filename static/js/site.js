@@ -275,9 +275,11 @@ function initSiteAuth() {
   const agreementInput = modal.querySelector('[data-site-auth-agreement]');
   const policyInput = modal.querySelector('[data-site-auth-policy]');
   const docModal = document.querySelector('[data-site-doc-modal]');
+  const docDataNode = document.querySelector('[data-site-doc-data]');
   const docTitle = docModal?.querySelector('[data-site-doc-title]');
   const docEyebrow = docModal?.querySelector('[data-site-doc-eyebrow]');
   const docContent = docModal?.querySelector('[data-site-doc-content]');
+  const docReadMore = docModal?.querySelector('[data-site-doc-read-more]');
   const codeInputs = Array.from(modal.querySelectorAll('[data-site-auth-code-input]'));
   const backButton = modal.querySelector('[data-site-auth-back]');
   const resendButton = modal.querySelector('[data-site-auth-resend]');
@@ -516,28 +518,15 @@ function initSiteAuth() {
     await sendCode(state.codeSource);
   };
 
-  const docs = {
-    agreement: {
-      eyebrow: 'Документ',
-      title: 'Пользовательское соглашение и Правила использования сайта',
-      content: `
-        <p>Используя сайт «Таласса Hotel & Spa», вы подтверждаете, что используете его добросовестно и только для получения информации об отеле, выбора номера, отправки заявок и оформления бронирования.</p>
-        <p>Пользователь обязуется указывать достоверные данные при регистрации и бронировании, не предпринимать действий, нарушающих работу сайта, и не использовать сайт для размещения ложных заявок или недобросовестных обращений.</p>
-        <p>Администрация сайта вправе обновлять информацию о номерах, стоимости, услугах и правилах проживания без отдельного уведомления. Итоговые условия бронирования считаются подтверждёнными после связи с администратором и подтверждения заявки.</p>
-        <p>Все материалы сайта, включая тексты, фотографии, дизайн и элементы интерфейса, используются только в информационных целях и не подлежат копированию или распространению без согласия правообладателя.</p>
-      `,
-    },
-    policy: {
-      eyebrow: 'Документ',
-      title: 'Политика обработки персональных данных',
-      content: `
-        <p>Оставляя свои данные на сайте, вы соглашаетесь на их обработку для связи с вами, подтверждения регистрации, оформления бронирования, уточнения деталей проживания и направления сервисных уведомлений, связанных с вашей заявкой.</p>
-        <p>К персональным данным могут относиться номер телефона, имя, адрес электронной почты и иные сведения, которые вы добровольно указываете при регистрации или бронировании.</p>
-        <p>Данные используются только для работы отеля и не передаются третьим лицам без законных оснований. Администрация принимает разумные меры для защиты полученной информации от утраты, неправомерного доступа и раскрытия.</p>
-        <p>Пользователь вправе запросить уточнение, обновление или удаление своих персональных данных, обратившись в отель по официальным контактам, указанным на сайте.</p>
-      `,
-    },
-  };
+  let docs = {};
+  if (docDataNode) {
+    try {
+      docs = JSON.parse(docDataNode.textContent || '{}');
+    } catch (error) {
+      console.error('Failed to parse legal document previews', error);
+      docs = {};
+    }
+  }
 
   const openDocModal = (key) => {
     if (!docModal || !docTitle || !docContent || !docs[key]) {
@@ -545,7 +534,11 @@ function initSiteAuth() {
     }
     docEyebrow.textContent = docs[key].eyebrow;
     docTitle.textContent = docs[key].title;
-    docContent.innerHTML = docs[key].content;
+    docContent.textContent = docs[key].preview || '';
+    if (docReadMore && docs[key].read_more_url) {
+      docReadMore.href = docs[key].read_more_url;
+      docReadMore.hidden = false;
+    }
     docModal.hidden = false;
     body.classList.add('site-doc-open');
   };
@@ -555,6 +548,10 @@ function initSiteAuth() {
       return;
     }
     docModal.hidden = true;
+    if (docReadMore) {
+      docReadMore.hidden = true;
+      docReadMore.href = '#';
+    }
     body.classList.remove('site-doc-open');
   };
 
@@ -570,6 +567,32 @@ function initSiteAuth() {
 
   docModal?.querySelectorAll('[data-site-doc-close]').forEach((button) => {
     button.addEventListener('click', closeDocModal);
+  });
+  docReadMore?.addEventListener('click', (event) => {
+    const targetUrl = docReadMore.getAttribute('href');
+    if (!targetUrl || targetUrl === '#') {
+      return;
+    }
+
+    event.preventDefault();
+    closeDocModal();
+    closeModal();
+
+    if (window.location.pathname + window.location.hash === targetUrl) {
+      return;
+    }
+
+    if (targetUrl.startsWith('#') && window.location.pathname === '/legal') {
+      window.location.hash = targetUrl.slice(1);
+      return;
+    }
+
+    if (targetUrl.startsWith('/legal#') && window.location.pathname === '/legal') {
+      window.location.hash = targetUrl.split('#')[1] || '';
+      return;
+    }
+
+    window.location.href = targetUrl;
   });
   openButtons.forEach((button) => {
     button.addEventListener('click', (event) => {

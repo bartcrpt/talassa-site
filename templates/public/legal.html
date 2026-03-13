@@ -1,0 +1,99 @@
+{% extends "public/base_public.html" %}
+
+{% block content %}
+{% set default_doc = legal_documents[0] if legal_documents else None %}
+
+<section class="page-hero" style="background-image: linear-gradient(rgba(49, 78, 111, 0.76), rgba(49, 78, 111, 0.8)), url('{{ hero_block.image_url if hero_block and hero_block.image_url else '/static/site/images/gallery/photo_3.jpg' }}');">
+    <div class="site-container page-hero__content">
+        <p class="hero__eyebrow">{{ hero_block.payload.get('eyebrow') if hero_block and hero_block.payload else 'Правовая информация' }}</p>
+        <h1>{{ hero_block.title if hero_block and hero_block.title else 'Юридические документы' }}</h1>
+        <p>{{ hero_block.subtitle if hero_block and hero_block.subtitle else 'На этой странице собраны пользовательское соглашение, договор оферты и политика обработки персональных данных.' }}</p>
+    </div>
+</section>
+
+<section class="section section--light section--tight-top">
+    <div class="site-container legal-page">
+        <div class="section-heading section-heading--center legal-page__heading">
+            <h2>Документы Таласса Hotel &amp; Spa</h2>
+            <p>Выберите нужный документ и просмотрите его полную актуальную редакцию.</p>
+        </div>
+
+        {% if legal_documents %}
+            <div class="legal-tabs" data-legal-tabs>
+                <div class="legal-tabs__nav" role="tablist" aria-label="Юридические документы">
+                    {% for doc in legal_documents %}
+                        <button
+                            type="button"
+                            class="legal-tabs__button{% if loop.first %} is-active{% endif %}"
+                            data-legal-tab-trigger="{{ doc.slug }}"
+                            role="tab"
+                            aria-selected="{{ 'true' if loop.first else 'false' }}"
+                        >
+                            {{ doc.tab_title }}
+                        </button>
+                    {% endfor %}
+                </div>
+
+                <div class="legal-tabs__panes">
+                    {% for doc in legal_documents %}
+                        <article
+                            class="legal-document{% if loop.first %} is-active{% endif %}"
+                            data-legal-tab-pane="{{ doc.slug }}"
+                            {% if not loop.first %}hidden{% endif %}
+                        >
+                            <h2>{{ doc.title }}</h2>
+                            <div class="legal-document__body">{{ doc.body }}</div>
+                        </article>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="empty-state-card centered-copy centered-copy--compact">
+                <h2>Документы пока не добавлены</h2>
+                <p>Содержимое юридических документов пока недоступно.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tabs = document.querySelector('[data-legal-tabs]');
+    if (!tabs) return;
+
+    const buttons = Array.from(tabs.querySelectorAll('[data-legal-tab-trigger]'));
+    const panes = Array.from(tabs.querySelectorAll('[data-legal-tab-pane]'));
+
+    const activate = (slug) => {
+        let matched = false;
+
+        buttons.forEach((button) => {
+            const isActive = button.getAttribute('data-legal-tab-trigger') === slug;
+            button.classList.toggle('is-active', isActive);
+            button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            if (isActive) matched = true;
+        });
+
+        panes.forEach((pane) => {
+            const isActive = pane.getAttribute('data-legal-tab-pane') === slug;
+            pane.classList.toggle('is-active', isActive);
+            pane.hidden = !isActive;
+        });
+
+        if (matched) {
+            window.history.replaceState(null, '', '#' + slug);
+        }
+    };
+
+    buttons.forEach((button) => {
+        button.addEventListener('click', () => {
+            activate(button.getAttribute('data-legal-tab-trigger'));
+        });
+    });
+
+    const initialSlug = window.location.hash ? window.location.hash.slice(1) : '{{ default_doc.slug if default_doc else "agreement" }}';
+    activate(initialSlug);
+});
+</script>
+{% endblock %}
+

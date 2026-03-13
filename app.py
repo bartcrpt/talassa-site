@@ -20,6 +20,7 @@ import pytz
 from dotenv import load_dotenv
 
 from send_msg import send_tg_message, send_sms_message
+from legal_content import AGREEMENT_TEXT, OFFER_TEXT, POLICY_TEXT
 from services.rooms import LegacyRoomService
 
 load_dotenv()  # This loads variables from .env into os.environ
@@ -49,6 +50,27 @@ NEXT_ROOM_NUMBER_BY_SLUG = {
 }
 NEXT_ROOM_SLUG_BY_NUMBER = {value: key for key, value in NEXT_ROOM_NUMBER_BY_SLUG.items()}
 _RUNTIME_SCHEMA_ENSURED = False
+
+
+def normalize_legal_document_text(text):
+    if not text:
+        return ''
+
+    normalized = (
+        str(text)
+        .replace('\r\n', '\n')
+        .replace('**', '')
+        .replace('\\.', '.')
+        .replace('\\-', '-')
+        .replace('\\&', '&')
+        .replace('\\+', '+')
+        .replace('\\(', '(')
+        .replace('\\)', ')')
+        .replace('\xa0', ' ')
+    )
+    normalized = re.sub(r'[ \t]+\n', '\n', normalized)
+    normalized = re.sub(r'\n{3,}', '\n\n', normalized)
+    return normalized.strip()
 
 # Загрузка токена и ID группы из .env
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
@@ -102,6 +124,7 @@ CMS_DEFAULT_PAGES = [
     {'slug': 'journal', 'name': 'Журнал', 'sort_order': 70},
     {'slug': 'contact', 'name': 'Контакты', 'sort_order': 80},
     {'slug': 'book', 'name': 'Бронирование', 'sort_order': 90},
+    {'slug': 'legal', 'name': 'Правовая информация', 'sort_order': 100},
 ]
 
 HOME_PAGE_DEFAULT_BLOCKS = {
@@ -583,6 +606,38 @@ GALLERY_PAGE_DEFAULT_BLOCKS = {
     },
 }
 
+LEGAL_PAGE_DEFAULT_BLOCKS = {
+    'hero': {
+        'name': 'Hero',
+        'title': 'Юридические документы',
+        'subtitle': 'На этой странице собраны пользовательское соглашение, договор оферты и политика обработки персональных данных.',
+        'image_url': '/static/site/images/gallery/photo_3.jpg',
+        'payload': {'eyebrow': 'Правовая информация'},
+        'sort_order': 10,
+    },
+    'agreement': {
+        'name': 'Пользовательское соглашение',
+        'title': 'Пользовательское соглашение',
+        'body': AGREEMENT_TEXT,
+        'payload': {'tab_title': 'Пользовательское соглашение', 'eyebrow': 'Документ 1'},
+        'sort_order': 20,
+    },
+    'offer': {
+        'name': 'Договор оферты',
+        'title': 'Договор оферты',
+        'body': OFFER_TEXT,
+        'payload': {'tab_title': 'Договор оферты', 'eyebrow': 'Документ 2'},
+        'sort_order': 30,
+    },
+    'policy': {
+        'name': 'Политика обработки персональных данных',
+        'title': 'Политика обработки персональных данных',
+        'body': POLICY_TEXT,
+        'payload': {'tab_title': 'Политика обработки персональных данных', 'eyebrow': 'Документ 3'},
+        'sort_order': 40,
+    },
+}
+
 PAGE_DEFAULT_BLOCKS = {
     'home': HOME_PAGE_DEFAULT_BLOCKS,
     'wellness': WELLNESS_PAGE_DEFAULT_BLOCKS,
@@ -592,6 +647,7 @@ PAGE_DEFAULT_BLOCKS = {
     'rooms': ROOMS_PAGE_DEFAULT_BLOCKS,
     'journal': JOURNAL_PAGE_DEFAULT_BLOCKS,
     'gallery': GALLERY_PAGE_DEFAULT_BLOCKS,
+    'legal': LEGAL_PAGE_DEFAULT_BLOCKS,
 }
 
 CURRENT_CMS_BLOCK_SYNC = {
@@ -726,6 +782,26 @@ CURRENT_CMS_BLOCK_SYNC = {
             },
         },
     },
+    'legal': {
+        'agreement': {
+            'body': {
+                'target': normalize_legal_document_text(AGREEMENT_TEXT),
+                'replace_if': [AGREEMENT_TEXT],
+            },
+        },
+        'offer': {
+            'body': {
+                'target': normalize_legal_document_text(OFFER_TEXT),
+                'replace_if': [OFFER_TEXT],
+            },
+        },
+        'policy': {
+            'body': {
+                'target': normalize_legal_document_text(POLICY_TEXT),
+                'replace_if': [POLICY_TEXT],
+            },
+        },
+    },
 }
 PAGE_PREVIEW_ENDPOINTS = {
     'home': 'index',
@@ -736,6 +812,7 @@ PAGE_PREVIEW_ENDPOINTS = {
     'journal': 'journal_page',
     'contact': 'contact_page',
     'book': 'book_landing_page',
+    'legal': 'legal_page',
 }
 
 CMS_BLOCK_GUIDES = {
@@ -789,6 +866,12 @@ CMS_BLOCK_GUIDES = {
     'gallery': {
         'hero': {'description': 'Верхний блок страницы галереи.'},
     },
+    'legal': {
+        'hero': {'description': 'Первый экран страницы с юридическими документами.'},
+        'agreement': {'description': 'Текст пользовательского соглашения.', 'payload_example': {'tab_title': 'Пользовательское соглашение', 'eyebrow': 'Документ 1'}},
+        'offer': {'description': 'Текст договора оферты.', 'payload_example': {'tab_title': 'Договор оферты', 'eyebrow': 'Документ 2'}},
+        'policy': {'description': 'Текст политики обработки персональных данных.', 'payload_example': {'tab_title': 'Политика обработки персональных данных', 'eyebrow': 'Документ 3'}},
+    },
 }
 
 PUBLIC_PAGE_SEO_DEFAULTS = {
@@ -832,9 +915,14 @@ PUBLIC_PAGE_SEO_DEFAULTS = {
         'description': 'Бронирование номера в Таласса Hotel & Spa: актуальные контакты, условия заселения и быстрая связь через Telegram, VK, телефон и email.',
         'image_url': '/static/site/images/gallery/photo_1.jpg',
     },
+    'legal': {
+        'title': 'Правовая информация',
+        'description': 'Пользовательское соглашение, договор оферты и политика обработки персональных данных Таласса Hotel & Spa.',
+        'image_url': '/static/site/images/gallery/photo_3.jpg',
+    },
 }
 
-CMS_SEO_SYNC_PAGES = ('home', 'wellness', 'rooms', 'gallery', 'accessibility', 'journal', 'contact', 'book')
+CMS_SEO_SYNC_PAGES = ('home', 'wellness', 'rooms', 'gallery', 'accessibility', 'journal', 'contact', 'book', 'legal')
 # Add custom filter for phone formatting
 @app.template_filter('format_phone')
 def format_phone_filter(phone):
@@ -1967,6 +2055,63 @@ def get_public_gallery_images():
         })
     return items
 
+def build_legal_documents_from_blocks(blocks):
+    legal_documents = []
+    for slug in ('agreement', 'offer', 'policy'):
+        block = blocks.get(slug)
+        if not block:
+            continue
+
+        payload = normalize_block_payload(block.payload)
+        legal_documents.append(
+            {
+                'slug': slug,
+                'tab_title': payload.get('tab_title') or block.title or block.name or slug,
+                'title': block.title or block.name or slug,
+                'eyebrow': payload.get('eyebrow') or '',
+                'body': normalize_legal_document_text(block.body),
+            }
+        )
+
+    return legal_documents
+
+def build_legal_preview_text(text, limit=1500):
+    normalized = normalize_legal_document_text(text)
+    if not normalized:
+        return ''
+    if len(normalized) <= limit:
+        return normalized
+
+    forward_dot_index = normalized.find('.', limit)
+    if forward_dot_index != -1 and forward_dot_index <= limit + 300:
+        cut_index = forward_dot_index + 1
+    else:
+        backward_dot_index = normalized.rfind('.', 0, limit)
+        if backward_dot_index != -1 and backward_dot_index >= int(limit * 0.6):
+            cut_index = backward_dot_index + 1
+        else:
+            next_space_index = normalized.find(' ', limit)
+            cut_index = next_space_index if next_space_index != -1 else limit
+
+    return normalized[:cut_index].strip()
+
+def get_legal_modal_documents():
+    _, blocks = get_site_page_with_blocks('legal')
+    documents = {}
+
+    for doc in build_legal_documents_from_blocks(blocks):
+        if doc['slug'] not in {'agreement', 'policy'}:
+            continue
+
+        documents[doc['slug']] = {
+            'title': doc['title'],
+            'eyebrow': 'Документ',
+            'preview': build_legal_preview_text(doc['body']),
+            'read_more_url': url_for('legal_page') + f"#{doc['slug']}",
+        }
+
+    return documents
+
 def ensure_site_pages_exist():
     created = False
 
@@ -2071,7 +2216,15 @@ def build_public_seo(page=None, blocks=None, seo_override=None):
 
 def render_public_template(template_name, page=None, blocks=None, seo_override=None, status_code=200, **context):
     seo = build_public_seo(page=page, blocks=blocks, seo_override=seo_override)
-    return render_template(template_name, page=page, blocks=blocks or {}, seo=seo, **context), status_code
+    legal_doc_previews = get_legal_modal_documents()
+    return render_template(
+        template_name,
+        page=page,
+        blocks=blocks or {},
+        seo=seo,
+        legal_doc_previews=legal_doc_previews,
+        **context,
+    ), status_code
 
 def serialize_site_payload(payload):
     if not payload:
@@ -2215,6 +2368,27 @@ def contact_page():
         page=page,
         blocks=blocks,
         map_embed_url=map_embed_url,
+    )
+
+
+@app.route('/legal')
+def legal_page():
+    page, blocks = get_site_page_with_blocks('legal')
+    hero_block = blocks.get('hero')
+    legal_documents = build_legal_documents_from_blocks(blocks)
+    return render_public_template(
+        'public/legal.html',
+        page=page,
+        blocks=blocks,
+        seo_override={
+            'title': 'Правовая информация',
+            'description': 'Пользовательское соглашение, договор оферты и политика обработки персональных данных Таласса Hotel & Spa.',
+            'image_url': hero_block.image_url if hero_block and hero_block.image_url else '/static/site/images/gallery/photo_3.jpg',
+            'canonical_url': request.base_url,
+            'page_slug': 'legal',
+        },
+        hero_block=hero_block,
+        legal_documents=legal_documents,
     )
 
 @app.route('/journal')

@@ -135,6 +135,7 @@
                         <li><a href="{{ url_for('gallery') }}">Галерея</a></li>
                         <li><a href="{{ url_for('journal_page') }}">Журнал</a></li>
                         <li><a href="{{ url_for('contact_page') }}">Контакты</a></li>
+                        <li><a href="{{ url_for('legal_page') }}">Правовая информация</a></li>
                     </ul>
                 </div>
 
@@ -244,12 +245,20 @@
             <button type="button" class="site-doc-modal__close" data-site-doc-close aria-label="Закрыть">×</button>
             <p class="site-doc-modal__eyebrow" data-site-doc-eyebrow></p>
             <h2 id="site-doc-title" data-site-doc-title></h2>
-            <div class="site-doc-modal__content" data-site-doc-content></div>
+            <div class="site-doc-modal__content-wrap">
+                <div class="site-doc-modal__content" data-site-doc-content></div>
+                <div class="site-doc-modal__actions">
+                    <a href="#" class="site-btn site-btn--gold site-doc-modal__cta" data-site-doc-read-more hidden>Читать далее</a>
+                </div>
+            </div>
         </div>
     </div>
+    <script type="application/json" data-site-doc-data>{{ legal_doc_previews|tojson }}</script>
     <script src="{{ url_for('static', filename='js/site.js') }}"></script>
 </body>
 </html>
+
+
 
 
 
