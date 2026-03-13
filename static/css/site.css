@@ -194,6 +194,32 @@ button {
   margin-top: 34px;
 }
 
+.hero__reviews {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.hero__reviews iframe {
+  display: block;
+  border: 0;
+  width: 150px;
+  height: 50px;
+}
+
+.hero__reviews {
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 8px 10px;
+  border-radius: 18px;
+  background: rgba(243, 239, 230, 0.16);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 14px 34px rgba(20, 41, 60, 0.16);
+}
+
 .site-btn {
   display: inline-flex;
   align-items: center;
@@ -557,6 +583,12 @@ button {
 
   .hero {
     padding-top: 150px;
+  }
+
+  .hero__reviews {
+    margin-top: 20px;
+    padding: 7px 8px;
+    border-radius: 16px;
   }
 
   .paper-card,
