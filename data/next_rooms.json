@@ -45,15 +45,15 @@
     ],
     "meals": "Завтраки включены (с июня по октябрь)",
     "images": [
-      "/next-assets/images/rooms/standart_plus_sv/standart_plus_sv_1.jpg",
-      "/next-assets/images/rooms/standart_plus_sv/standart_plus_sv_2.jpg",
-      "/next-assets/images/rooms/standart_plus_sv/standart_plus_sv_3.jpg",
-      "/next-assets/images/rooms/standart_plus_sv/standart_plus_sv_4.jpg",
-      "/next-assets/images/rooms/standart_plus_sv/standart_plus_sv_5.jpg",
-      "/next-assets/images/rooms/standart_plus_sv/standart_plus_sv_6.jpg",
-      "/next-assets/images/rooms/standart_plus_sv/standart_plus_sv_7.jpg"
+      "/static/site/images/rooms/standart_plus_sv/standart_plus_sv_1.jpg",
+      "/static/site/images/rooms/standart_plus_sv/standart_plus_sv_2.jpg",
+      "/static/site/images/rooms/standart_plus_sv/standart_plus_sv_3.jpg",
+      "/static/site/images/rooms/standart_plus_sv/standart_plus_sv_4.jpg",
+      "/static/site/images/rooms/standart_plus_sv/standart_plus_sv_5.jpg",
+      "/static/site/images/rooms/standart_plus_sv/standart_plus_sv_6.jpg",
+      "/static/site/images/rooms/standart_plus_sv/standart_plus_sv_7.jpg"
     ],
-    "heroImage": "/next-assets/images/rooms/standart_plus_sv/standart_plus_sv_1.jpg",
+    "heroImage": "/static/site/images/rooms/standart_plus_sv/standart_plus_sv_1.jpg",
     "features": {
       "seaView": true,
       "balcony": true,
@@ -102,13 +102,13 @@
     ],
     "meals": "Завтраки включены (с июня по октябрь)",
     "images": [
-      "/next-assets/images/rooms/standart_sv_nb/standart_sv_nb_1.jpg",
-      "/next-assets/images/rooms/standart_sv_nb/standart_sv_nb_2.jpg",
-      "/next-assets/images/rooms/standart_sv_nb/standart_sv_nb_3.jpg",
-      "/next-assets/images/rooms/standart_sv_nb/standart_sv_nb_4.jpg",
-      "/next-assets/images/rooms/standart_sv_nb/standart_sv_nb_5.jpg"
+      "/static/site/images/rooms/standart_sv_nb/standart_sv_nb_1.jpg",
+      "/static/site/images/rooms/standart_sv_nb/standart_sv_nb_2.jpg",
+      "/static/site/images/rooms/standart_sv_nb/standart_sv_nb_3.jpg",
+      "/static/site/images/rooms/standart_sv_nb/standart_sv_nb_4.jpg",
+      "/static/site/images/rooms/standart_sv_nb/standart_sv_nb_5.jpg"
     ],
-    "heroImage": "/next-assets/images/rooms/standart_sv_nb/standart_sv_nb_1.jpg",
+    "heroImage": "/static/site/images/rooms/standart_sv_nb/standart_sv_nb_1.jpg",
     "features": {
       "seaView": true,
       "balcony": false,
@@ -158,15 +158,15 @@
     ],
     "meals": "Завтраки включены (с июня по октябрь)",
     "images": [
-      "/next-assets/images/rooms/standart_bal_sv/standart_bal_sv_1.jpg",
-      "/next-assets/images/rooms/standart_bal_sv/standart_bal_sv_2.jpg",
-      "/next-assets/images/rooms/standart_bal_sv/standart_bal_sv_3.jpg",
-      "/next-assets/images/rooms/standart_bal_sv/standart_bal_sv_4.jpg",
-      "/next-assets/images/rooms/standart_bal_sv/standart_bal_sv_5.jpg",
-      "/next-assets/images/rooms/standart_bal_sv/standart_bal_sv_6.jpg",
-      "/next-assets/images/rooms/standart_bal_sv/standart_bal_sv_7.jpg"
+      "/static/site/images/rooms/standart_bal_sv/standart_bal_sv_1.jpg",
+      "/static/site/images/rooms/standart_bal_sv/standart_bal_sv_2.jpg",
+      "/static/site/images/rooms/standart_bal_sv/standart_bal_sv_3.jpg",
+      "/static/site/images/rooms/standart_bal_sv/standart_bal_sv_4.jpg",
+      "/static/site/images/rooms/standart_bal_sv/standart_bal_sv_5.jpg",
+      "/static/site/images/rooms/standart_bal_sv/standart_bal_sv_6.jpg",
+      "/static/site/images/rooms/standart_bal_sv/standart_bal_sv_7.jpg"
     ],
-    "heroImage": "/next-assets/images/rooms/standart_bal_sv/standart_bal_sv_1.jpg",
+    "heroImage": "/static/site/images/rooms/standart_bal_sv/standart_bal_sv_1.jpg",
     "features": {
       "seaView": true,
       "balcony": true,
@@ -214,13 +214,13 @@
     ],
     "meals": "Завтраки включены (с июня по октябрь)",
     "images": [
-      "/next-assets/images/rooms/standart_ff_nb/standart_ff_nb_1.jpg",
-      "/next-assets/images/rooms/standart_ff_nb/standart_ff_nb_2.jpg",
-      "/next-assets/images/rooms/standart_ff_nb/standart_ff_nb_3.jpg",
-      "/next-assets/images/rooms/standart_ff_nb/standart_ff_nb_4.jpg",
-      "/next-assets/images/rooms/standart_ff_nb/standart_ff_nb_5.jpg"
+      "/static/site/images/rooms/standart_ff_nb/standart_ff_nb_1.jpg",
+      "/static/site/images/rooms/standart_ff_nb/standart_ff_nb_2.jpg",
+      "/static/site/images/rooms/standart_ff_nb/standart_ff_nb_3.jpg",
+      "/static/site/images/rooms/standart_ff_nb/standart_ff_nb_4.jpg",
+      "/static/site/images/rooms/standart_ff_nb/standart_ff_nb_5.jpg"
     ],
-    "heroImage": "/next-assets/images/rooms/standart_ff_nb/standart_ff_nb_1.jpg",
+    "heroImage": "/static/site/images/rooms/standart_ff_nb/standart_ff_nb_1.jpg",
     "features": {
       "seaView": false,
       "balcony": false,
@@ -269,13 +269,13 @@
     ],
     "meals": "Завтраки включены (с июня по октябрь)",
     "images": [
-      "/next-assets/images/rooms/deluxe_ter_sv/deluxe_plus_ter_sv_1.jpg",
-      "/next-assets/images/rooms/deluxe_ter_sv/deluxe_plus_ter_sv_2.jpg",
-      "/next-assets/images/rooms/deluxe_ter_sv/deluxe_plus_ter_sv_3.jpg",
-      "/next-assets/images/rooms/deluxe_ter_sv/deluxe_plus_ter_sv_4.jpg",
-      "/next-assets/images/rooms/deluxe_ter_sv/deluxe_plus_ter_sv_5.jpg"
+      "/static/site/images/rooms/deluxe_ter_sv/deluxe_plus_ter_sv_1.jpg",
+      "/static/site/images/rooms/deluxe_ter_sv/deluxe_plus_ter_sv_2.jpg",
+      "/static/site/images/rooms/deluxe_ter_sv/deluxe_plus_ter_sv_3.jpg",
+      "/static/site/images/rooms/deluxe_ter_sv/deluxe_plus_ter_sv_4.jpg",
+      "/static/site/images/rooms/deluxe_ter_sv/deluxe_plus_ter_sv_5.jpg"
     ],
-    "heroImage": "/next-assets/images/rooms/deluxe_ter_sv/deluxe_plus_ter_sv_1.jpg",
+    "heroImage": "/static/site/images/rooms/deluxe_ter_sv/deluxe_plus_ter_sv_1.jpg",
     "features": {
       "seaView": true,
       "balcony": false,
@@ -324,15 +324,15 @@
     ],
     "meals": "Завтраки включены (с июня по октябрь)",
     "images": [
-      "/next-assets/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_1.jpg",
-      "/next-assets/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_2.jpg",
-      "/next-assets/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_3.jpg",
-      "/next-assets/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_4.jpg",
-      "/next-assets/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_5.jpg",
-      "/next-assets/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_6.jpg",
-      "/next-assets/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_7.jpg"
+      "/static/site/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_1.jpg",
+      "/static/site/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_2.jpg",
+      "/static/site/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_3.jpg",
+      "/static/site/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_4.jpg",
+      "/static/site/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_5.jpg",
+      "/static/site/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_6.jpg",
+      "/static/site/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_7.jpg"
     ],
-    "heroImage": "/next-assets/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_1.jpg",
+    "heroImage": "/static/site/images/rooms/deluxe_big_ter_sv/deluxe_big_ter_sv_1.jpg",
     "features": {
       "seaView": true,
       "balcony": false,
@@ -382,17 +382,17 @@
     ],
     "meals": "Завтраки включены (с июня по октябрь)",
     "images": [
-      "/next-assets/images/rooms/appart_bal_sv/appart_bal_sv_1.jpg",
-      "/next-assets/images/rooms/appart_bal_sv/appart_bal_sv_2.jpg",
-      "/next-assets/images/rooms/appart_bal_sv/appart_bal_sv_3.jpg",
-      "/next-assets/images/rooms/appart_bal_sv/appart_bal_sv_4.jpg",
-      "/next-assets/images/rooms/appart_bal_sv/appart_bal_sv_5.jpg",
-      "/next-assets/images/rooms/appart_bal_sv/appart_bal_sv_6.jpg",
-      "/next-assets/images/rooms/appart_bal_sv/appart_bal_sv_7.jpg",
-      "/next-assets/images/rooms/appart_bal_sv/appart_bal_sv_8.jpg",
-      "/next-assets/images/rooms/appart_bal_sv/appart_bal_sv_9.jpg"
+      "/static/site/images/rooms/appart_bal_sv/appart_bal_sv_1.jpg",
+      "/static/site/images/rooms/appart_bal_sv/appart_bal_sv_2.jpg",
+      "/static/site/images/rooms/appart_bal_sv/appart_bal_sv_3.jpg",
+      "/static/site/images/rooms/appart_bal_sv/appart_bal_sv_4.jpg",
+      "/static/site/images/rooms/appart_bal_sv/appart_bal_sv_5.jpg",
+      "/static/site/images/rooms/appart_bal_sv/appart_bal_sv_6.jpg",
+      "/static/site/images/rooms/appart_bal_sv/appart_bal_sv_7.jpg",
+      "/static/site/images/rooms/appart_bal_sv/appart_bal_sv_8.jpg",
+      "/static/site/images/rooms/appart_bal_sv/appart_bal_sv_9.jpg"
     ],
-    "heroImage": "/next-assets/images/rooms/appart_bal_sv/appart_bal_sv_1.jpg",
+    "heroImage": "/static/site/images/rooms/appart_bal_sv/appart_bal_sv_1.jpg",
     "features": {
       "seaView": true,
       "balcony": true,
@@ -442,13 +442,13 @@
     ],
     "meals": "Завтраки включены (с июня по октябрь)",
     "images": [
-      "/next-assets/images/rooms/appart/appart_1.jpg",
-      "/next-assets/images/rooms/appart/appart_2.jpg",
-      "/next-assets/images/rooms/appart/appart_3.jpg",
-      "/next-assets/images/rooms/appart/appart_4.jpg",
-      "/next-assets/images/rooms/appart/appart_5.jpg"
+      "/static/site/images/rooms/appart/appart_1.jpg",
+      "/static/site/images/rooms/appart/appart_2.jpg",
+      "/static/site/images/rooms/appart/appart_3.jpg",
+      "/static/site/images/rooms/appart/appart_4.jpg",
+      "/static/site/images/rooms/appart/appart_5.jpg"
     ],
-    "heroImage": "/next-assets/images/rooms/appart/appart_1.jpg",
+    "heroImage": "/static/site/images/rooms/appart/appart_1.jpg",
     "features": {
       "seaView": true,
       "balcony": false,
@@ -458,3 +458,4 @@
       "kitchen": true
     }
   }]
+

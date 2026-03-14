@@ -35,7 +35,7 @@ UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER')
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
-NEXT_PUBLIC_DIR = os.path.join(PROJECT_ROOT, 'public')
+NEXT_PUBLIC_DIR = os.path.join(BASE_DIR, 'static', 'site')
 NEXT_ROOMS_DATA_PATH = os.path.join(BASE_DIR, 'data', 'next_rooms.json')
 NEXT_ROOMS_CACHE = None
 NEXT_ROOM_NUMBER_BY_SLUG = {
