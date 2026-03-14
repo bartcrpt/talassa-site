@@ -151,12 +151,7 @@ document.addEventListener('DOMContentLoaded', function () {
             image.alt = payload.name || '';
 
             features.innerHTML = '';
-            (payload.feature_labels || []).forEach(function (item) {
-                const chip = document.createElement('span');
-                chip.className = 'admin-chip';
-                chip.textContent = item;
-                features.appendChild(chip);
-            });
+            features.style.display = 'none';
 
             facts.innerHTML = '';
             [payload.area_label, payload.max_capacity ? ('До ' + payload.max_capacity + ' гостей') : '', payload.extra_bed || ''].filter(Boolean).forEach(function (item) {
@@ -172,6 +167,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 li.textContent = item;
                 amenities.appendChild(li);
             });
+            if (amenities.children.length === 0) {
+                const li = document.createElement('li');
+                li.textContent = 'Удобства не заполнены';
+                amenities.appendChild(li);
+            }
 
             modal.show();
         });

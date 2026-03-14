@@ -112,7 +112,7 @@
 
 <section class="section section--tight-top room-pricing-section-next">
     <div class="site-container">
-        <h2 class="section-heading-inline">Цены по месяцам</h2>
+        <h2 class="section-heading-inline">Цены по месяцам (при двухместном размещении)</h2>
         <div class="room-month-wrapper">
             {% if current_price %}
                 <div class="room-current-price">
@@ -122,8 +122,8 @@
             {% endif %}
             <div class="room-month-grid">
                 {% for item in monthly_prices %}
-                    <div class="room-month-grid__item {{ 'is-current' if item.is_current else '' }}">
-                        <p>{{ item.label[:3] }}</p>
+                    <div class="room-month-grid__item room-month-grid__item--{{ item.tier }} {{ 'is-current' if item.is_current else '' }}">
+                        <p>{{ item.label[:3] }}{% if item.is_current %} • сейчас{% endif %}</p>
                         <strong>{{ '%.0f'|format(item.price) }} ₽</strong>
                     </div>
                 {% endfor %}
@@ -158,3 +158,6 @@
     </div>
 </section>
 {% endblock %}
+
+
+

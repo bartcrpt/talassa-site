@@ -7,6 +7,7 @@
 {% set rooms_preview = blocks.get('rooms_preview') %}
 {% set wellness = blocks.get('wellness') %}
 {% set gallery_block = blocks.get('gallery') %}
+{% set faq_block = blocks.get('faq') %}
 {% set cta = blocks.get('cta') %}
 
 <section class="hero" style="background-image: linear-gradient(rgba(49, 78, 111, 0.38), rgba(49, 78, 111, 0.60)), url('{{ hero.image_url if hero and hero.image_url else '/static/site/images/gallery/photo_7.jpg' }}');">
@@ -155,6 +156,15 @@
     </div>
 </section>
 
+{% if faq_block %}
+    {% set dynamic_block = faq_block %}
+    {% include "public/_cms_dynamic_block.html" %}
+{% endif %}
+
+{% for dynamic_block in dynamic_home_blocks %}
+    {% include "public/_cms_dynamic_block.html" %}
+{% endfor %}
+
 <section class="section home-cta-section">
     <div class="site-container centered-copy centered-copy--compact">
         <h2>{{ cta.title if cta and cta.title else 'Начните свой отдых' }}</h2>
@@ -163,3 +173,4 @@
     </div>
 </section>
 {% endblock %}
+

@@ -22,10 +22,6 @@
             <i class="bi bi-people"></i>
             <span>Пользователи</span>
         </a>
-        <a href="{{ url_for('admin_categories') }}" class="admin-sidebar-nav__link {{ 'is-active' if active_page == 'categories' else '' }}">
-            <i class="bi bi-tags"></i>
-            <span>Категории</span>
-        </a>
         <a href="{{ url_for('admin_news') }}" class="admin-sidebar-nav__link {{ 'is-active' if active_page == 'news' else '' }}">
             <i class="bi bi-newspaper"></i>
             <span>Журнал</span>

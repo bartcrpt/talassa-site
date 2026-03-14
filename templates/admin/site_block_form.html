@@ -56,6 +56,18 @@
                     <label class="form-label">Название блока</label>
                     <input type="text" name="name" class="form-control" value="{{ block.name if block else initial_name or '' }}" required>
                 </div>
+                {% if page.slug == 'home' %}
+                    <div class="col-md-6">
+                        <label class="form-label">Тип отображения</label>
+                        <select name="block_type" class="form-select">
+                            <option value="">Стандартный / определяется по ключу</option>
+                            {% for option in dynamic_block_type_options %}
+                                <option value="{{ option.value }}" {% if selected_block_type == option.value %}selected{% endif %}>{{ option.label }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Для новых произвольных секций на главной лучше выбирать один из поддержанных шаблонов.</div>
+                    </div>
+                {% endif %}
                 <div class="col-md-8">
                     <label class="form-label">Заголовок</label>
                     <input type="text" name="title" class="form-control" value="{{ block.title if block else initial_title or '' }}">

@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSiteUserMenu();
   initSiteAuth();
   initPhilosophyToggle();
+  initFaqAccordion();
   initSiteLightbox();
   initRoomGallery();
 });
@@ -707,5 +708,50 @@ function initSiteAuth() {
 
 
 
+
+
+
+function initFaqAccordion() {
+  document.querySelectorAll('[data-faq-accordion]').forEach((root) => {
+    root.querySelectorAll('[data-faq-item]').forEach((item) => {
+      const trigger = item.querySelector('[data-faq-trigger]');
+      const panel = item.querySelector('[data-faq-panel]');
+      if (!trigger || !panel) {
+        return;
+      }
+
+      const setState = (expanded) => {
+        item.classList.toggle('is-open', expanded);
+        trigger.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+
+        if (expanded) {
+          panel.hidden = false;
+          panel.style.maxHeight = `${panel.scrollHeight}px`;
+          return;
+        }
+
+        panel.style.maxHeight = `${panel.scrollHeight}px`;
+        requestAnimationFrame(() => {
+          panel.style.maxHeight = '0px';
+        });
+        window.setTimeout(() => {
+          if (!item.classList.contains('is-open')) {
+            panel.hidden = true;
+          }
+        }, 280);
+      };
+
+      trigger.addEventListener('click', () => {
+        setState(!item.classList.contains('is-open'));
+      });
+
+      panel.addEventListener('transitionend', () => {
+        if (item.classList.contains('is-open')) {
+          panel.style.maxHeight = 'none';
+        }
+      });
+    });
+  });
+}
 
 

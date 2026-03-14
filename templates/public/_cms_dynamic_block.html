@@ -1,0 +1,173 @@
+{% set block = dynamic_block %}
+{% set payload = block.payload if block.payload else {} %}
+{% set block_type = block.cms_block_type %}
+
+{% if block_type == 'text_media' %}
+<section class="section section--pattern cms-dynamic-section cms-dynamic-section--text-media" id="{{ block.block_key }}">
+    <div class="site-container split-grid split-grid--top {% if payload.get('media_position') == 'left' %}split-grid--reverse{% endif %}">
+        <div>
+            <div class="paper-card">
+                <div class="section-copy">
+                    {% if payload.get('eyebrow') %}
+                        <p class="section-copy__eyebrow">{{ payload.get('eyebrow') }}</p>
+                    {% endif %}
+                    {% if block.title %}
+                        <h2>{{ block.title }}</h2>
+                    {% endif %}
+                    {% if block.subtitle %}
+                        <p class="section-copy__lead">{{ block.subtitle }}</p>
+                    {% endif %}
+                    {% if block.body %}
+                        <div class="cms-dynamic-richtext">
+                            {% for paragraph in block.body.split('\n\n') if paragraph.strip() %}
+                                <p>{{ paragraph.strip() }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% if block.button_label and block.button_url %}
+                        <a href="{{ block.button_url }}" class="site-btn site-btn--secondary">{{ block.button_label }}</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% if block.image_url %}
+            <div class="section-image section-image--tall">
+                <img src="{{ block.image_url }}" alt="{{ block.title or block.name }}">
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% elif block_type == 'features_grid' %}
+<section class="section section--light cms-dynamic-section cms-dynamic-section--features" id="{{ block.block_key }}">
+    <div class="site-container">
+        <div class="section-heading section-heading--center">
+            {% if block.title %}
+                <h2>{{ block.title }}</h2>
+            {% endif %}
+            {% if block.subtitle %}
+                <p>{{ block.subtitle }}</p>
+            {% endif %}
+        </div>
+        <div class="highlights-grid">
+            {% for item in payload.get('items', []) %}
+                {% set item_title = item.get('title') if item is mapping else item %}
+                {% set item_desc = item.get('desc') if item is mapping else '' %}
+                {% set item_description = item.get('description') if item is mapping else '' %}
+                {% set item_list = item.get('items') if item is mapping else [] %}
+                <article class="feature-card">
+                    <h3>{{ item_title }}</h3>
+                    {% if item_desc %}
+                        <p>{{ item_desc }}</p>
+                    {% elif item_description %}
+                        <p>{{ item_description }}</p>
+                    {% elif item_list %}
+                        <ul>
+                            {% for list_item in item_list %}
+                                <li>{{ list_item }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% elif block_type == 'cta_banner' %}
+<section class="section section--overlay cms-dynamic-section cms-dynamic-section--cta" id="{{ block.block_key }}" {% if block.image_url %}style="background-image: linear-gradient(rgba(82, 110, 98, 0.82), rgba(49, 78, 111, 0.82)), url('{{ block.image_url }}');"{% endif %}>
+    <div class="site-container centered-copy">
+        {% if payload.get('eyebrow') %}
+            <p class="section-copy__eyebrow">{{ payload.get('eyebrow') }}</p>
+        {% endif %}
+        {% if block.title %}
+            <h2>{{ block.title }}</h2>
+        {% endif %}
+        {% if block.body %}
+            <p>{{ block.body }}</p>
+        {% endif %}
+        {% if block.button_label and block.button_url %}
+            <a href="{{ block.button_url }}" class="site-btn site-btn--gold">{{ block.button_label }}</a>
+        {% endif %}
+    </div>
+</section>
+{% elif block_type == 'faq_accordion' %}
+<section class="section section--pattern cms-dynamic-section cms-dynamic-section--faq" id="{{ block.block_key }}" data-faq-accordion>
+    <div class="site-container faq-section">
+        <div class="paper-card faq-section__card">
+            <div class="section-heading section-heading--center faq-section__heading">
+                {% if block.title %}
+                    <h2>{{ block.title }}</h2>
+                {% endif %}
+                {% if block.subtitle %}
+                    <p>{{ block.subtitle }}</p>
+                {% endif %}
+            </div>
+            {% set faq_items = payload.get('items', []) %}
+            {% set faq_split_index = ((faq_items|length + 1) // 2) %}
+            {% set faq_columns = [faq_items[:faq_split_index], faq_items[faq_split_index:]] %}
+            <div class="faq-section__grid">
+                {% for column_items in faq_columns %}
+                    <div class="faq-section__column">
+                        {% for item in column_items %}
+                            <article class="faq-item" data-faq-item>
+                                <button type="button" class="faq-item__trigger" data-faq-trigger aria-expanded="false">
+                                    <span class="faq-item__question">{{ item.get('question') }}</span>
+                                    <span class="faq-item__icon" aria-hidden="true"></span>
+                                </button>
+                                <div class="faq-item__panel" data-faq-panel hidden>
+                                    <div class="faq-item__answer">
+                                        {% for paragraph in item.get('answer', '').split('\n\n') if paragraph.strip() %}
+                                            <p>{{ paragraph.strip() }}</p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+            {% if payload.get('laundry_title') or payload.get('laundry_body') %}
+                <div class="faq-section__footer">
+                    <div class="faq-laundry">
+                        {% if payload.get('laundry_title') %}
+                            <h3>{{ payload.get('laundry_title') }}</h3>
+                        {% endif %}
+                        {% if payload.get('laundry_body') %}
+                            {% for paragraph in payload.get('laundry_body', '').split('\n\n') if paragraph.strip() %}
+                                <p>{{ paragraph.strip() }}</p>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% elif block_type == 'image_gallery_preview' %}
+<section class="section cms-dynamic-section cms-dynamic-section--gallery" id="{{ block.block_key }}">
+    <div class="site-container">
+        <div class="section-heading section-heading--between">
+            <div>
+                {% if block.title %}
+                    <h2>{{ block.title }}</h2>
+                {% endif %}
+                {% if block.subtitle %}
+                    <p>{{ block.subtitle }}</p>
+                {% endif %}
+            </div>
+            {% if block.button_label and block.button_url %}
+                <a href="{{ block.button_url }}" class="site-btn site-btn--secondary">{{ block.button_label }}</a>
+            {% endif %}
+        </div>
+        <div class="gallery-grid">
+            {% for image in payload.get('images', []) %}
+                <div class="gallery-grid__item {% if loop.first %}gallery-grid__item--large{% endif %}">
+                    <img src="{{ image }}" alt="{{ block.title or block.name }} - фото {{ loop.index }}">
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+
+

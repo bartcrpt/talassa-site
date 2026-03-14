@@ -336,7 +336,7 @@
                 <p class="booking-room-modal__category" data-booking-room-category></p>
                 <h2 id="booking-room-modal-title" data-booking-room-title></h2>
                 <p class="booking-room-modal__description" data-booking-room-description></p>
-                <div class="booking-room-modal__tags" data-booking-room-tags></div>
+
                 <div class="booking-room-modal__facts">
                     <div>
                         <span>Базовое размещение</span>
@@ -692,18 +692,6 @@ document.addEventListener('DOMContentLoaded', function () {
         maxCapacity.textContent = `${payload.max_capacity || 0} гост.`;
         area.textContent = payload.area_label || 'Не указана';
 
-        tags.innerHTML = '';
-        (payload.feature_labels || []).forEach((item) => {
-            const span = document.createElement('span');
-            span.textContent = item;
-            tags.appendChild(span);
-        });
-        if (payload.area_label) {
-            const span = document.createElement('span');
-            span.textContent = payload.area_label;
-            tags.appendChild(span);
-        }
-
         if (payload.extra_bed) {
             extraWrap.hidden = false;
             extra.textContent = payload.extra_bed;
@@ -775,4 +763,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 {% endblock %}
+
+
 

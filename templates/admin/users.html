@@ -28,7 +28,6 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Имя</th>
-                                    <th>Логин</th>
                                     <th>Email</th>
                                     <th>Телефон</th>
                                     <th>Роль</th>
@@ -42,7 +41,6 @@
                                 <tr>
                                     <td>#{{ user.id }}</td>
                                     <td>{{ user.first_name }} {{ user.last_name }}</td>
-                                    <td>{{ user.username or '—' }}</td>
                                     <td>{{ user.email or '—' }}</td>
                                     <td>{{ user.phone|format_phone if user.phone else '—' }}</td>
                                     <td>

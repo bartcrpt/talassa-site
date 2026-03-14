@@ -121,15 +121,30 @@ class LegacyRoomService:
 
     def get_next_room_monthly_price_items(self, room):
         prices = {item['month']: item['price'] for item in room.get('prices', [])}
-        current_month_label = self.month_labels_ru[datetime.now().month - 1][1]
+        current_month_key = self.month_labels_ru[datetime.now().month - 1][0]
         items = []
-        for _, label in self.month_labels_ru:
+        for month_key, label in self.month_labels_ru:
             items.append({
+                'key': month_key,
                 'label': label,
                 'price': prices.get(label, room.get('minPrice', 0)),
-                'is_current': label == current_month_label,
+                'is_current': month_key == current_month_key,
+                'tier': self.get_month_heatmap_tier(month_key),
             })
         return items
+
+    def get_month_heatmap_tier(self, month_key):
+        if month_key in {'January', 'February', 'March', 'April', 'November', 'December'}:
+            return 'cold'
+        if month_key == 'May':
+            return 'growth'
+        if month_key in {'June', 'October'}:
+            return 'warm'
+        if month_key in {'July', 'September'}:
+            return 'high'
+        if month_key == 'August':
+            return 'peak'
+        return 'cold'
 
     def get_room_category_group_from_name(self, name):
         value = (name or '').lower()
@@ -202,9 +217,26 @@ class LegacyRoomService:
 
         items = []
         for value in values:
-            clean = self.get_plain_text(str(value)).strip(' -')
-            if clean:
-                items.append(clean)
+            extracted_values = [value]
+            if isinstance(value, str):
+                nested = value.strip()
+                if nested.startswith('[') and nested.endswith(']'):
+                    try:
+                        parsed_nested = json.loads(nested)
+                    except (json.JSONDecodeError, TypeError):
+                        parsed_nested = None
+                    if isinstance(parsed_nested, list):
+                        extracted_values = parsed_nested
+
+            for extracted in extracted_values:
+                clean = self.get_plain_text(str(extracted)).strip(' -[]"\'')
+                if not clean:
+                    continue
+
+                for chunk in clean.replace('•', '\n').replace('·', '\n').split('\n'):
+                    normalized_chunk = chunk.strip(' -[]"\'')
+                    if normalized_chunk:
+                        items.append(normalized_chunk)
 
         return list(dict.fromkeys(items))
 

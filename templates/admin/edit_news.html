@@ -3,39 +3,15 @@
 {% block title %}Редактировать новость - Админ панель{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row">
-        <!-- Sidebar -->
-        <div class="col-md-3 col-lg-2">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h6 class="mb-0"><i class="bi bi-gear"></i> Админ панель</h6>
-                </div>
-                <div class="list-group list-group-flush">
-                    <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action">
-                        <i class="bi bi-speedometer2"></i> Главная
-                    </a>
-                    <a href="{{ url_for('admin_rooms') }}" class="list-group-item list-group-item-action">
-                        <i class="bi bi-door-open"></i> Номера
-                    </a>
-                    <a href="{{ url_for('admin_categories') }}" class="list-group-item list-group-item-action">
-                        <i class="bi bi-tags"></i> Категории
-                    </a>
-                    <a href="{{ url_for('admin_bookings') }}" class="list-group-item list-group-item-action">
-                        <i class="bi bi-calendar-check"></i> Бронирования
-                    </a>
-                    <a href="{{ url_for('admin_users') }}" class="list-group-item list-group-item-action">
-                        <i class="bi bi-people"></i> Пользователи
-                    </a>
-                    <a href="{{ url_for('admin_news') }}" class="list-group-item list-group-item-action active">
-                        <i class="bi bi-newspaper"></i> Новости
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Main Content -->
-        <div class="col-md-9 col-lg-10">
+<section class="admin-shell">
+    <div class="container-fluid admin-shell__container">
+        <div class="admin-layout">
+            <aside class="admin-sidebar">
+                {% set active_page = 'news' %}
+                {% include 'admin/_sidebar.html' %}
+            </aside>
+
+            <div class="admin-content">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1>Редактировать новость</h1>
                 <a href="{{ url_for('admin_news') }}" class="btn btn-outline-secondary">
@@ -48,7 +24,7 @@
                 <div class="col-lg-10">
                     <div class="card border-0 shadow-sm">
                         <div class="card-body p-4">
-                            <form method="POST">
+                            <form method="POST" enctype="multipart/form-data">
                                 <div class="mb-3">
                                     <label for="title" class="form-label">Заголовок *</label>
                                     <input type="text" class="form-control" id="title" name="title" 
@@ -64,7 +40,7 @@
                                 <div class="mb-3">
                                     <label for="content" class="form-label">Содержание *</label>
                                     <textarea class="form-control wysiwyg-editor" id="content" name="content" 
-                                              rows="10" placeholder="Полный текст новости..." required>{{ article.content }}</textarea>
+                                              rows="10" placeholder="Полный текст новости...">{{ article.content }}</textarea>
                                 </div>
                                 
                                 <div class="mb-3">
@@ -130,9 +106,10 @@
                     </div>
                 </div>
             </div>
+                    </div>
         </div>
     </div>
-</div>
+</section>
 {% endblock %}
 
 {% block scripts %}
@@ -140,6 +117,9 @@
 <script src="{{ url_for('static', filename='js/tinymce/tinymce.min.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form[method="POST"]');
+    const contentField = document.getElementById('content');
+
     // Initialize TinyMCE
     tinymce.init({
         selector: '.wysiwyg-editor',
@@ -159,6 +139,18 @@ document.addEventListener('DOMContentLoaded', function() {
         language: 'ru',
         branding: false,
         promotion: false
+    });
+
+    form?.addEventListener('submit', function(event) {
+        if (window.tinymce) {
+            window.tinymce.triggerSave();
+        }
+
+        if (!contentField || !contentField.value.trim()) {
+            event.preventDefault();
+            alert('Пожалуйста, заполните содержание новости.');
+            return;
+        }
     });
     
     const photosInput = document.getElementById('photos');
@@ -202,3 +194,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
+

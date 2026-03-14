@@ -203,6 +203,28 @@ HOME_PAGE_DEFAULT_BLOCKS = {
         },
         'sort_order': 60,
     },
+    'faq': {
+        'name': 'FAQ',
+        'title': 'Ответы на частые вопросы',
+        'subtitle': '',
+        'payload': {
+            'items': [
+                {'question': 'Есть ли Wi Fi?', 'answer': 'Да, на всей территории отеля (включая пляж).'},
+                {'question': 'Когда заезд и выезд?', 'answer': 'Заезд — с 14:00. Выезд — до 12:00.\n\nЗа дополнительную плату можно заехать раньше или выехать позднее — пожалуйста, уточните возможность продления заранее.'},
+                {'question': 'Можно с питомцем?', 'answer': 'В нашем отеле запрещено проживание с питомцами.'},
+                {'question': 'Какая валюта в Абхазии и нужны ли наличные?', 'answer': 'В Абхазии рубли, поэтому менять деньги не нужно. Сейчас практически везде можно расплатиться картой или сделать перевод, поэтому снимать большую сумму наличных на весь отпуск не стоит. Можете подготовить небольшую сумму наличных для поездки на рынок или покупки фруктов у местных торговцев.'},
+                {'question': 'Включено ли питание в стоимость проживания?', 'answer': 'В зимний период с 1 ноября по 1 июня питание не входит в стоимость проживания.\n\nВ летний период с 1 июня по 31 октября в стоимость включен завтрак по системе Шведский стол.'},
+                {'question': 'По каким документам пересекать границу Абхазии?', 'answer': 'Вы можете пересечь границу по внутреннему паспорту Российской Федерации или по загранпаспорту Российской Федерации.'},
+                {'question': 'Какие правила въезда в Абхазию для детей?', 'answer': 'С 2026 года дети до 14 лет для въезда в Абхазию должны иметь собственный загранпаспорт, так как свидетельство о рождении перестало быть действительным документом для выезда за границу. Детям старше 14 лет подойдет внутренний или заграничный паспорт РФ. При путешествии с одним родителем согласие второго не нужно, но при путешествии без законных представителей требуется нотариальное согласие.'},
+                {'question': 'Есть ли рядом магазины и аптеки?', 'answer': 'Да, рядом с отелем есть несколько продуктовых магазинов. Там же можно купить все необходимые средства гигиены. Ближайшая аптека в 500 метрах от отеля (работает только в летнее время).'},
+                {'question': 'Как добраться до отеля', 'answer': 'От аэропорта Сочи или жд вокзала Адлера до границы Абхазии путь на такси займет 15 минут без пробок. Конечным адресом можно указать ул. Урожайную, 112.\n\nПосле перехода границы можно заказать такси или взять частных водителей на месте. Дорога от границы до отеля на авто займет не более 10-и минут.\n\nТакже вы можете заказать у нас трансфер за отдельную оплату, вас встретят от границы или от аэропорта / жд вокзала. Услугу можно заказать у менеджера при бронировании размещения.'},
+                {'question': 'Как передвигаться по Абхазии?', 'answer': 'Вы можете воспользоваться услугами местных такси, частных водителей или заказать авто на ресепшене в отеле. Также в Цандрипше можно арендовать авто. Кроме этого есть общественный транспорт, который ходит между городами.'},
+            ],
+            'laundry_title': 'Услуги прачечной',
+            'laundry_body': 'Вы всегда сможете воспользоваться услугой стирки белья. Стоимость одной стирки загрузка до 5 кг — всего 500 рублей.',
+        },
+        'sort_order': 65,
+    },
     'cta': {
         'name': 'Финальный CTA',
         'title': 'Начните свой отдых',
@@ -339,7 +361,7 @@ WELLNESS_PAGE_DEFAULT_BLOCKS = {
                 },
                 {
                     'title': 'Климатотерапия',
-                    'description': 'Использование уникального микроклимата Гагры - сочетание горного и морского воздуха, насыщенного аэроионами, фитонцидами и минеральными солями.',
+                    'description': 'Использование уникального микроклимата - сочетание горного и морского воздуха, насыщенного аэроионами, фитонцидами и минеральными солями.',
                     'benefits': ['Укрепление дыхательной системы', 'Нормализация давления', 'Повышение жизненного тонуса'],
                     'icon': '🌤️'
                 },
@@ -824,6 +846,7 @@ CMS_BLOCK_GUIDES = {
         'rooms_preview': {'description': 'Вводный блок перед превью номеров на главной.'},
         'wellness': {'description': 'Короткий блок про оздоровление на главной.', 'payload_example': {'eyebrow': 'Оздоровление'}},
         'gallery': {'description': 'Превью галереи на главной. В payload можно перечислить изображения для сетки.', 'payload_example': {'images': ['/static/site/images/gallery/photo_1.jpg', '/static/site/images/gallery/photo_2.jpg']}},
+        'faq': {'description': 'FAQ-блок с двухколоночным аккордеоном и подблоком про прачечную.', 'payload_example': {'items': [{'question': 'Есть ли Wi Fi?', 'answer': 'Да, на всей территории отеля.'}], 'laundry_title': 'Услуги прачечной', 'laundry_body': 'Описание услуги.'}},
         'cta': {'description': 'Финальный призыв к действию внизу главной страницы.'},
     },
     'wellness': {
@@ -873,6 +896,94 @@ CMS_BLOCK_GUIDES = {
         'policy': {'description': 'Текст политики обработки персональных данных.', 'payload_example': {'tab_title': 'Политика обработки персональных данных', 'eyebrow': 'Документ 3'}},
     },
 }
+
+CMS_DYNAMIC_BLOCK_TYPES = {
+    'text_media': {
+        'label': 'Текст + изображение',
+        'description': 'Секция с текстом и изображением, подходит для истории, вступления и текстовых блоков с кнопкой.',
+        'payload_example': {'block_type': 'text_media', 'eyebrow': 'О Таласса', 'media_position': 'right'},
+    },
+    'features_grid': {
+        'label': 'Сетка карточек',
+        'description': 'Заголовок, подзаголовок и набор карточек с описаниями или списками.',
+        'payload_example': {'block_type': 'features_grid', 'items': [{'title': 'Преимущество', 'desc': 'Описание'}]},
+    },
+    'cta_banner': {
+        'label': 'CTA-баннер',
+        'description': 'Крупный баннер с фоном, заголовком, текстом и кнопкой.',
+        'payload_example': {'block_type': 'cta_banner', 'eyebrow': 'Оздоровление'},
+    },
+    'image_gallery_preview': {
+        'label': 'Превью галереи',
+        'description': 'Секция с заголовком, сеткой изображений и кнопкой перехода.',
+        'payload_example': {'block_type': 'image_gallery_preview', 'images': ['/static/site/images/gallery/photo_1.jpg', '/static/site/images/gallery/photo_2.jpg']},
+    },
+    'faq_accordion': {
+        'label': 'FAQ-аккордеон',
+        'description': 'Двухколоночный блок вопросов и ответов с дополнительным информационным подблоком.',
+        'payload_example': {'block_type': 'faq_accordion', 'items': [{'question': 'Есть ли Wi Fi?', 'answer': 'Да, на всей территории отеля.'}], 'laundry_title': 'Услуги прачечной', 'laundry_body': 'Описание услуги.'},
+    },
+}
+
+CMS_KNOWN_BLOCK_TYPES = {
+    'home': {
+        'hero': 'hero',
+        'philosophy': 'text_media',
+        'highlights': 'features_grid',
+        'rooms_preview': 'rooms_preview',
+        'wellness': 'cta_banner',
+        'gallery': 'image_gallery_preview',
+        'faq': 'faq_accordion',
+        'cta': 'cta_banner',
+    },
+    'wellness': {
+        'hero': 'hero',
+        'intro': 'text_media',
+        'minerals': 'features_grid',
+        'procedures': 'features_grid',
+        'beach': 'cta_banner',
+        'cta': 'cta_banner',
+    },
+    'accessibility': {
+        'hero': 'hero',
+        'intro': 'text_media',
+        'features': 'features_grid',
+        'room': 'text_media',
+        'wellness': 'text_media',
+        'cta': 'cta_banner',
+    },
+    'contact': {
+        'hero': 'hero',
+        'contacts': 'contact_cards',
+        'schedule': 'info_table',
+        'directions': 'features_grid',
+    },
+    'book': {
+        'hero': 'hero',
+        'cta': 'features_grid',
+        'steps': 'features_grid',
+        'info': 'features_grid',
+        'rooms_cta': 'cta_banner',
+    },
+    'rooms': {
+        'hero': 'hero',
+        'highlights': 'features_grid',
+    },
+    'journal': {
+        'hero': 'hero',
+    },
+    'gallery': {
+        'hero': 'hero',
+    },
+    'legal': {
+        'hero': 'hero',
+        'agreement': 'legal_tabs',
+        'offer': 'legal_tabs',
+        'policy': 'legal_tabs',
+    },
+}
+
+HOME_DYNAMIC_BLOCK_EXCLUDE_KEYS = {'hero', 'philosophy', 'highlights', 'rooms_preview', 'wellness', 'gallery', 'faq', 'cta'}
 
 PUBLIC_PAGE_SEO_DEFAULTS = {
     'home': {
@@ -1313,6 +1424,7 @@ def get_site_page_with_blocks(page_slug):
         if not block.is_enabled:
             continue
         block.payload = normalize_block_payload(block.payload)
+        block.cms_block_type = get_cms_block_type(page_slug, block)
         block_map[block.block_key] = block
     return page, block_map
 
@@ -1727,6 +1839,7 @@ def inject_room_display_helpers():
     return {
         'get_room_display_name': get_room_display_name,
         'get_room_display_category': get_room_display_category,
+        'get_room_detail_url': get_room_detail_url,
     }
 
 def build_room_card_data(room, check_in='', check_out='', adults=2, children=0):
@@ -2241,6 +2354,40 @@ def parse_site_payload(raw_payload):
     except json.JSONDecodeError as exc:
         raise ValueError(f'Некорректный JSON в payload: {exc.msg}') from exc
 
+def get_cms_block_type(page_slug, block):
+    payload = normalize_block_payload(getattr(block, 'payload', None))
+    explicit_type = (payload.get('block_type') or '').strip() if isinstance(payload, dict) else ''
+    if explicit_type:
+        return explicit_type
+    return CMS_KNOWN_BLOCK_TYPES.get(page_slug, {}).get(block.block_key, '')
+
+def upsert_block_type_in_payload(payload, block_type):
+    normalized_payload = normalize_block_payload(payload)
+    if not isinstance(normalized_payload, dict):
+        normalized_payload = {}
+    if block_type:
+        normalized_payload['block_type'] = block_type
+    else:
+        normalized_payload.pop('block_type', None)
+    return normalized_payload
+
+def get_dynamic_block_type_options():
+    return [
+        {'value': value, 'label': config['label'], 'description': config['description']}
+        for value, config in CMS_DYNAMIC_BLOCK_TYPES.items()
+    ]
+
+def get_dynamic_home_blocks(blocks):
+    dynamic_blocks = []
+    for block in blocks.values():
+        if block.block_key in HOME_DYNAMIC_BLOCK_EXCLUDE_KEYS:
+            continue
+        block_type = get_cms_block_type('home', block)
+        if block_type not in CMS_DYNAMIC_BLOCK_TYPES:
+            continue
+        dynamic_blocks.append(block)
+    return dynamic_blocks
+
 # Routes
 @app.route('/')
 def index():
@@ -2266,6 +2413,7 @@ def index():
             featured_rooms.append(room)
 
     room_cards = [build_next_room_card_data(room) for room in featured_rooms]
+    dynamic_home_blocks = get_dynamic_home_blocks(blocks)
 
     philosophy_paragraphs = []
     if philosophy_block and philosophy_block.body:
@@ -2277,6 +2425,7 @@ def index():
         blocks=blocks,
         room_cards=room_cards,
         philosophy_paragraphs=philosophy_paragraphs,
+        dynamic_home_blocks=dynamic_home_blocks,
     )
 
 @app.route('/about')
@@ -2299,6 +2448,8 @@ def wellness_page():
                 if item.get('title') == 'Гидромассажные купели':
                     item['description'] = 'Купели на морской воде для глубокого расслабления мышц, восстановления суставов, улучшения кровообращения и мягкой капилляротерапии. Температура и интенсивность подбираются индивидуально.'
                     item['benefits'] = ['Снятие мышечного напряжения', 'Улучшение кровообращения', 'Восстановление суставов', 'Капилляротерапия']
+                elif item.get('title') == 'Климатотерапия':
+                    item['description'] = 'Использование уникального микроклимата - сочетание горного и морского воздуха, насыщенного аэроионами, фитонцидами и минеральными солями.'
         procedures_block.payload = payload
 
     intro_paragraphs = split_block_body(blocks.get('intro'))
@@ -3678,30 +3829,12 @@ def admin_delete_photo(photo_id):
 @app.route('/admin/categories')
 @login_required
 def admin_categories():
-    if not current_user.is_admin:
-        abort(403)
-    categories = Category.query.all()
-    return render_template('admin/categories.html', categories=categories)
+    abort(404)
 
 @app.route('/admin/categories/add', methods=['GET', 'POST'])
 @login_required
 def admin_add_category():
-    if not current_user.is_admin:
-        abort(403)
-
-    if request.method == 'POST':
-        category = Category(
-            name=request.form['name'],
-            description=request.form['description']
-        )
-
-        db.session.add(category)
-        db.session.commit()
-
-        flash('Category added successfully!', 'success')
-        return redirect(url_for('admin_categories'))
-
-    return render_template('admin/add_category.html')
+    abort(404)
 
 @app.route('/admin/bookings')
 @login_required
@@ -3728,17 +3861,40 @@ def admin_edit_user(user_id):
     user = User.query.get_or_404(user_id)
 
     if request.method == 'POST':
-        user.first_name = request.form['first_name']
-        user.last_name = request.form['last_name']
-        user.email = request.form['email']
+        first_name = request.form.get('first_name', '').strip()
+        last_name = request.form.get('last_name', '').strip()
+        email = request.form.get('email', '').strip()
+        phone_raw = request.form.get('phone', '').strip()
+        phone = format_phone_for_storage(phone_raw) if phone_raw else None
 
-        # Валидация и форматирование телефона
-        # Валидация телефона
-        if not validate_russian_phone(phone):
+        if not first_name:
+            flash('Имя обязательно для заполнения', 'error')
+            return render_template('admin/edit_user.html', user=user)
+
+        if email:
+            existing_user = User.query.filter(User.email == email, User.id != user.id).first()
+            if existing_user:
+                flash('Пользователь с таким email уже существует', 'error')
+                return render_template('admin/edit_user.html', user=user)
+
+            if '@' not in email or '.' not in email:
+                flash('Введите корректный email адрес', 'error')
+                return render_template('admin/edit_user.html', user=user)
+
+        if phone and not validate_russian_phone(phone):
             flash('Введите корректный российский номер телефона', 'error')
-            return render_template('login.html')
+            return render_template('admin/edit_user.html', user=user)
+
         if phone:
-            user.phone = None
+            existing_phone_user = User.query.filter(User.phone == phone, User.id != user.id).first()
+            if existing_phone_user:
+                flash('Пользователь с таким номером телефона уже существует', 'error')
+                return render_template('admin/edit_user.html', user=user)
+
+        user.first_name = first_name
+        user.last_name = last_name
+        user.email = email if email else None
+        user.phone = phone
 
         user.is_admin = 'is_admin' in request.form
 
@@ -3945,7 +4101,7 @@ def admin_site_content():
         abort(403)
 
     ensure_all_default_site_blocks()
-    pages = SitePage.query.order_by(SitePage.sort_order.asc(), SitePage.name.asc()).all()
+    pages = SitePage.query.filter(SitePage.slug != 'about').order_by(SitePage.sort_order.asc(), SitePage.name.asc()).all()
     preview_urls = {page.slug: get_page_preview_url(page.slug) for page in pages}
     return render_template('admin/site_content.html', pages=pages, preview_urls=preview_urls)
 
@@ -3954,11 +4110,16 @@ def admin_site_content():
 def admin_site_page_content(page_slug):
     if not current_user.is_admin:
         abort(403)
+    if page_slug == 'about':
+        abort(404)
 
     ensure_default_blocks_for_page(page_slug)
     page = SitePage.query.filter_by(slug=page_slug).first_or_404()
     blocks = SiteBlock.query.filter_by(page_id=page.id).order_by(SiteBlock.sort_order.asc(), SiteBlock.id.asc()).all()
     blocks = sync_current_cms_block_values(page_slug, blocks)
+    for block in blocks:
+        block.payload = normalize_block_payload(block.payload)
+        block.cms_block_type = get_cms_block_type(page.slug, block)
     preview_url = get_page_preview_url(page.slug)
     block_guides = get_page_block_guides(page.slug)
     existing_block_keys = {block.block_key for block in blocks}
@@ -3968,6 +4129,7 @@ def admin_site_page_content(page_slug):
         blocks=blocks,
         preview_url=preview_url,
         block_guides=block_guides,
+        dynamic_block_type_options=get_dynamic_block_type_options(),
         existing_block_keys=existing_block_keys,
     )
 
@@ -4002,6 +4164,7 @@ def admin_add_site_block(page_slug):
     ensure_default_blocks_for_page(page_slug)
     page = SitePage.query.filter_by(slug=page_slug).first_or_404()
     block_guides = get_page_block_guides(page.slug)
+    dynamic_block_type_options = get_dynamic_block_type_options()
     template_key = request.args.get('template', '').strip()
     default_template = get_default_block_template(page.slug, template_key)
 
@@ -4017,6 +4180,8 @@ def admin_add_site_block(page_slug):
                 block=None,
                 payload_json=request.form.get('payload', ''),
                 block_guides=block_guides,
+                dynamic_block_type_options=dynamic_block_type_options,
+                selected_block_type=request.form.get('block_type', '').strip(),
                 selected_block_key=request.form.get('block_key', '').strip(),
                 preview_url=get_page_preview_url(page.slug),
             )
@@ -4030,12 +4195,15 @@ def admin_add_site_block(page_slug):
                 block=None,
                 payload_json=request.form.get('payload', ''),
                 block_guides=block_guides,
+                dynamic_block_type_options=dynamic_block_type_options,
+                selected_block_type=request.form.get('block_type', '').strip(),
                 selected_block_key=request.form.get('block_key', '').strip(),
                 preview_url=get_page_preview_url(page.slug),
             )
 
         try:
             payload = parse_site_payload(request.form.get('payload', ''))
+            payload = upsert_block_type_in_payload(payload, request.form.get('block_type', '').strip())
         except ValueError as exc:
             flash(str(exc), 'error')
             return render_template(
@@ -4044,6 +4212,8 @@ def admin_add_site_block(page_slug):
                 block=None,
                 payload_json=request.form.get('payload', ''),
                 block_guides=block_guides,
+                dynamic_block_type_options=dynamic_block_type_options,
+                selected_block_type=request.form.get('block_type', '').strip(),
                 selected_block_key=request.form.get('block_key', '').strip(),
                 preview_url=get_page_preview_url(page.slug),
             )
@@ -4075,6 +4245,8 @@ def admin_add_site_block(page_slug):
         block=None,
         payload_json=payload_json,
         block_guides=block_guides,
+        dynamic_block_type_options=dynamic_block_type_options,
+        selected_block_type=(normalize_block_payload(default_template.get('payload')).get('block_type') if default_template and default_template.get('payload') else ''),
         selected_block_key=template_key,
         preview_url=get_page_preview_url(page.slug),
         initial_name=default_template.get('name') if default_template else '',
@@ -4096,6 +4268,7 @@ def admin_edit_site_block(block_id):
     block = SiteBlock.query.get_or_404(block_id)
     page = block.page
     block_guides = get_page_block_guides(page.slug)
+    dynamic_block_type_options = get_dynamic_block_type_options()
 
     if request.method == 'POST':
         new_block_key = request.form.get('block_key', '').strip()
@@ -4109,6 +4282,8 @@ def admin_edit_site_block(block_id):
                 block=block,
                 payload_json=request.form.get('payload', ''),
                 block_guides=block_guides,
+                dynamic_block_type_options=dynamic_block_type_options,
+                selected_block_type=request.form.get('block_type', '').strip() or get_cms_block_type(page.slug, block),
                 selected_block_key=request.form.get('block_key', '').strip() or block.block_key,
                 preview_url=get_page_preview_url(page.slug),
             )
@@ -4126,12 +4301,15 @@ def admin_edit_site_block(block_id):
                 block=block,
                 payload_json=request.form.get('payload', ''),
                 block_guides=block_guides,
+                dynamic_block_type_options=dynamic_block_type_options,
+                selected_block_type=request.form.get('block_type', '').strip() or get_cms_block_type(page.slug, block),
                 selected_block_key=request.form.get('block_key', '').strip() or block.block_key,
                 preview_url=get_page_preview_url(page.slug),
             )
 
         try:
             payload = parse_site_payload(request.form.get('payload', ''))
+            payload = upsert_block_type_in_payload(payload, request.form.get('block_type', '').strip())
         except ValueError as exc:
             flash(str(exc), 'error')
             return render_template(
@@ -4140,6 +4318,8 @@ def admin_edit_site_block(block_id):
                 block=block,
                 payload_json=request.form.get('payload', ''),
                 block_guides=block_guides,
+                dynamic_block_type_options=dynamic_block_type_options,
+                selected_block_type=request.form.get('block_type', '').strip() or get_cms_block_type(page.slug, block),
                 selected_block_key=request.form.get('block_key', '').strip() or block.block_key,
                 preview_url=get_page_preview_url(page.slug),
             )
@@ -4166,6 +4346,8 @@ def admin_edit_site_block(block_id):
         block=block,
         payload_json=serialize_site_payload(block.payload),
         block_guides=block_guides,
+        dynamic_block_type_options=dynamic_block_type_options,
+        selected_block_type=get_cms_block_type(page.slug, block),
         selected_block_key=block.block_key,
         preview_url=get_page_preview_url(page.slug),
     )

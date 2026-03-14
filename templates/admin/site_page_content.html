@@ -3,25 +3,15 @@
 {% block title %}{{ page.name }} - Контент страницы{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-md-3 col-lg-2">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h6 class="mb-0"><i class="bi bi-gear"></i> Админ панель</h6>
-                </div>
-                <div class="list-group list-group-flush">
-                    <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action">
-                        <i class="bi bi-speedometer2"></i> Главная
-                    </a>
-                    <a href="{{ url_for('admin_site_content') }}" class="list-group-item list-group-item-action active">
-                        <i class="bi bi-layout-text-window"></i> Контент сайта
-                    </a>
-                </div>
-            </div>
-        </div>
+<section class="admin-shell">
+    <div class="container-fluid admin-shell__container">
+        <div class="admin-layout">
+            <aside class="admin-sidebar">
+                {% set active_page = 'site-content' %}
+                {% include 'admin/_sidebar.html' %}
+            </aside>
 
-        <div class="col-md-9 col-lg-10">
+            <div class="admin-content">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h1 class="mb-1">{{ page.name }}</h1>
@@ -98,6 +88,26 @@
                 </div>
             {% endif %}
 
+            {% if page.slug == 'home' and dynamic_block_type_options %}
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <strong>Поддерживаемые произвольные секции</strong>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            {% for option in dynamic_block_type_options %}
+                                <div class="col-md-6">
+                                    <div class="border rounded p-3 h-100">
+                                        <div class="fw-semibold mb-1">{{ option.label }}</div>
+                                        <div class="small text-muted">{{ option.description }}</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-0">
                     {% if blocks %}
@@ -108,6 +118,7 @@
                                         <th>Порядок</th>
                                         <th>Блок</th>
                                         <th>Ключ</th>
+                                        <th>Тип</th>
                                         <th>Контент</th>
                                         <th>Статус</th>
                                         <th>Действия</th>
@@ -124,6 +135,18 @@
                                                 {% endif %}
                                             </td>
                                             <td><code>{{ block.block_key }}</code></td>
+                                            <td>
+                                                {% if block.cms_block_type %}
+                                                    {% set type_option = dynamic_block_type_options | selectattr('value', 'equalto', block.cms_block_type) | first %}
+                                                    {% if type_option %}
+                                                        <span class="badge text-bg-light border">{{ type_option.label }}</span>
+                                                    {% else %}
+                                                        <span class="text-muted small">Стандартный</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-muted small">Стандартный</span>
+                                                {% endif %}
+                                            </td>
                                             <td>
                                                 {% if block.body %}
                                                     <small class="text-muted">{{ block.body[:120] }}{% if block.body|length > 120 %}...{% endif %}</small>
@@ -167,7 +190,9 @@
                     {% endif %}
                 </div>
             </div>
+                    </div>
         </div>
     </div>
-</div>
+</section>
 {% endblock %}
+

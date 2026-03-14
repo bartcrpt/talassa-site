@@ -92,7 +92,7 @@
                             <small>Создано {{ booking.created_at.strftime('%d.%m.%Y в %H:%M') }}</small>
                         </div>
                         <div class="booking-card-next__actions">
-                            <a href="{{ url_for('room_detail', room_id=booking.room.id) }}" class="btn btn-outline-secondary account-btn">Посмотреть номер</a>
+                            <a href="{{ get_room_detail_url(booking.room) }}" class="btn btn-outline-secondary account-btn">Посмотреть номер</a>
                             <form action="{{ url_for('delete_booking', booking_id=booking.id) }}" method="POST" onsubmit="return confirm('Вы уверены, что хотите отменить это бронирование?');" style="display: inline;">
                                 <button type="submit" class="btn btn-outline-danger account-btn account-btn--danger">Удалить</button>
                             </form>
