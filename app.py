@@ -2388,6 +2388,170 @@ def get_dynamic_home_blocks(blocks):
         dynamic_blocks.append(block)
     return dynamic_blocks
 
+
+ADMIN_OCCUPANCY_DAY_OPTIONS = (30, 90, 180, 365)
+ADMIN_OCCUPANCY_ACTIVE_STATUSES = {'pending', 'confirmed'}
+WEEKDAY_LABELS_RU = ('Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс')
+MONTH_LABELS_RU_GENITIVE = (
+    'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
+)
+MONTH_LABELS_RU_SHORT = ('янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек')
+
+
+def parse_admin_occupancy_start(raw_value):
+    if not raw_value:
+        return get_moscow_date()
+    try:
+        return datetime.strptime(raw_value, '%Y-%m-%d').date()
+    except ValueError:
+        return get_moscow_date()
+
+
+def get_admin_occupancy_granularity(day_count):
+    if day_count <= 30:
+        return 'day'
+    if day_count <= 90:
+        return 'week'
+    return 'month'
+
+
+def build_admin_occupancy_periods(start_date, day_count):
+    today = get_moscow_date()
+    end_date = start_date + timedelta(days=day_count)
+    granularity = get_admin_occupancy_granularity(day_count)
+    periods = []
+
+    if granularity == 'day':
+        for offset in range(day_count):
+            current = start_date + timedelta(days=offset)
+            periods.append({
+                'start': current,
+                'end': current + timedelta(days=1),
+                'iso': current.isoformat(),
+                'primary_label': WEEKDAY_LABELS_RU[current.weekday()],
+                'secondary_label': str(current.day),
+                'tertiary_label': MONTH_LABELS_RU_GENITIVE[current.month - 1],
+                'is_today': current == today,
+                'is_weekend': current.weekday() >= 5,
+            })
+        return periods
+
+    if granularity == 'week':
+        current = start_date
+        while current < end_date:
+            period_end = min(current + timedelta(days=7), end_date)
+            periods.append({
+                'start': current,
+                'end': period_end,
+                'iso': current.isoformat(),
+                'primary_label': 'Нед',
+                'secondary_label': f"{current.day}-{(period_end - timedelta(days=1)).day}",
+                'tertiary_label': MONTH_LABELS_RU_SHORT[current.month - 1],
+                'is_today': current <= today < period_end,
+                'is_weekend': False,
+            })
+            current = period_end
+        return periods
+
+    current = start_date
+    while current < end_date:
+        if current.day == 1:
+            next_month_start = (current.replace(day=28) + timedelta(days=4)).replace(day=1)
+        else:
+            next_month_start = (current.replace(day=28) + timedelta(days=4)).replace(day=1)
+        period_end = min(next_month_start, end_date)
+        periods.append({
+            'start': current,
+            'end': period_end,
+            'iso': current.isoformat(),
+            'primary_label': MONTH_LABELS_RU_SHORT[current.month - 1].capitalize(),
+            'secondary_label': str(current.year),
+            'tertiary_label': f"{current.day}-{(period_end - timedelta(days=1)).day}",
+            'is_today': current <= today < period_end,
+            'is_weekend': False,
+        })
+        current = period_end
+
+    return periods
+
+
+def has_booking_conflict(bookings):
+    if len(bookings) < 2:
+        return False
+
+    sorted_bookings = sorted(bookings, key=lambda item: (item.check_in, item.check_out, item.id))
+    previous = sorted_bookings[0]
+    for current in sorted_bookings[1:]:
+        if current.check_in < previous.check_out:
+            return True
+        previous = current
+    return False
+
+
+def build_admin_occupancy_cell(bookings, period_start, period_end, granularity):
+    if not bookings:
+        return None
+
+    primary_booking = min(bookings, key=lambda item: (item.check_in, item.id))
+    guest_names = []
+    for booking in bookings:
+        guest_name = ' '.join(filter(None, [booking.user.first_name, booking.user.last_name])).strip()
+        if not guest_name:
+            guest_name = booking.user.phone or f'Гость #{booking.user_id}'
+        if guest_name not in guest_names:
+            guest_names.append(guest_name)
+
+    summary_parts = guest_names[:2]
+    if len(guest_names) > 2:
+        summary_parts.append(f'+{len(guest_names) - 2}')
+
+    status = 'confirmed' if any(item.status == 'confirmed' for item in bookings) else 'pending'
+    is_conflict = has_booking_conflict(bookings)
+
+    return {
+        'booking_id': primary_booking.id,
+        'href': url_for('admin_edit_booking', booking_id=primary_booking.id),
+        'status': status,
+        'guest_name': ', '.join(summary_parts),
+        'room_number': primary_booking.room.number,
+        'check_in_label': min(item.check_in for item in bookings).strftime('%d.%m.%Y'),
+        'check_out_label': max(item.check_out for item in bookings).strftime('%d.%m.%Y'),
+        'is_start': granularity == 'day' and any(item.check_in == period_start for item in bookings),
+        'is_end': granularity == 'day' and any((item.check_out - timedelta(days=1)) == period_start for item in bookings),
+        'is_conflict': is_conflict,
+        'booking_count': len(bookings),
+        'display_text': f"{len(bookings)}" if granularity != 'day' else (f"#{primary_booking.id}" if any(item.check_in == period_start for item in bookings) else ('!' if is_conflict else '')),
+    }
+
+
+def build_admin_occupancy_rows(rooms, bookings, occupancy_periods, granularity):
+    rows = []
+
+    bookings_by_room = {}
+    for booking in bookings:
+        bookings_by_room.setdefault(booking.room_id, []).append(booking)
+
+    for room in rooms:
+        room_bookings = bookings_by_room.get(room.id, [])
+        cells = []
+
+        for period in occupancy_periods:
+            period_bookings = [
+                booking for booking in room_bookings
+                if booking.check_in < period['end'] and booking.check_out > period['start']
+            ]
+            cells.append(build_admin_occupancy_cell(period_bookings, period['start'], period['end'], granularity))
+
+        rows.append({
+            'room': room,
+            'display_name': get_room_display_name(room),
+            'display_category': get_room_display_category(room),
+            'cells': cells,
+        })
+
+    return rows
+
 # Routes
 @app.route('/')
 def index():
@@ -3843,6 +4007,48 @@ def admin_bookings():
         abort(403)
     bookings = Booking.query.order_by(Booking.created_at.desc()).all()
     return render_template('admin/bookings.html', bookings=bookings)
+
+
+@app.route('/admin/occupancy')
+@login_required
+def admin_occupancy():
+    if not current_user.is_admin:
+        abort(403)
+
+    day_count = request.args.get('days', type=int) or 90
+    if day_count not in ADMIN_OCCUPANCY_DAY_OPTIONS:
+        day_count = 90
+
+    start_date = parse_admin_occupancy_start(request.args.get('start', '').strip())
+    end_date = start_date + timedelta(days=day_count)
+
+    rooms = Room.query.order_by(Room.number.asc()).all()
+    bookings = Booking.query.filter(
+        Booking.status.in_(tuple(ADMIN_OCCUPANCY_ACTIVE_STATUSES)),
+        Booking.check_in < end_date,
+        Booking.check_out > start_date,
+    ).order_by(Booking.check_in.asc(), Booking.id.asc()).all()
+
+    granularity = get_admin_occupancy_granularity(day_count)
+    occupancy_periods = build_admin_occupancy_periods(start_date, day_count)
+    occupancy_rows = build_admin_occupancy_rows(rooms, bookings, occupancy_periods, granularity) if occupancy_periods else []
+
+    previous_start = start_date - timedelta(days=day_count)
+    next_start = start_date + timedelta(days=day_count)
+
+    return render_template(
+        'admin/occupancy.html',
+        occupancy_periods=occupancy_periods,
+        occupancy_rows=occupancy_rows,
+        granularity=granularity,
+        day_count=day_count,
+        day_options=ADMIN_OCCUPANCY_DAY_OPTIONS,
+        selected_start=start_date.isoformat(),
+        selected_end=(end_date - timedelta(days=1)).isoformat(),
+        previous_start=previous_start.isoformat(),
+        next_start=next_start.isoformat(),
+        visible_bookings=len(bookings),
+    )
 
 @app.route('/admin/users')
 @login_required

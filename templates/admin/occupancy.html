@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Шахматка бронирований - Talassa Admin{% endblock %}
+
+{% block content %}
+<section class="admin-shell">
+    <div class="container-fluid admin-shell__container">
+        <div class="admin-layout">
+            <aside class="admin-sidebar">
+                {% set active_page = 'occupancy' %}
+                {% include 'admin/_sidebar.html' %}
+            </aside>
+
+            <div class="admin-content">
+                <div class="admin-page-header">
+                    <div>
+                        <p class="admin-page-header__eyebrow">Загрузка номерного фонда</p>
+                        <h1>Шахматка бронирований</h1>
+                        <p>Смотрите занятость номеров по дням, неделям или месяцам, отслеживайте сезонные брони заранее и быстро переходите в карточку конкретной заявки.</p>
+                    </div>
+                    <div class="admin-page-header__meta">
+                        <span><i class="bi bi-calendar-range"></i> {{ selected_start }} - {{ selected_end }}</span>
+                        <span><i class="bi bi-calendar-check"></i> Активных броней: {{ visible_bookings }}</span>
+                        <span><i class="bi bi-grid"></i> Шаг: {% if granularity == 'day' %}дни{% elif granularity == 'week' %}недели{% else %}месяцы{% endif %}</span>
+                    </div>
+                </div>
+
+                <section class="admin-panel-card admin-occupancy-card">
+                    <div class="admin-panel-card__header admin-panel-card__header--stacked">
+                        <div>
+                            <p class="admin-panel-card__eyebrow">Фильтры периода</p>
+                            <h2>Просмотр загрузки</h2>
+                        </div>
+                        <form method="GET" class="admin-occupancy-toolbar">
+                            <label class="admin-occupancy-toolbar__field">
+                                <span>Стартовая дата</span>
+                                <input type="date" name="start" value="{{ selected_start }}">
+                            </label>
+                            <input type="hidden" name="days" value="{{ day_count }}">
+                            <button type="submit" class="btn btn-outline-secondary admin-btn">Показать</button>
+                            <div class="admin-occupancy-toolbar__ranges">
+                                {% for option in day_options %}
+                                    <a href="{{ url_for('admin_occupancy', start=selected_start, days=option) }}" class="admin-occupancy-range {{ 'is-active' if day_count == option else '' }}">
+                                        {{ option }} дней
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </form>
+                        <div class="admin-occupancy-toolbar admin-occupancy-toolbar--secondary">
+                            <a href="{{ url_for('admin_occupancy', start=previous_start, days=day_count) }}" class="btn btn-outline-secondary admin-btn">Предыдущий период</a>
+                            <a href="{{ url_for('admin_occupancy', start=next_start, days=day_count) }}" class="btn btn-outline-secondary admin-btn">Следующий период</a>
+                        </div>
+                    </div>
+
+                    <div class="admin-occupancy-legend">
+                        <span><i class="admin-occupancy-legend__chip admin-occupancy-legend__chip--confirmed"></i> Подтверждено</span>
+                        <span><i class="admin-occupancy-legend__chip admin-occupancy-legend__chip--pending"></i> Ожидает подтверждения</span>
+                        <span><i class="admin-occupancy-legend__chip admin-occupancy-legend__chip--free"></i> Свободно</span>
+                        <span><i class="admin-occupancy-legend__chip admin-occupancy-legend__chip--overlap"></i> Конфликт</span>
+                    </div>
+
+                    {% if occupancy_rows %}
+                        <div class="admin-occupancy-grid-wrap">
+                            <table class="admin-occupancy-grid admin-occupancy-grid--{{ granularity }}">
+                                <thead>
+                                    <tr>
+                                        <th class="admin-occupancy-grid__room-head">Номер</th>
+                                        {% for item in occupancy_periods %}
+                                            <th class="admin-occupancy-grid__date-head {{ 'is-today' if item.is_today else '' }} {{ 'is-weekend' if item.is_weekend else '' }}">
+                                                <span>{{ item.primary_label }}</span>
+                                                <strong>{{ item.secondary_label }}</strong>
+                                                <small>{{ item.tertiary_label }}</small>
+                                            </th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in occupancy_rows %}
+                                        <tr>
+                                            <th class="admin-occupancy-grid__room-cell">
+                                                <strong>№ {{ row.room.number }}</strong>
+                                                <small>{{ row.display_category }}</small>
+                                            </th>
+                                            {% for cell in row.cells %}
+                                                <td class="admin-occupancy-grid__cell">
+                                                    {% if cell %}
+                                                        <a
+                                                            href="{{ cell.href }}"
+                                                            class="admin-occupancy-grid__slot admin-occupancy-grid__slot--{{ cell.status }} {{ 'is-conflict' if cell.is_conflict else '' }} {{ 'is-start' if cell.is_start else '' }} {{ 'is-end' if cell.is_end else '' }}"
+                                                            title="{{ cell.guest_name }} · {{ cell.check_in_label }} - {{ cell.check_out_label }} · Бронь #{{ cell.booking_id }}"
+                                                        >
+                                                            {% if cell.display_text %}
+                                                                <span>{{ cell.display_text }}</span>
+                                                            {% endif %}
+                                                        </a>
+                                                    {% else %}
+                                                        <div class="admin-occupancy-grid__slot admin-occupancy-grid__slot--free" aria-hidden="true"></div>
+                                                    {% endif %}
+                                                </td>
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="admin-empty-state">
+                            <span class="admin-empty-state__icon"><i class="bi bi-grid-3x3-gap"></i></span>
+                            <h2>Номера не найдены</h2>
+                            <p>Когда в системе появятся номера и брони, они отобразятся в шахматке.</p>
+                        </div>
+                    {% endif %}
+                </section>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

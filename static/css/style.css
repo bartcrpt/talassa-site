@@ -2510,3 +2510,303 @@ body.internal-admin .admin-room-preview-modal__amenities {
         grid-template-columns: 1fr;
     }
 }
+
+body.internal-admin .admin-panel-card__header--stacked {
+    align-items: stretch;
+    gap: 1rem;
+}
+
+body.internal-admin .admin-occupancy-card {
+    gap: 1.5rem;
+}
+
+body.internal-admin .admin-occupancy-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    align-items: end;
+}
+
+body.internal-admin .admin-occupancy-toolbar--secondary {
+    justify-content: flex-end;
+}
+
+body.internal-admin .admin-occupancy-toolbar__field {
+    display: grid;
+    gap: 0.35rem;
+    min-width: 190px;
+    color: rgba(49, 78, 111, 0.72);
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+body.internal-admin .admin-occupancy-toolbar__field input {
+    border: 1px solid rgba(192, 159, 107, 0.28);
+    border-radius: 999px;
+    padding: 0.8rem 1rem;
+    background: rgba(255, 255, 255, 0.84);
+    color: #314e6f;
+}
+
+body.internal-admin .admin-occupancy-toolbar__ranges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+}
+
+body.internal-admin .admin-occupancy-range {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(49, 78, 111, 0.18);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.82);
+    color: #314e6f;
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+body.internal-admin .admin-occupancy-range.is-active,
+body.internal-admin .admin-occupancy-range:hover {
+    border-color: rgba(192, 159, 107, 0.9);
+    background: rgba(192, 159, 107, 0.16);
+    color: #8f5f2b;
+}
+
+body.internal-admin .admin-occupancy-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+    align-items: center;
+    color: rgba(82, 110, 98, 0.92);
+}
+
+body.internal-admin .admin-occupancy-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.95rem;
+}
+
+body.internal-admin .admin-occupancy-legend__chip {
+    width: 16px;
+    height: 16px;
+    border-radius: 5px;
+    display: inline-block;
+    border: 1px solid transparent;
+}
+
+body.internal-admin .admin-occupancy-legend__chip--confirmed {
+    background: rgba(82, 110, 98, 0.82);
+}
+
+body.internal-admin .admin-occupancy-legend__chip--pending {
+    background: rgba(192, 159, 107, 0.82);
+}
+
+body.internal-admin .admin-occupancy-legend__chip--free {
+    background: rgba(255, 255, 255, 0.94);
+    border-color: rgba(49, 78, 111, 0.16);
+}
+
+body.internal-admin .admin-occupancy-legend__chip--overlap {
+    background: rgba(177, 76, 76, 0.88);
+}
+
+body.internal-admin .admin-occupancy-grid-wrap {
+    overflow: auto;
+    border-radius: 26px;
+    border: 1px solid rgba(192, 159, 107, 0.18);
+    background: rgba(255, 255, 255, 0.72);
+}
+
+body.internal-admin .admin-occupancy-grid {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+body.internal-admin .admin-occupancy-grid th,
+body.internal-admin .admin-occupancy-grid td {
+    border-bottom: 1px solid rgba(192, 159, 107, 0.14);
+}
+
+body.internal-admin .admin-occupancy-grid__room-head,
+body.internal-admin .admin-occupancy-grid__room-cell {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: #f8f4eb;
+    min-width: 150px;
+    max-width: 150px;
+    padding: 0.9rem 1rem;
+    text-align: left;
+    border-right: 1px solid rgba(192, 159, 107, 0.16);
+}
+
+body.internal-admin .admin-occupancy-grid__room-head {
+    z-index: 4;
+    color: rgba(49, 78, 111, 0.75);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.76rem;
+}
+
+body.internal-admin .admin-occupancy-grid__room-cell strong,
+body.internal-admin .admin-occupancy-grid__room-cell span,
+body.internal-admin .admin-occupancy-grid__room-cell small {
+    display: block;
+}
+
+body.internal-admin .admin-occupancy-grid__room-cell strong {
+    color: #314e6f;
+    font-size: 0.95rem;
+}
+
+body.internal-admin .admin-occupancy-grid__room-cell span {
+    color: #526e62;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+body.internal-admin .admin-occupancy-grid__room-cell small {
+    color: rgba(49, 78, 111, 0.56);
+    margin-top: 0.25rem;
+}
+
+body.internal-admin .admin-occupancy-grid__date-head {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    min-width: 66px;
+    width: 66px;
+    padding: 0.75rem 0.35rem;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.94);
+}
+
+body.internal-admin .admin-occupancy-grid__date-head.is-weekend {
+    background: rgba(243, 239, 230, 0.96);
+}
+
+body.internal-admin .admin-occupancy-grid__date-head.is-today {
+    background: rgba(192, 159, 107, 0.16);
+}
+
+body.internal-admin .admin-occupancy-grid__date-head span,
+body.internal-admin .admin-occupancy-grid__date-head strong,
+body.internal-admin .admin-occupancy-grid__date-head small {
+    display: block;
+    line-height: 1.15;
+}
+
+body.internal-admin .admin-occupancy-grid__date-head span,
+body.internal-admin .admin-occupancy-grid__date-head small {
+    color: rgba(49, 78, 111, 0.62);
+    font-size: 0.72rem;
+}
+
+body.internal-admin .admin-occupancy-grid__date-head strong {
+    color: #314e6f;
+    font-size: 1rem;
+    margin: 0.18rem 0;
+}
+
+body.internal-admin .admin-occupancy-grid__cell {
+    padding: 0.22rem;
+    min-width: 66px;
+    width: 66px;
+    background: rgba(255, 255, 255, 0.65);
+}
+
+body.internal-admin .admin-occupancy-grid--day .admin-occupancy-grid__date-head,
+body.internal-admin .admin-occupancy-grid--day .admin-occupancy-grid__cell {
+    min-width: 36px;
+    width: 36px;
+}
+
+body.internal-admin .admin-occupancy-grid--day .admin-occupancy-grid__date-head {
+    padding: 0.6rem 0.1rem;
+}
+
+body.internal-admin .admin-occupancy-grid--day .admin-occupancy-grid__date-head span,
+body.internal-admin .admin-occupancy-grid--day .admin-occupancy-grid__date-head small {
+    font-size: 0.58rem;
+}
+
+body.internal-admin .admin-occupancy-grid--day .admin-occupancy-grid__date-head strong {
+    font-size: 0.82rem;
+}
+
+body.internal-admin .admin-occupancy-grid--day .admin-occupancy-grid__slot {
+    min-height: 32px;
+    border-radius: 10px;
+    font-size: 0.56rem;
+    padding: 0;
+}
+
+body.internal-admin .admin-occupancy-grid--month .admin-occupancy-grid__date-head,
+body.internal-admin .admin-occupancy-grid--month .admin-occupancy-grid__cell {
+    min-width: 78px;
+    width: 78px;
+}
+
+body.internal-admin .admin-occupancy-grid__slot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    border-radius: 12px;
+    border: 1px solid rgba(49, 78, 111, 0.08);
+    text-decoration: none;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+body.internal-admin .admin-occupancy-grid__slot--free {
+    background: rgba(255, 255, 255, 0.82);
+}
+
+body.internal-admin .admin-occupancy-grid__slot--confirmed {
+    background: rgba(82, 110, 98, 0.86);
+    border-color: rgba(82, 110, 98, 1);
+    color: #fff;
+}
+
+body.internal-admin .admin-occupancy-grid__slot--pending {
+    background: rgba(192, 159, 107, 0.82);
+    border-color: rgba(192, 159, 107, 1);
+    color: #fff;
+}
+
+body.internal-admin .admin-occupancy-grid__slot.is-conflict {
+    background: rgba(177, 76, 76, 0.9);
+    border-color: rgba(177, 76, 76, 1);
+    color: #fff;
+}
+
+body.internal-admin .admin-occupancy-grid__slot:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(49, 78, 111, 0.14);
+}
+
+@media (max-width: 767px) {
+    body.internal-admin .admin-occupancy-toolbar--secondary {
+        justify-content: stretch;
+    }
+
+    body.internal-admin .admin-occupancy-toolbar--secondary .admin-btn {
+        width: 100%;
+    }
+
+    body.internal-admin .admin-occupancy-grid__room-head,
+    body.internal-admin .admin-occupancy-grid__room-cell {
+        min-width: 130px;
+        max-width: 130px;
+    }
+}
