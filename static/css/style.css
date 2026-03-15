@@ -2625,9 +2625,16 @@ body.internal-admin .admin-occupancy-grid-wrap {
 
 body.internal-admin .admin-occupancy-grid {
     width: max-content;
-    min-width: 100%;
     border-collapse: separate;
     border-spacing: 0;
+}
+
+body.internal-admin .admin-occupancy-grid__room-col {
+    width: 150px;
+}
+
+body.internal-admin .admin-occupancy-grid__period-col {
+    width: 66px;
 }
 
 body.internal-admin .admin-occupancy-grid th,
@@ -2641,11 +2648,13 @@ body.internal-admin .admin-occupancy-grid__room-cell {
     left: 0;
     z-index: 2;
     background: #f8f4eb;
+    width: 150px;
     min-width: 150px;
     max-width: 150px;
     padding: 0.9rem 1rem;
     text-align: left;
     border-right: 1px solid rgba(192, 159, 107, 0.16);
+    box-sizing: border-box;
 }
 
 body.internal-admin .admin-occupancy-grid__room-head {
@@ -2729,6 +2738,10 @@ body.internal-admin .admin-occupancy-grid--day .admin-occupancy-grid__cell {
     width: 36px;
 }
 
+body.internal-admin .admin-occupancy-grid--day .admin-occupancy-grid__period-col {
+    width: 36px;
+}
+
 body.internal-admin .admin-occupancy-grid--day .admin-occupancy-grid__date-head {
     padding: 0.6rem 0.1rem;
 }
@@ -2755,6 +2768,10 @@ body.internal-admin .admin-occupancy-grid--month .admin-occupancy-grid__cell {
     width: 78px;
 }
 
+body.internal-admin .admin-occupancy-grid--month .admin-occupancy-grid__period-col {
+    width: 78px;
+}
+
 body.internal-admin .admin-occupancy-grid__slot {
     display: flex;
     align-items: center;
@@ -2766,6 +2783,11 @@ body.internal-admin .admin-occupancy-grid__slot {
     font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.02em;
+}
+
+body.internal-admin button.admin-occupancy-grid__slot {
+    width: 100%;
+    cursor: pointer;
 }
 
 body.internal-admin .admin-occupancy-grid__slot--free {
@@ -2795,6 +2817,108 @@ body.internal-admin .admin-occupancy-grid__slot:hover {
     box-shadow: 0 10px 24px rgba(49, 78, 111, 0.14);
 }
 
+body.internal-admin .admin-occupancy-modal[hidden] {
+    display: none;
+}
+
+body.internal-admin .admin-occupancy-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+}
+
+body.internal-admin .admin-occupancy-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(49, 78, 111, 0.42);
+    backdrop-filter: blur(4px);
+}
+
+body.internal-admin .admin-occupancy-modal__dialog {
+    position: relative;
+    width: min(680px, calc(100vw - 2rem));
+    margin: 8vh auto 0;
+    padding: 1.5rem;
+    border-radius: 26px;
+    background: #f8f4eb;
+    box-shadow: 0 26px 60px rgba(34, 51, 73, 0.24);
+}
+
+body.internal-admin .admin-occupancy-modal__close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 42px;
+    height: 42px;
+    border: 1px solid rgba(192, 159, 107, 0.25);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.82);
+    color: #314e6f;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+body.internal-admin .admin-occupancy-modal__header {
+    margin-bottom: 1.2rem;
+    padding-right: 3.2rem;
+}
+
+body.internal-admin .admin-occupancy-modal__eyebrow {
+    margin: 0 0 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.72rem;
+    color: rgba(49, 78, 111, 0.55);
+}
+
+body.internal-admin .admin-occupancy-modal__header h2 {
+    margin: 0;
+    color: #314e6f;
+}
+
+body.internal-admin .admin-occupancy-modal__content {
+    max-height: 60vh;
+    overflow: auto;
+}
+
+body.internal-admin .admin-occupancy-popup__list {
+    display: grid;
+    gap: 0.85rem;
+}
+
+body.internal-admin .admin-occupancy-popup__item {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.05rem;
+    border: 1px solid rgba(192, 159, 107, 0.22);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.78);
+}
+
+body.internal-admin .admin-occupancy-popup__item-main strong,
+body.internal-admin .admin-occupancy-popup__item-main span {
+    display: block;
+}
+
+body.internal-admin .admin-occupancy-popup__item-main strong {
+    color: #314e6f;
+    margin-bottom: 0.25rem;
+}
+
+body.internal-admin .admin-occupancy-popup__item-main span {
+    color: rgba(49, 78, 111, 0.68);
+}
+
+body.internal-admin .admin-occupancy-popup__item-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.65rem;
+}
+
 @media (max-width: 767px) {
     body.internal-admin .admin-occupancy-toolbar--secondary {
         justify-content: stretch;
@@ -2806,7 +2930,26 @@ body.internal-admin .admin-occupancy-grid__slot:hover {
 
     body.internal-admin .admin-occupancy-grid__room-head,
     body.internal-admin .admin-occupancy-grid__room-cell {
+        width: 130px;
         min-width: 130px;
         max-width: 130px;
+    }
+
+    body.internal-admin .admin-occupancy-grid__room-col {
+        width: 130px;
+    }
+
+    body.internal-admin .admin-occupancy-modal__dialog {
+        width: calc(100vw - 1rem);
+        margin-top: 5vh;
+        padding: 1.15rem;
+    }
+
+    body.internal-admin .admin-occupancy-popup__item {
+        flex-direction: column;
+    }
+
+    body.internal-admin .admin-occupancy-popup__item-side {
+        align-items: flex-start;
     }
 }

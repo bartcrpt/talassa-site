@@ -1218,7 +1218,7 @@ def format_phone_for_storage(phone):
 
     return phone  # Возвращаем как есть, если не удалось отформатировать
 
-def is_room_available(room_id, check_in, check_out):
+def is_room_available(room_id, check_in, check_out, exclude_booking_id=None):
     conflicting_bookings = Booking.query.filter(
         Booking.room_id == room_id,
         Booking.status.in_(['pending', 'confirmed']),
@@ -1227,8 +1227,38 @@ def is_room_available(room_id, check_in, check_out):
             db.and_(Booking.check_in < check_out, Booking.check_out >= check_out),
             db.and_(Booking.check_in >= check_in, Booking.check_out <= check_out)
         )
-    ).first()
+    )
+    if exclude_booking_id is not None:
+        conflicting_bookings = conflicting_bookings.filter(Booking.id != exclude_booking_id)
+    conflicting_bookings = conflicting_bookings.first()
     return conflicting_bookings is None
+
+
+def get_admin_booking_room_options(booking):
+    room_type_slug = legacy_room_service.get_room_type_slug(booking.room)
+    candidate_rooms_query = Room.query
+
+    if room_type_slug:
+        candidate_rooms_query = candidate_rooms_query.filter(Room.room_type_slug == room_type_slug)
+    else:
+        candidate_rooms_query = candidate_rooms_query.filter(Room.id == booking.room_id)
+
+    candidate_rooms = candidate_rooms_query.order_by(Room.number.asc()).all()
+    available_rooms = []
+
+    for room in candidate_rooms:
+        if room.id == booking.room_id or is_room_available(
+            room.id,
+            booking.check_in,
+            booking.check_out,
+            exclude_booking_id=booking.id,
+        ):
+            available_rooms.append(room)
+
+    if not any(room.id == booking.room_id for room in available_rooms):
+        available_rooms.insert(0, booking.room)
+
+    return available_rooms
 
 def format_phone_for_display(phone):
     """Форматирует телефон для отображения в шаблонах"""
@@ -2431,7 +2461,7 @@ def build_admin_occupancy_periods(start_date, day_count):
                 'iso': current.isoformat(),
                 'primary_label': WEEKDAY_LABELS_RU[current.weekday()],
                 'secondary_label': str(current.day),
-                'tertiary_label': MONTH_LABELS_RU_GENITIVE[current.month - 1],
+                'tertiary_label': MONTH_LABELS_RU_SHORT[current.month - 1],
                 'is_today': current == today,
                 'is_weekend': current.weekday() >= 5,
             })
@@ -2493,14 +2523,30 @@ def build_admin_occupancy_cell(bookings, period_start, period_end, granularity):
     if not bookings:
         return None
 
-    primary_booking = min(bookings, key=lambda item: (item.check_in, item.id))
+    sorted_bookings = sorted(bookings, key=lambda item: (item.check_in, item.id))
+    primary_booking = sorted_bookings[0]
     guest_names = []
-    for booking in bookings:
+    booking_items = []
+    for booking in sorted_bookings:
         guest_name = ' '.join(filter(None, [booking.user.first_name, booking.user.last_name])).strip()
         if not guest_name:
             guest_name = booking.user.phone or f'Гость #{booking.user_id}'
         if guest_name not in guest_names:
             guest_names.append(guest_name)
+        booking_items.append({
+            'id': booking.id,
+            'href': url_for('admin_edit_booking', booking_id=booking.id),
+            'guest_name': guest_name,
+            'check_in_label': booking.check_in.strftime('%d.%m.%Y'),
+            'check_out_label': booking.check_out.strftime('%d.%m.%Y'),
+            'status': booking.status,
+            'status_label': {
+                'pending': 'Ожидает подтверждения',
+                'confirmed': 'Подтверждено',
+                'cancelled': 'Отменено',
+                'completed': 'Завершено',
+            }.get(booking.status, booking.status),
+        })
 
     summary_parts = guest_names[:2]
     if len(guest_names) > 2:
@@ -2521,6 +2567,7 @@ def build_admin_occupancy_cell(bookings, period_start, period_end, granularity):
         'is_end': granularity == 'day' and any((item.check_out - timedelta(days=1)) == period_start for item in bookings),
         'is_conflict': is_conflict,
         'booking_count': len(bookings),
+        'bookings': booking_items,
         'display_text': f"{len(bookings)}" if granularity != 'day' else (f"#{primary_booking.id}" if any(item.check_in == period_start for item in bookings) else ('!' if is_conflict else '')),
     }
 
@@ -4117,8 +4164,37 @@ def admin_edit_booking(booking_id):
         abort(403)
 
     booking = Booking.query.get_or_404(booking_id)
+    available_room_options = get_admin_booking_room_options(booking)
+    selected_room_id = booking.room_id
 
     if request.method == 'POST':
+        selected_room_id = request.form.get('room_id', type=int) or booking.room_id
+        allowed_room_ids = {room.id for room in available_room_options}
+
+        if selected_room_id not in allowed_room_ids:
+            flash('Можно выбрать только свободный физический номер того же вида.', 'error')
+            return render_template(
+                'admin/edit_booking.html',
+                booking=booking,
+                available_room_options=available_room_options,
+                selected_room_id=selected_room_id,
+            )
+
+        if not is_room_available(
+            selected_room_id,
+            booking.check_in,
+            booking.check_out,
+            exclude_booking_id=booking.id,
+        ):
+            flash('Выбранный номер уже занят на эти даты. Обновите страницу и попробуйте снова.', 'error')
+            return render_template(
+                'admin/edit_booking.html',
+                booking=booking,
+                available_room_options=available_room_options,
+                selected_room_id=selected_room_id,
+            )
+
+        booking.room_id = selected_room_id
         booking.status = request.form['status']
         booking.special_requests = request.form.get('special_requests', '')
 
@@ -4126,7 +4202,12 @@ def admin_edit_booking(booking_id):
         flash('Бронирование успешно обновлено!', 'success')
         return redirect(url_for('admin_bookings'))
 
-    return render_template('admin/edit_booking.html', booking=booking)
+    return render_template(
+        'admin/edit_booking.html',
+        booking=booking,
+        available_room_options=available_room_options,
+        selected_room_id=selected_room_id,
+    )
 
 @app.route('/admin/news')
 @login_required

@@ -62,6 +62,12 @@
                     {% if occupancy_rows %}
                         <div class="admin-occupancy-grid-wrap">
                             <table class="admin-occupancy-grid admin-occupancy-grid--{{ granularity }}">
+                                <colgroup>
+                                    <col class="admin-occupancy-grid__room-col">
+                                    {% for item in occupancy_periods %}
+                                    <col class="admin-occupancy-grid__period-col">
+                                    {% endfor %}
+                                </colgroup>
                                 <thead>
                                     <tr>
                                         <th class="admin-occupancy-grid__room-head">Номер</th>
@@ -84,15 +90,48 @@
                                             {% for cell in row.cells %}
                                                 <td class="admin-occupancy-grid__cell">
                                                     {% if cell %}
-                                                        <a
-                                                            href="{{ cell.href }}"
-                                                            class="admin-occupancy-grid__slot admin-occupancy-grid__slot--{{ cell.status }} {{ 'is-conflict' if cell.is_conflict else '' }} {{ 'is-start' if cell.is_start else '' }} {{ 'is-end' if cell.is_end else '' }}"
-                                                            title="{{ cell.guest_name }} · {{ cell.check_in_label }} - {{ cell.check_out_label }} · Бронь #{{ cell.booking_id }}"
-                                                        >
-                                                            {% if cell.display_text %}
-                                                                <span>{{ cell.display_text }}</span>
-                                                            {% endif %}
-                                                        </a>
+                                                        {% if cell.booking_count > 1 %}
+                                                            <button
+                                                                type="button"
+                                                                class="admin-occupancy-grid__slot admin-occupancy-grid__slot--{{ cell.status }} {{ 'is-conflict' if cell.is_conflict else '' }} {{ 'is-start' if cell.is_start else '' }} {{ 'is-end' if cell.is_end else '' }}"
+                                                                title="{{ cell.guest_name }} · {{ cell.booking_count }} брони"
+                                                                data-occupancy-popup-trigger
+                                                                data-popup-title="№ {{ row.room.number }} · {{ row.display_category }}"
+                                                                data-popup-subtitle="{{ cell.booking_count }} брони в выбранном периоде"
+                                                            >
+                                                                {% if cell.display_text %}
+                                                                    <span>{{ cell.display_text }}</span>
+                                                                {% endif %}
+                                                            </button>
+                                                            <div class="admin-occupancy-popup-source" hidden>
+                                                                <div class="admin-occupancy-popup__list">
+                                                                    {% for booking_item in cell.bookings %}
+                                                                        <article class="admin-occupancy-popup__item">
+                                                                            <div class="admin-occupancy-popup__item-main">
+                                                                                <strong>{{ booking_item.guest_name }}</strong>
+                                                                                <span>{{ booking_item.check_in_label }} - {{ booking_item.check_out_label }}</span>
+                                                                            </div>
+                                                                            <div class="admin-occupancy-popup__item-side">
+                                                                                <span class="admin-status-badge admin-status-badge--{{ 'confirmed' if booking_item.status == 'confirmed' else ('pending' if booking_item.status == 'pending' else 'neutral') }}">
+                                                                                    {{ booking_item.status_label }}
+                                                                                </span>
+                                                                                <a href="{{ booking_item.href }}" class="btn btn-outline-secondary admin-btn">Открыть</a>
+                                                                            </div>
+                                                                        </article>
+                                                                    {% endfor %}
+                                                                </div>
+                                                            </div>
+                                                        {% else %}
+                                                            <a
+                                                                href="{{ cell.href }}"
+                                                                class="admin-occupancy-grid__slot admin-occupancy-grid__slot--{{ cell.status }} {{ 'is-conflict' if cell.is_conflict else '' }} {{ 'is-start' if cell.is_start else '' }} {{ 'is-end' if cell.is_end else '' }}"
+                                                                title="{{ cell.guest_name }} · {{ cell.check_in_label }} - {{ cell.check_out_label }} · Бронь #{{ cell.booking_id }}"
+                                                            >
+                                                                {% if cell.display_text %}
+                                                                    <span>{{ cell.display_text }}</span>
+                                                                {% endif %}
+                                                            </a>
+                                                        {% endif %}
                                                     {% else %}
                                                         <div class="admin-occupancy-grid__slot admin-occupancy-grid__slot--free" aria-hidden="true"></div>
                                                     {% endif %}
@@ -115,4 +154,64 @@
         </div>
     </div>
 </section>
+
+<div class="admin-occupancy-modal" id="adminOccupancyModal" hidden>
+    <div class="admin-occupancy-modal__backdrop" data-occupancy-popup-close></div>
+    <div class="admin-occupancy-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="adminOccupancyModalTitle">
+        <button type="button" class="admin-occupancy-modal__close" aria-label="Закрыть" data-occupancy-popup-close>
+            <i class="bi bi-x-lg"></i>
+        </button>
+        <div class="admin-occupancy-modal__header">
+            <p class="admin-occupancy-modal__eyebrow" id="adminOccupancyModalSubtitle"></p>
+            <h2 id="adminOccupancyModalTitle">Брони</h2>
+        </div>
+        <div class="admin-occupancy-modal__content" id="adminOccupancyModalContent"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('adminOccupancyModal');
+    if (!modal) return;
+
+    const titleNode = document.getElementById('adminOccupancyModalTitle');
+    const subtitleNode = document.getElementById('adminOccupancyModalSubtitle');
+    const contentNode = document.getElementById('adminOccupancyModalContent');
+    let lastTrigger = null;
+
+    const closeModal = () => {
+        modal.hidden = true;
+        contentNode.innerHTML = '';
+        if (lastTrigger) {
+            lastTrigger.focus();
+            lastTrigger = null;
+        }
+    };
+
+    document.querySelectorAll('[data-occupancy-popup-trigger]').forEach((trigger) => {
+        trigger.addEventListener('click', () => {
+            const source = trigger.nextElementSibling;
+            if (!source) return;
+
+            lastTrigger = trigger;
+            titleNode.textContent = trigger.dataset.popupTitle || 'Брони';
+            subtitleNode.textContent = trigger.dataset.popupSubtitle || '';
+            contentNode.innerHTML = source.innerHTML;
+            modal.hidden = false;
+        });
+    });
+
+    modal.querySelectorAll('[data-occupancy-popup-close]').forEach((node) => {
+        node.addEventListener('click', closeModal);
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !modal.hidden) {
+            closeModal();
+        }
+    });
+});
+</script>
 {% endblock %}
