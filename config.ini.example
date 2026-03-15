@@ -1,0 +1,17 @@
+[uwsgi]
+module = app:app
+
+master = true
+processes = 4
+
+uid = www-data
+gid = www-data
+
+; Для запуска за Nginx:
+socket = 127.0.0.1:5000
+
+; Для прямого открытия по IP:5000 без Nginx используйте вместо socket:
+; http = 0.0.0.0:5000
+
+vacuum = true
+die-on-term = true
