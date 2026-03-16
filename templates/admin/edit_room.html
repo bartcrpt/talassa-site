@@ -280,6 +280,60 @@
 <script src="{{ url_for('static', filename='js/tinymce/tinymce.min.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const roomTypeAutofillData = {{ room_type_autofill_data|tojson }};
+    const roomTypeSelect = document.getElementById('room_type_slug');
+    const categorySelect = document.getElementById('category_id');
+    const capacityInput = document.getElementById('capacity');
+    const smallSofaCheckbox = document.querySelector('input[name="has_small_sofa"]');
+    const largeSofaCheckbox = document.querySelector('input[name="has_large_sofa"]');
+
+    const setTinyMceValue = (fieldId, value) => {
+        const editor = window.tinymce ? window.tinymce.get(fieldId) : null;
+        if (editor) {
+            editor.setContent(value || '');
+        } else {
+            const field = document.getElementById(fieldId);
+            if (field) field.value = value || '';
+        }
+    };
+
+    const applyRoomTypeAutofill = () => {
+        const payload = roomTypeAutofillData[roomTypeSelect.value];
+        if (!payload) return;
+
+        if (categorySelect) {
+            const matchingOption = Array.from(categorySelect.options).find((option) => option.text.trim() === payload.category);
+            if (matchingOption) {
+                categorySelect.value = matchingOption.value;
+            }
+        }
+
+        if (capacityInput && payload.capacity) {
+            capacityInput.value = payload.capacity;
+        }
+
+        Object.entries(payload.prices || {}).forEach(([fieldName, fieldValue]) => {
+            const input = document.querySelector(`[name="${fieldName}"]`);
+            if (input && fieldValue !== null && fieldValue !== undefined) {
+                input.value = fieldValue;
+            }
+        });
+
+        setTinyMceValue('description', payload.description || '');
+        setTinyMceValue('amenities', payload.amenities || '');
+
+        if (smallSofaCheckbox) {
+            smallSofaCheckbox.checked = !!payload.has_small_sofa;
+        }
+        if (largeSofaCheckbox) {
+            largeSofaCheckbox.checked = !!payload.has_large_sofa;
+        }
+    };
+
+    if (roomTypeSelect) {
+        roomTypeSelect.addEventListener('change', applyRoomTypeAutofill);
+    }
+
     // Initialize TinyMCE for description
     tinymce.init({
         selector: '.wysiwyg-editor',

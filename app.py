@@ -1771,6 +1771,48 @@ def get_room_type_options():
     ]
 
 
+def get_room_type_autofill_data():
+    month_field_map = {
+        'Январь': 'price_per_night_january',
+        'Февраль': 'price_per_night_february',
+        'Март': 'price_per_night_march',
+        'Апрель': 'price_per_night_april',
+        'Май': 'price_per_night_may',
+        'Июнь': 'price_per_night_june',
+        'Июль': 'price_per_night_july',
+        'Август': 'price_per_night_august',
+        'Сентябрь': 'price_per_night_september',
+        'Октябрь': 'price_per_night_october',
+        'Ноябрь': 'price_per_night_november',
+        'Декабрь': 'price_per_night_december',
+    }
+
+    result = {}
+    for room in load_next_rooms_data():
+        slug = room.get('slug')
+        if not slug:
+            continue
+
+        prices = {}
+        for item in room.get('prices', []):
+            field_name = month_field_map.get(item.get('month'))
+            if field_name:
+                prices[field_name] = item.get('price')
+
+        extra_bed = (room.get('extraBed') or '').lower()
+        result[slug] = {
+            'category': room.get('category'),
+            'capacity': room.get('capacity', {}).get('standard') or room.get('capacity', {}).get('max') or 2,
+            'description': room.get('description') or '',
+            'amenities': json.dumps(room.get('amenities') or [], ensure_ascii=False),
+            'prices': prices,
+            'has_small_sofa': 'односпаль' in extra_bed,
+            'has_large_sofa': 'двуспаль' in extra_bed,
+        }
+
+    return result
+
+
 def get_room_type_option(room_type_slug):
     if not room_type_slug:
         return None
@@ -3892,7 +3934,13 @@ def admin_add_room():
 
     categories = Category.query.all()
     room_type_options = get_room_type_options()
-    return render_template('admin/add_room.html', categories=categories, room_type_options=room_type_options)
+    room_type_autofill_data = get_room_type_autofill_data()
+    return render_template(
+        'admin/add_room.html',
+        categories=categories,
+        room_type_options=room_type_options,
+        room_type_autofill_data=room_type_autofill_data,
+    )
 
 @app.route('/admin/rooms/<int:room_id>/photos', methods=['GET', 'POST'])
 @login_required
@@ -3984,7 +4032,14 @@ def admin_edit_room(room_id):
 
     categories = Category.query.all()
     room_type_options = get_room_type_options()
-    return render_template('admin/edit_room.html', room=room, categories=categories, room_type_options=room_type_options)
+    room_type_autofill_data = get_room_type_autofill_data()
+    return render_template(
+        'admin/edit_room.html',
+        room=room,
+        categories=categories,
+        room_type_options=room_type_options,
+        room_type_autofill_data=room_type_autofill_data,
+    )
 
 @app.route('/admin/rooms/<int:room_id>/delete', methods=['POST'])
 @login_required
