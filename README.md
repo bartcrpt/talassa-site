@@ -92,6 +92,35 @@ python app.py
 celery -A app.celery worker -l info
 ```
 
+Обычно для этого нужен локальный Redis:
+
+```bash
+sudo apt install -y redis-server
+sudo systemctl enable redis-server
+sudo systemctl start redis-server
+redis-cli ping
+```
+
+Рекомендуемый запуск worker через `systemd`:
+
+```ini
+[Unit]
+Description=Talassa Celery Worker
+After=network.target redis-server.service
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/path/to/project
+Environment="PATH=/path/to/project/.venv/bin"
+ExecStart=/path/to/project/.venv/bin/python3 -m celery -A app.celery worker -l info
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+```
+
 ## uWSGI / deploy
 
 В репозитории хранится только шаблон:
