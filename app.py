@@ -3634,39 +3634,6 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
-
-def allow_debug_login_routes():
-    return os.getenv('ENABLE_DEBUG_LOGIN_ROUTES', '1') == '1'
-
-def login_debug_user(is_admin=False):
-    if not allow_debug_login_routes():
-        abort(404)
-
-    next_page = request.args.get('next')
-    user = User.query.filter_by(is_admin=is_admin).order_by(User.id.asc()).first()
-
-    if not user:
-        flash('Подходящий пользователь для debug-входа не найден.', 'error')
-        return redirect(url_for('login', next=next_page))
-
-    user.is_verified = True
-    user.sms_code = None
-    user.sms_code_expires = None
-    db.session.commit()
-
-    login_user(user)
-    flash(f"Временный вход выполнен: {'администратор' if is_admin else 'пользователь'} {user.first_name}.", 'success')
-
-    return redirect(next_page) if next_page else redirect(url_for('profile'))
-
-@app.route('/debug/login-admin')
-def debug_login_admin():
-    return login_debug_user(is_admin=True)
-
-@app.route('/debug/login-user')
-def debug_login_user():
-    return login_debug_user(is_admin=False)
-
 @app.route('/verify-sms')
 def verify_sms():
     phone = request.args.get('phone')
