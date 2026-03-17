@@ -20,7 +20,6 @@ import pytz
 from dotenv import load_dotenv
 
 from send_msg import send_tg_message, send_sms_message
-from legal_content import AGREEMENT_TEXT, OFFER_TEXT, POLICY_TEXT
 from services.rooms import LegacyRoomService
 
 load_dotenv()  # This loads variables from .env into os.environ
@@ -640,21 +639,21 @@ LEGAL_PAGE_DEFAULT_BLOCKS = {
     'agreement': {
         'name': 'Пользовательское соглашение',
         'title': 'Пользовательское соглашение',
-        'body': AGREEMENT_TEXT,
+        'body': '',
         'payload': {'tab_title': 'Пользовательское соглашение', 'eyebrow': 'Документ 1'},
         'sort_order': 20,
     },
     'offer': {
         'name': 'Договор оферты',
         'title': 'Договор оферты',
-        'body': OFFER_TEXT,
+        'body': '',
         'payload': {'tab_title': 'Договор оферты', 'eyebrow': 'Документ 2'},
         'sort_order': 30,
     },
     'policy': {
         'name': 'Политика обработки персональных данных',
         'title': 'Политика обработки персональных данных',
-        'body': POLICY_TEXT,
+        'body': '',
         'payload': {'tab_title': 'Политика обработки персональных данных', 'eyebrow': 'Документ 3'},
         'sort_order': 40,
     },
@@ -801,26 +800,6 @@ CURRENT_CMS_BLOCK_SYNC = {
             'image_url': {
                 'target': '/static/site/images/gallery/photo_7.jpg',
                 'replace_if': [None, ''],
-            },
-        },
-    },
-    'legal': {
-        'agreement': {
-            'body': {
-                'target': normalize_legal_document_text(AGREEMENT_TEXT),
-                'replace_if': [AGREEMENT_TEXT],
-            },
-        },
-        'offer': {
-            'body': {
-                'target': normalize_legal_document_text(OFFER_TEXT),
-                'replace_if': [OFFER_TEXT],
-            },
-        },
-        'policy': {
-            'body': {
-                'target': normalize_legal_document_text(POLICY_TEXT),
-                'replace_if': [POLICY_TEXT],
             },
         },
     },
