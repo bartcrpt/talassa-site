@@ -7,6 +7,7 @@
 ## Что внутри
 
 - Flask + SQLAlchemy + Flask-Login
+- Celery + Redis для фоновой отправки SMS и Telegram-уведомлений
 - публичный сайт в `templates/public`
 - админка в `templates/admin`
 - личный кабинет гостя
@@ -59,6 +60,9 @@
 - `DB_PORT`
 - `SMS_API_GATEWAY`
 - `SMS_API_KEY`
+- `CELERY_BROKER_URL`
+- `CELERY_RESULT_BACKEND`
+- `NOTIFICATION_HTTP_TIMEOUT`
 
 ## Локальный запуск
 
@@ -78,6 +82,14 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 python app.py
+```
+
+### Celery worker
+
+Для отправки SMS и Telegram-уведомлений в фоне должен работать отдельный worker:
+
+```bash
+celery -A app.celery worker -l info
 ```
 
 ## uWSGI / deploy
@@ -140,6 +152,8 @@ http = 0.0.0.0:5000
 3. прописать `.env`
 4. создать рабочий `config.ini` из `config.ini.example`
 5. запустить приложение
+6. запустить Redis
+7. запустить Celery worker
 
 Для обычного запуска migration/sync-скрипты не требуются. Они нужны только если отдельно выполняется перенос пользователей и бронирований из старой рабочей базы.
 

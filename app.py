@@ -17,6 +17,7 @@ import re
 import random
 import string
 import pytz
+from celery import Celery, Task
 from dotenv import load_dotenv
 
 from send_msg import send_tg_message, send_sms_message
@@ -77,6 +78,9 @@ TELEGRAM_GROUP_ID = os.getenv('TELEGRAM_GROUP_ID')
 
 SMS_API_GATEWAY = os.getenv('SMS_API_GATEWAY')
 SMS_API_KEY = os.getenv('SMS_API_KEY')
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', CELERY_BROKER_URL)
+NOTIFICATION_HTTP_TIMEOUT = float(os.getenv('NOTIFICATION_HTTP_TIMEOUT', '10'))
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -84,6 +88,12 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{DB_USER}:{DB_PASSWORD}@{
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['CELERY'] = {
+    'broker_url': CELERY_BROKER_URL,
+    'result_backend': CELERY_RESULT_BACKEND,
+    'task_ignore_result': True,
+    'broker_connection_retry_on_startup': True,
+}
 
 # Create upload folder if it doesn't exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -92,6 +102,21 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+
+def create_celery(flask_app):
+    class FlaskTask(Task):
+        def __call__(self, *args, **kwargs):
+            with flask_app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery_app = Celery(flask_app.import_name, task_cls=FlaskTask)
+    celery_app.config_from_object(flask_app.config['CELERY'])
+    celery_app.set_default()
+    return celery_app
+
+
+celery = create_celery(app)
 
 
 def ensure_runtime_schema():
@@ -1266,7 +1291,11 @@ def generate_sms_code():
     """Генерирует 6-значный SMS код"""
     return ''.join(random.choices(string.digits, k=6))
 
-def send_code(phone, code, api_key=SMS_API_KEY, sms_api_gateway=SMS_API_GATEWAY):
+
+def build_auth_code_delivery(phone, code, api_key=SMS_API_KEY):
+    if not api_key or ':' not in api_key:
+        raise RuntimeError('SMS_API_KEY is not configured correctly')
+
     sms_login, sms_passwd = api_key.split(':')
     text_for_sms = f'Welcome to Talassa Hotel & SPA \nAccept your code: { code }'
     text_for_send_sms = (
@@ -1294,10 +1323,49 @@ def send_code(phone, code, api_key=SMS_API_KEY, sms_api_gateway=SMS_API_GATEWAY)
         ]
     }
 
-    """Отправляет SMS код (пока выводит в консоль)"""
-    app.logger.info(text_for_send_sms)
-    send_tg_message(text_for_send_sms, TELEGRAM_GROUP_ID)
-    send_sms_message(phone, sms_json, sms_api_gateway=sms_api_gateway)
+    return sms_json, text_for_send_sms
+
+
+@celery.task(
+    bind=True,
+    autoretry_for=(RuntimeError,),
+    retry_backoff=True,
+    retry_jitter=True,
+    retry_kwargs={'max_retries': 3},
+)
+def deliver_auth_code_task(self, phone, code):
+    sms_json, text_for_send_sms = build_auth_code_delivery(phone, code)
+
+    sms_sent = send_sms_message(
+        phone,
+        sms_json,
+        sms_api_gateway=SMS_API_GATEWAY,
+        timeout=NOTIFICATION_HTTP_TIMEOUT,
+    )
+    if not sms_sent:
+        raise RuntimeError(f'Failed to send SMS auth code to {phone}')
+
+    tg_sent = send_tg_message(
+        text_for_send_sms,
+        TELEGRAM_GROUP_ID,
+        timeout=NOTIFICATION_HTTP_TIMEOUT,
+    )
+    if not tg_sent:
+        app.logger.warning('Telegram notification was not delivered for phone %s', phone)
+
+    app.logger.info('Queued auth code delivered to %s', phone)
+    return {'phone': phone, 'sms_sent': sms_sent, 'tg_sent': tg_sent}
+
+
+def send_code(phone, code):
+    """Ставит отправку SMS-кода в очередь Celery."""
+    app.logger.info('Queueing SMS auth code for %s', phone)
+    try:
+        deliver_auth_code_task.delay(phone, code)
+        return True
+    except Exception:
+        app.logger.exception('Failed to queue SMS auth code for %s', phone)
+        return False
 
 
 def ensure_home_page_blocks_exist():
@@ -3459,7 +3527,11 @@ def register():
         user.sms_code_expires = datetime.utcnow() + timedelta(minutes=5)
         db.session.commit()
         # Отправка SMS (пока в консоль)
-        send_code(formatted_phone, sms_code)
+        if not send_code(formatted_phone, sms_code):
+            db.session.delete(user)
+            db.session.commit()
+            flash('Не удалось поставить отправку SMS в очередь. Попробуйте позже.', 'error')
+            return render_template('register.html')
         flash('SMS-код отправлен на ваш номер телефона для подтверждения регистрации', 'success')
         return redirect(url_for('verify_sms', phone=formatted_phone))
     return render_template('register.html')
@@ -3488,7 +3560,9 @@ def login():
 
         db.session.commit()
 
-        send_code(formatted_phone, sms_code)
+        if not send_code(formatted_phone, sms_code):
+            flash('Не удалось поставить отправку SMS в очередь. Попробуйте позже.', 'error')
+            return render_template('login.html', next_page=next_page)
 
         flash('SMS-код отправлен на ваш номер телефона', 'success')
         return redirect(url_for('verify_sms', phone=formatted_phone, next=next_page))
@@ -3523,7 +3597,10 @@ def auth_api_login():
     user.sms_code_expires = datetime.utcnow() + timedelta(minutes=5)
     db.session.commit()
 
-    send_code(formatted_phone, sms_code)
+    if not send_code(formatted_phone, sms_code):
+        db.session.delete(user)
+        db.session.commit()
+        return _json_error('Не удалось поставить отправку SMS в очередь. Попробуйте позже.', 503)
 
     return jsonify({
         'success': True,
@@ -3563,7 +3640,8 @@ def auth_api_register():
     user.sms_code_expires = datetime.utcnow() + timedelta(minutes=5)
     db.session.commit()
 
-    send_code(formatted_phone, sms_code)
+    if not send_code(formatted_phone, sms_code):
+        return _json_error('Не удалось поставить отправку SMS в очередь. Попробуйте позже.', 503)
 
     return jsonify({
         'success': True,
@@ -3687,7 +3765,9 @@ def resend_sms():
     db.session.commit()
 
     # Отправка SMS (пока в консоль)
-    send_code(phone, sms_code)
+    if not send_code(phone, sms_code):
+        flash('Не удалось поставить отправку SMS в очередь. Попробуйте позже.', 'error')
+        return render_template('verify_sms.html', phone=phone, next_page=next_page)
 
     flash('Новый SMS-код отправлен', 'success')
     return render_template('verify_sms.html', phone=phone)
