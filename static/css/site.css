@@ -5475,6 +5475,13 @@ body.is-modal-open {
   position: fixed;
   inset: 0;
   z-index: 82;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .booking-room-modal__backdrop {
@@ -5486,12 +5493,16 @@ body.is-modal-open {
 .booking-room-modal__dialog {
   position: relative;
   z-index: 1;
-  width: min(1080px, calc(100% - 40px));
-  margin: 40px auto;
+  width: min(1080px, 100%);
+  margin: 0;
   padding: 28px;
   border-radius: 30px;
   background: var(--cream);
   box-shadow: 0 28px 70px rgba(36, 66, 91, 0.24);
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .booking-room-modal__close {
@@ -5506,12 +5517,19 @@ body.is-modal-open {
   color: var(--sea);
   font-size: 28px;
   cursor: pointer;
+  z-index: 2;
 }
 
 .booking-room-modal__grid {
   display: grid;
   grid-template-columns: minmax(0, 1.02fr) minmax(360px, 0.98fr);
   gap: 28px;
+  align-items: start;
+}
+
+.booking-room-modal__media,
+.booking-room-modal__content {
+  min-width: 0;
 }
 
 .booking-room-modal__main-image-wrap {
@@ -5574,6 +5592,7 @@ body.is-modal-open {
 
 .booking-room-modal__content h2 {
   margin: 0;
+  padding-right: 56px;
 }
 
 .booking-room-modal__description {
@@ -5655,11 +5674,25 @@ body.is-modal-open {
   margin-top: 26px;
 }
 
+.booking-room-modal__footer {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.booking-room-modal__dismiss {
+  min-width: 180px;
+}
+
 @media (max-width: 980px) {
+  .booking-room-modal {
+    padding: 12px;
+  }
+
   .booking-room-modal__dialog {
-    width: min(100%, calc(100% - 24px));
-    margin: 20px auto;
-    padding: 22px;
+    width: 100%;
+    padding: 20px;
+    max-height: calc(100dvh - 24px);
   }
 
   .booking-room-modal__grid {
@@ -5668,6 +5701,46 @@ body.is-modal-open {
 
   .booking-room-modal__facts {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .booking-room-modal {
+    padding: 10px;
+  }
+
+  .booking-room-modal__dialog {
+    padding: 18px 16px 16px;
+    border-radius: 24px;
+    max-height: calc(100dvh - 20px);
+  }
+
+  .booking-room-modal__close {
+    top: 12px;
+    right: 12px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .booking-room-modal__thumbs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .booking-room-modal__content h2 {
+    padding-right: 44px;
+  }
+
+  .booking-room-modal__footer {
+    position: sticky;
+    bottom: -16px;
+    margin-top: 20px;
+    padding-top: 12px;
+    padding-bottom: 2px;
+    background: linear-gradient(180deg, rgba(243, 239, 230, 0), rgba(243, 239, 230, 0.96) 28%, var(--cream) 100%);
+  }
+
+  .booking-room-modal__dismiss {
+    width: 100%;
   }
 }
 
@@ -6448,4 +6521,5 @@ body.is-modal-open {
     font-size: 26px;
   }
 }
+
 

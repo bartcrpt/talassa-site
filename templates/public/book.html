@@ -359,6 +359,11 @@
                     <h3>Удобства</h3>
                     <div class="booking-room-modal__amenities" data-booking-room-amenities></div>
                 </div>
+                <div class="booking-room-modal__footer">
+                    <button type="button" class="site-btn site-btn--secondary booking-room-modal__dismiss" data-booking-room-close>
+                        Закрыть окно
+                    </button>
+                </div>
 </div>
         </div>
     </div>
@@ -750,7 +755,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     modal.addEventListener('click', function (event) {
-        if (event.target.matches('[data-booking-room-close]')) {
+        if (event.target.matches('[data-booking-room-close]') || event.target.closest('[data-booking-room-close]')) {
             closeModal();
         }
     });
@@ -763,6 +768,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 {% endblock %}
+
 
 
 
