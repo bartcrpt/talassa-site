@@ -4159,11 +4159,13 @@ def admin_bookings():
         filter_start_raw = filter_start.isoformat()
         filter_end_raw = filter_end.isoformat()
 
+    filter_end_exclusive = filter_end + timedelta(days=1) if filter_end else None
+
     bookings_query = Booking.query
     if filter_start:
-        bookings_query = bookings_query.filter(Booking.check_in >= filter_start)
-    if filter_end:
-        bookings_query = bookings_query.filter(Booking.check_in <= filter_end)
+        bookings_query = bookings_query.filter(Booking.check_out > filter_start)
+    if filter_end_exclusive:
+        bookings_query = bookings_query.filter(Booking.check_in < filter_end_exclusive)
 
     bookings = bookings_query.order_by(Booking.created_at.desc()).all()
 
@@ -4171,13 +4173,25 @@ def admin_bookings():
         Booking.status.in_(tuple(ADMIN_OCCUPANCY_ACTIVE_STATUSES))
     )
     if filter_start:
-        active_bookings_query = active_bookings_query.filter(Booking.check_in >= filter_start)
-    if filter_end:
-        active_bookings_query = active_bookings_query.filter(Booking.check_in <= filter_end)
+        active_bookings_query = active_bookings_query.filter(Booking.check_out > filter_start)
+    if filter_end_exclusive:
+        active_bookings_query = active_bookings_query.filter(Booking.check_in < filter_end_exclusive)
 
     active_bookings = active_bookings_query.order_by(Booking.check_in.asc(), Booking.id.asc()).all()
     active_bookings_count = len(active_bookings)
-    active_bookings_nights = sum(max((booking.check_out - booking.check_in).days, 0) for booking in active_bookings)
+
+    def get_booking_nights_in_selected_period(booking):
+        overlap_start = booking.check_in
+        overlap_end = booking.check_out
+
+        if filter_start and overlap_start < filter_start:
+            overlap_start = filter_start
+        if filter_end_exclusive and overlap_end > filter_end_exclusive:
+            overlap_end = filter_end_exclusive
+
+        return max((overlap_end - overlap_start).days, 0)
+
+    active_bookings_nights = sum(get_booking_nights_in_selected_period(booking) for booking in active_bookings)
 
     return render_template(
         'admin/bookings.html',

@@ -26,14 +26,14 @@
                 <section class="admin-panel-card mb-4">
                     <div class="admin-panel-card__header">
                         <div>
-                            <p class="admin-panel-card__eyebrow">Статистика по заезду</p>
+                            <p class="admin-panel-card__eyebrow">Статистика по периоду проживания</p>
                             <h2>Активные бронирования</h2>
                         </div>
                     </div>
 
                     <form method="GET" action="{{ url_for('admin_bookings') }}" class="row g-3 align-items-end mb-4">
                         <div class="col-12 col-md-4">
-                            <label for="check_in_from" class="form-label">Заезд с</label>
+                            <label for="check_in_from" class="form-label">Период с</label>
                             <input
                                 type="date"
                                 id="check_in_from"
@@ -43,7 +43,7 @@
                             >
                         </div>
                         <div class="col-12 col-md-4">
-                            <label for="check_in_to" class="form-label">Заезд по</label>
+                            <label for="check_in_to" class="form-label">Период по</label>
                             <input
                                 type="date"
                                 id="check_in_to"
