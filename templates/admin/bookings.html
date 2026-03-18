@@ -51,11 +51,13 @@
                                 value="{{ check_in_to }}"
                                 class="form-control"
                             >
-                            <div class="form-text">Дата выезда не включается: считаются только ночи до этой даты.</div>
                         </div>
                         <div class="col-12 col-md-4 d-flex gap-2">
                             <button type="submit" class="btn btn-primary admin-btn">Показать</button>
                             <a href="{{ url_for('admin_bookings') }}" class="btn btn-outline-secondary admin-btn">Сбросить</a>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-text mt-1">Дата выезда не включается: считаются только ночи до этой даты.</div>
                         </div>
                     </form>
 
