@@ -24,6 +24,7 @@ python-dotenv==1.1.1
 pytz==2025.2
 requests==2.32.5
 SQLAlchemy==2.0.43
+Telethon==1.42.0
 tomli==2.3.0
 tools==1.0.21
 typing_extensions==4.15.0

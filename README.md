@@ -53,7 +53,13 @@
 - `UPLOAD_FOLDER`
 - `TELEGRAM_TOKEN`
 - `TELEGRAM_GROUP_ID`
-- `TELEGRAM_PROXY_URL` - опционально, если с VPS нет прямого доступа к `api.telegram.org`
+- `TELEGRAM_API_ID` - обязателен для MTProto-отправки через Telethon
+- `TELEGRAM_API_HASH` - обязателен для MTProto-отправки через Telethon
+- `TELEGRAM_MTPROXY_HOST` - опционально, если Telegram с VPS доступен только через MTProto proxy
+- `TELEGRAM_MTPROXY_PORT`
+- `TELEGRAM_MTPROXY_SECRET`
+- `TELEGRAM_SESSION_NAME` - имя session-файла Telethon
+- `TELEGRAM_PROXY_URL` - legacy fallback для Bot API, если MTProto не используется
 - `DB_USER`
 - `DB_PASSWORD`
 - `DB_NAME`
@@ -93,11 +99,17 @@ python app.py
 celery -A app.celery worker -l info
 ```
 
-Если Telegram API недоступен напрямую с VPS, можно пустить только Telegram-запросы через HTTP/HTTPS proxy:
+Если Telegram Bot API недоступен напрямую с VPS, но MTProto доступен, Telegram-уведомления можно отправлять через Telethon:
 
 ```env
-TELEGRAM_PROXY_URL='http://proxy-host:8080'
+TELEGRAM_API_ID='12345678'
+TELEGRAM_API_HASH='0123456789abcdef0123456789abcdef'
+TELEGRAM_MTPROXY_HOST='mtproxy-host'
+TELEGRAM_MTPROXY_PORT='443'
+TELEGRAM_MTPROXY_SECRET='dddddddddddddddddddddddddddddddd'
 ```
+
+Если MTProto не используется, сохранён fallback на старую отправку через Bot API и `TELEGRAM_PROXY_URL`.
 
 Обычно для этого нужен локальный Redis:
 
