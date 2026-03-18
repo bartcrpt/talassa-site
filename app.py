@@ -4133,8 +4133,61 @@ def admin_add_category():
 def admin_bookings():
     if not current_user.is_admin:
         abort(403)
-    bookings = Booking.query.order_by(Booking.created_at.desc()).all()
-    return render_template('admin/bookings.html', bookings=bookings)
+
+    filter_start_raw = (request.args.get('check_in_from') or '').strip()
+    filter_end_raw = (request.args.get('check_in_to') or '').strip()
+
+    filter_start = None
+    filter_end = None
+
+    if filter_start_raw:
+        try:
+            filter_start = datetime.strptime(filter_start_raw, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Дата начала фильтра указана некорректно.', 'error')
+            filter_start_raw = ''
+
+    if filter_end_raw:
+        try:
+            filter_end = datetime.strptime(filter_end_raw, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Дата конца фильтра указана некорректно.', 'error')
+            filter_end_raw = ''
+
+    if filter_start and filter_end and filter_start > filter_end:
+        filter_start, filter_end = filter_end, filter_start
+        filter_start_raw = filter_start.isoformat()
+        filter_end_raw = filter_end.isoformat()
+
+    bookings_query = Booking.query
+    if filter_start:
+        bookings_query = bookings_query.filter(Booking.check_in >= filter_start)
+    if filter_end:
+        bookings_query = bookings_query.filter(Booking.check_in <= filter_end)
+
+    bookings = bookings_query.order_by(Booking.created_at.desc()).all()
+
+    active_bookings_query = Booking.query.filter(
+        Booking.status.in_(tuple(ADMIN_OCCUPANCY_ACTIVE_STATUSES))
+    )
+    if filter_start:
+        active_bookings_query = active_bookings_query.filter(Booking.check_in >= filter_start)
+    if filter_end:
+        active_bookings_query = active_bookings_query.filter(Booking.check_in <= filter_end)
+
+    active_bookings = active_bookings_query.order_by(Booking.check_in.asc(), Booking.id.asc()).all()
+    active_bookings_count = len(active_bookings)
+    active_bookings_nights = sum(max((booking.check_out - booking.check_in).days, 0) for booking in active_bookings)
+
+    return render_template(
+        'admin/bookings.html',
+        bookings=bookings,
+        check_in_from=filter_start_raw,
+        check_in_to=filter_end_raw,
+        active_bookings_count=active_bookings_count,
+        active_bookings_nights=active_bookings_nights,
+        filtered_bookings_count=len(bookings),
+    )
 
 
 @app.route('/admin/occupancy')

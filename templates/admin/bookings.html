@@ -23,6 +23,66 @@
                     </div>
                 </div>
 
+                <section class="admin-panel-card mb-4">
+                    <div class="admin-panel-card__header">
+                        <div>
+                            <p class="admin-panel-card__eyebrow">Статистика по заезду</p>
+                            <h2>Активные бронирования</h2>
+                        </div>
+                    </div>
+
+                    <form method="GET" action="{{ url_for('admin_bookings') }}" class="row g-3 align-items-end mb-4">
+                        <div class="col-12 col-md-4">
+                            <label for="check_in_from" class="form-label">Заезд с</label>
+                            <input
+                                type="date"
+                                id="check_in_from"
+                                name="check_in_from"
+                                value="{{ check_in_from }}"
+                                class="form-control"
+                            >
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label for="check_in_to" class="form-label">Заезд по</label>
+                            <input
+                                type="date"
+                                id="check_in_to"
+                                name="check_in_to"
+                                value="{{ check_in_to }}"
+                                class="form-control"
+                            >
+                        </div>
+                        <div class="col-12 col-md-4 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary admin-btn">Показать</button>
+                            <a href="{{ url_for('admin_bookings') }}" class="btn btn-outline-secondary admin-btn">Сбросить</a>
+                        </div>
+                    </form>
+
+                    <div class="admin-stats-grid mb-0">
+                        <article class="admin-stat-card">
+                            <span class="admin-stat-card__icon"><i class="bi bi-calendar-check"></i></span>
+                            <div>
+                                <p>Активных броней</p>
+                                <strong>{{ active_bookings_count }}</strong>
+                            </div>
+                        </article>
+                        <article class="admin-stat-card">
+                            <span class="admin-stat-card__icon"><i class="bi bi-moon-stars"></i></span>
+                            <div>
+                                <p>Суммарно ночей</p>
+                                <strong>{{ active_bookings_nights }}</strong>
+                            </div>
+                        </article>
+                        <article class="admin-stat-card">
+                            <span class="admin-stat-card__icon"><i class="bi bi-list-check"></i></span>
+                            <div>
+                                <p>Записей в таблице</p>
+                                <strong>{{ filtered_bookings_count }}</strong>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+
                 <section class="admin-panel-card admin-panel-card--table">
                     {% if bookings %}
                     <div class="admin-table-wrap">
