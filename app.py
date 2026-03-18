@@ -1345,16 +1345,56 @@ def deliver_auth_code_task(self, phone, code):
     if not sms_sent:
         raise RuntimeError(f'Failed to send SMS auth code to {phone}')
 
-    tg_sent = send_tg_message(
+    tg_sent = queue_telegram_message(
         text_for_send_sms,
+        reason=f'auth code for {phone}',
+    )
+    if not tg_sent:
+        app.logger.warning('Telegram notification was not queued for phone %s', phone)
+
+    app.logger.info('Queued auth code delivered to %s', phone)
+    return {'phone': phone, 'sms_sent': sms_sent, 'tg_sent': tg_sent}
+
+
+@celery.task(
+    bind=True,
+    autoretry_for=(RuntimeError,),
+    retry_backoff=True,
+    retry_jitter=True,
+    retry_kwargs={'max_retries': 5},
+)
+def deliver_telegram_message_task(self, message, reason='notification'):
+    if not TELEGRAM_GROUP_ID:
+        raise RuntimeError('TELEGRAM_GROUP_ID is not configured')
+
+    tg_sent = send_tg_message(
+        message,
         TELEGRAM_GROUP_ID,
         timeout=NOTIFICATION_HTTP_TIMEOUT,
     )
     if not tg_sent:
-        app.logger.warning('Telegram notification was not delivered for phone %s', phone)
+        raise RuntimeError(f'Failed to send Telegram {reason}')
 
-    app.logger.info('Queued auth code delivered to %s', phone)
-    return {'phone': phone, 'sms_sent': sms_sent, 'tg_sent': tg_sent}
+    app.logger.info('Telegram %s delivered successfully', reason)
+    return {'reason': reason, 'tg_sent': tg_sent}
+
+
+def queue_telegram_message(message, reason='notification'):
+    if not TELEGRAM_TOKEN:
+        app.logger.warning('TELEGRAM_TOKEN is not configured, Telegram %s skipped', reason)
+        return False
+
+    if not TELEGRAM_GROUP_ID:
+        app.logger.warning('TELEGRAM_GROUP_ID is not configured, Telegram %s skipped', reason)
+        return False
+
+    app.logger.info('Queueing Telegram %s', reason)
+    try:
+        deliver_telegram_message_task.delay(message, reason)
+        return True
+    except Exception:
+        app.logger.exception('Failed to queue Telegram %s', reason)
+        return False
 
 
 def send_code(phone, code):
@@ -2081,9 +2121,9 @@ def notify_booking_via_telegram(message):
         return False
 
     try:
-        return send_tg_message(message, TELEGRAM_GROUP_ID)
+        return queue_telegram_message(message, reason='booking notification')
     except Exception:
-        app.logger.exception("Failed to send Telegram booking notification")
+        app.logger.exception("Failed to queue Telegram booking notification")
         return False
 
 def find_two_room_guest_split(room_a, room_b, adults, children):
