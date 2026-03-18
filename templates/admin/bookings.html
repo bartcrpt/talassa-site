@@ -32,6 +32,7 @@
                         background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, var(--booking-filter-cream) 100%);
                         box-shadow: 0 16px 40px rgba(49, 78, 111, 0.08);
                         cursor: pointer;
+                        user-select: none;
                         transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
                     }
 
@@ -80,6 +81,7 @@
                         height: 100%;
                         opacity: 0;
                         cursor: pointer;
+                        z-index: 2;
                     }
 
                     .admin-bookings-filter__hint {
@@ -119,7 +121,7 @@
 
                     <form method="GET" action="{{ url_for('admin_bookings') }}" class="row g-3 align-items-end mb-4 admin-bookings-filter">
                         <div class="col-12 col-md-4">
-                            <label for="check_in_from" class="admin-bookings-date-field">
+                            <label for="check_in_from" class="admin-bookings-date-field" data-period-trigger="from" tabindex="0" role="button" aria-label="Выбрать дату начала периода">
                                 <span class="admin-bookings-date-field__label">Период с</span>
                                 <strong class="admin-bookings-date-field__value is-placeholder" data-period-label="from">Выберите дату</strong>
                                 <span class="admin-bookings-date-field__icon"><i class="bi bi-calendar3"></i></span>
@@ -134,7 +136,7 @@
                             </label>
                         </div>
                         <div class="col-12 col-md-4">
-                            <label for="check_in_to" class="admin-bookings-date-field">
+                            <label for="check_in_to" class="admin-bookings-date-field" data-period-trigger="to" tabindex="0" role="button" aria-label="Выбрать дату конца периода">
                                 <span class="admin-bookings-date-field__label">Период по</span>
                                 <strong class="admin-bookings-date-field__value is-placeholder" data-period-label="to">Выберите дату</strong>
                                 <span class="admin-bookings-date-field__icon"><i class="bi bi-calendar3"></i></span>
@@ -261,8 +263,10 @@
         const toInput = document.querySelector('[data-period-input="to"]');
         const fromLabel = document.querySelector('[data-period-label="from"]');
         const toLabel = document.querySelector('[data-period-label="to"]');
+        const fromTrigger = document.querySelector('[data-period-trigger="from"]');
+        const toTrigger = document.querySelector('[data-period-trigger="to"]');
 
-        if (!fromInput || !toInput || !fromLabel || !toLabel) {
+        if (!fromInput || !toInput || !fromLabel || !toLabel || !fromTrigger || !toTrigger) {
             return;
         }
 
@@ -336,12 +340,44 @@
             renderLabel(toInput, toLabel, 'Выберите дату');
         }
 
+        function openPicker(input) {
+            if (typeof input.showPicker === 'function') {
+                input.showPicker();
+                return;
+            }
+
+            input.focus();
+            input.click();
+        }
+
+        function bindPickerTrigger(trigger, input) {
+            trigger.addEventListener('click', function(event) {
+                if (event.target === input) {
+                    return;
+                }
+
+                event.preventDefault();
+                openPicker(input);
+            });
+
+            trigger.addEventListener('keydown', function(event) {
+                if (event.key !== 'Enter' && event.key !== ' ') {
+                    return;
+                }
+
+                event.preventDefault();
+                openPicker(input);
+            });
+        }
+
         renderLabel(fromInput, fromLabel, 'Выберите дату');
         renderLabel(toInput, toLabel, 'Выберите дату');
         if (!toInput.value) {
             toInput.dataset.autofilled = 'true';
         }
         syncEndPeriodFromStart();
+        bindPickerTrigger(fromTrigger, fromInput);
+        bindPickerTrigger(toTrigger, toInput);
 
         fromInput.addEventListener('change', function() {
             renderLabel(fromInput, fromLabel, 'Выберите дату');
