@@ -53,6 +53,7 @@
 - `UPLOAD_FOLDER`
 - `TELEGRAM_TOKEN`
 - `TELEGRAM_GROUP_ID`
+- `TELEGRAM_PROXY_URL` - опционально, если с VPS нет прямого доступа к `api.telegram.org`
 - `DB_USER`
 - `DB_PASSWORD`
 - `DB_NAME`
@@ -90,6 +91,12 @@ python app.py
 
 ```bash
 celery -A app.celery worker -l info
+```
+
+Если Telegram API недоступен напрямую с VPS, можно пустить только Telegram-запросы через HTTP/HTTPS proxy:
+
+```env
+TELEGRAM_PROXY_URL='http://proxy-host:8080'
 ```
 
 Обычно для этого нужен локальный Redis:

@@ -9,6 +9,7 @@ load_dotenv()
 
 # # Загрузка токена и ID группы из .env
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+TELEGRAM_PROXY_URL = os.getenv('TELEGRAM_PROXY_URL')
 
 
 # TELEGRAM_GROUP_ID = os.getenv('TELEGRAM_GROUP_ID')
@@ -34,9 +35,20 @@ def send_tg_message(message, tg_group_id, timeout=10):
         "chat_id": tg_group_id,
         "text": message
     }
+    proxies = None
+    if TELEGRAM_PROXY_URL:
+        proxies = {
+            "http": TELEGRAM_PROXY_URL,
+            "https": TELEGRAM_PROXY_URL,
+        }
 
     try:
-        response = requests.post(telegram_api_url, json=payload, timeout=timeout)
+        response = requests.post(
+            telegram_api_url,
+            json=payload,
+            timeout=timeout,
+            proxies=proxies,
+        )
         if response.status_code == 200:
             logging.info("Сообщение отправлено успешно")
             return True
