@@ -142,11 +142,23 @@ function initSiteLightbox() {
     });
   });
 
-  closeButton.addEventListener('click', close);
-  prevButton.addEventListener('click', () => move(-1));
-  nextButton.addEventListener('click', () => move(1));
+  closeButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    close();
+  });
+  prevButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    move(-1);
+  });
+  nextButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    move(1);
+  });
   root.addEventListener('click', (event) => {
-    if (event.target === root) {
+    if (event.target === root || event.target.closest('[data-site-lightbox-close]')) {
       close();
     }
   });
