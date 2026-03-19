@@ -3,13 +3,14 @@ import logging
 from audioop import minmax
 
 #from Tools.scripts.make_ctype import method
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, abort, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, abort, send_from_directory, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from sqlalchemy import case, cast, Integer, inspect, text
 # from sqlalchemy.testing.util import total_size
 from werkzeug.utils import secure_filename
 from datetime import datetime, date, timedelta
+from io import BytesIO
 import os
 import uuid
 from PIL import Image
@@ -19,6 +20,8 @@ import string
 import pytz
 from celery import Celery, Task
 from dotenv import load_dotenv
+from openpyxl import Workbook
+from openpyxl.styles import Font
 
 from send_msg import send_tg_message, send_sms_message
 from services.rooms import LegacyRoomService
@@ -2558,6 +2561,65 @@ MONTH_LABELS_RU_GENITIVE = (
 MONTH_LABELS_RU_SHORT = ('янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек')
 
 
+def parse_admin_bookings_filters():
+    filter_start_raw = (request.args.get('check_in_from') or '').strip()
+    filter_end_raw = (request.args.get('check_in_to') or '').strip()
+    room_number_raw = (request.args.get('room_number') or '').strip()
+
+    filter_start = None
+    filter_end = None
+
+    if filter_start_raw:
+        try:
+            filter_start = datetime.strptime(filter_start_raw, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Дата начала фильтра указана некорректно.', 'error')
+            filter_start_raw = ''
+
+    if filter_end_raw:
+        try:
+            filter_end = datetime.strptime(filter_end_raw, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Дата конца фильтра указана некорректно.', 'error')
+            filter_end_raw = ''
+
+    if filter_start and filter_end and filter_start > filter_end:
+        filter_start, filter_end = filter_end, filter_start
+        filter_start_raw = filter_start.isoformat()
+        filter_end_raw = filter_end.isoformat()
+
+    return {
+        'filter_start_raw': filter_start_raw,
+        'filter_end_raw': filter_end_raw,
+        'room_number_raw': room_number_raw,
+        'filter_start': filter_start,
+        'filter_end': filter_end,
+    }
+
+
+def build_admin_bookings_query(filter_start=None, filter_end=None, room_number=None):
+    query = Booking.query.join(Room).join(User)
+    if filter_start:
+        query = query.filter(Booking.check_out > filter_start)
+    if filter_end:
+        query = query.filter(Booking.check_in < filter_end)
+    if room_number:
+        query = query.filter(Room.number == room_number)
+    return query
+
+
+def get_booking_nights_in_selected_period(booking, filter_start=None, filter_end=None):
+    overlap_start = booking.check_in
+    overlap_end = booking.check_out
+
+    if filter_start and overlap_start < filter_start:
+        overlap_start = filter_start
+    if filter_end and overlap_end > filter_end:
+        overlap_end = filter_end
+
+    return max((overlap_end - overlap_start).days, 0)
+
+
 def parse_admin_occupancy_start(raw_value):
     if not raw_value:
         return get_moscow_date()
@@ -4174,71 +4236,132 @@ def admin_bookings():
     if not current_user.is_admin:
         abort(403)
 
-    filter_start_raw = (request.args.get('check_in_from') or '').strip()
-    filter_end_raw = (request.args.get('check_in_to') or '').strip()
+    filters = parse_admin_bookings_filters()
+    filter_start_raw = filters['filter_start_raw']
+    filter_end_raw = filters['filter_end_raw']
+    room_number_raw = filters['room_number_raw']
+    filter_start = filters['filter_start']
+    filter_end = filters['filter_end']
 
-    filter_start = None
-    filter_end = None
-
-    if filter_start_raw:
-        try:
-            filter_start = datetime.strptime(filter_start_raw, '%Y-%m-%d').date()
-        except ValueError:
-            flash('Дата начала фильтра указана некорректно.', 'error')
-            filter_start_raw = ''
-
-    if filter_end_raw:
-        try:
-            filter_end = datetime.strptime(filter_end_raw, '%Y-%m-%d').date()
-        except ValueError:
-            flash('Дата конца фильтра указана некорректно.', 'error')
-            filter_end_raw = ''
-
-    if filter_start and filter_end and filter_start > filter_end:
-        filter_start, filter_end = filter_end, filter_start
-        filter_start_raw = filter_start.isoformat()
-        filter_end_raw = filter_end.isoformat()
-
-    bookings_query = Booking.query
-    if filter_start:
-        bookings_query = bookings_query.filter(Booking.check_out > filter_start)
-    if filter_end:
-        bookings_query = bookings_query.filter(Booking.check_in < filter_end)
-
+    bookings_query = build_admin_bookings_query(
+        filter_start=filter_start,
+        filter_end=filter_end,
+        room_number=room_number_raw or None,
+    )
     bookings = bookings_query.order_by(Booking.created_at.desc()).all()
 
-    active_bookings_query = Booking.query.filter(
+    active_bookings_query = build_admin_bookings_query(
+        filter_start=filter_start,
+        filter_end=filter_end,
+        room_number=room_number_raw or None,
+    ).filter(
         Booking.status.in_(tuple(ADMIN_OCCUPANCY_ACTIVE_STATUSES))
     )
-    if filter_start:
-        active_bookings_query = active_bookings_query.filter(Booking.check_out > filter_start)
-    if filter_end:
-        active_bookings_query = active_bookings_query.filter(Booking.check_in < filter_end)
 
     active_bookings = active_bookings_query.order_by(Booking.check_in.asc(), Booking.id.asc()).all()
     active_bookings_count = len(active_bookings)
 
-    def get_booking_nights_in_selected_period(booking):
-        overlap_start = booking.check_in
-        overlap_end = booking.check_out
-
-        if filter_start and overlap_start < filter_start:
-            overlap_start = filter_start
-        if filter_end and overlap_end > filter_end:
-            overlap_end = filter_end
-
-        return max((overlap_end - overlap_start).days, 0)
-
-    active_bookings_nights = sum(get_booking_nights_in_selected_period(booking) for booking in active_bookings)
+    active_bookings_nights = sum(
+        get_booking_nights_in_selected_period(booking, filter_start, filter_end)
+        for booking in active_bookings
+    )
+    room_numbers = [number for number, in db.session.query(Room.number).order_by(Room.number.asc()).all()]
 
     return render_template(
         'admin/bookings.html',
         bookings=bookings,
         check_in_from=filter_start_raw,
         check_in_to=filter_end_raw,
+        room_number=room_number_raw,
+        room_numbers=room_numbers,
         active_bookings_count=active_bookings_count,
         active_bookings_nights=active_bookings_nights,
         filtered_bookings_count=len(bookings),
+    )
+
+
+@app.route('/admin/bookings/export')
+@login_required
+def admin_bookings_export():
+    if not current_user.is_admin:
+        abort(403)
+
+    filters = parse_admin_bookings_filters()
+    filter_start_raw = filters['filter_start_raw']
+    filter_end_raw = filters['filter_end_raw']
+    room_number_raw = filters['room_number_raw']
+    filter_start = filters['filter_start']
+    filter_end = filters['filter_end']
+
+    bookings = (
+        build_admin_bookings_query(
+            filter_start=filter_start,
+            filter_end=filter_end,
+            room_number=room_number_raw or None,
+        )
+        .order_by(Room.number.asc(), Booking.check_in.asc(), Booking.id.asc())
+        .all()
+    )
+
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = 'Бронирования'
+
+    headers = [
+        'Физический номер',
+        'Вид номера',
+        'Даты бронирования',
+        'Количество ночей',
+        'Количество взрослых',
+        'Количество детей',
+        'Номер телефона гостя',
+    ]
+    worksheet.append(headers)
+    for cell in worksheet[1]:
+        cell.font = Font(bold=True)
+
+    for booking in bookings:
+        total_children = (booking.children or 0) + (booking.children_under_five or 0)
+        worksheet.append([
+            booking.room.number,
+            get_room_display_name(booking.room),
+            f'{booking.check_in.strftime("%d.%m.%Y")} - {booking.check_out.strftime("%d.%m.%Y")}',
+            get_booking_nights_in_selected_period(booking, filter_start, filter_end),
+            booking.adults or booking.guests or 0,
+            total_children,
+            booking.user.phone or '',
+        ])
+
+    column_widths = {
+        'A': 18,
+        'B': 38,
+        'C': 28,
+        'D': 18,
+        'E': 22,
+        'F': 18,
+        'G': 22,
+    }
+    for column_name, width in column_widths.items():
+        worksheet.column_dimensions[column_name].width = width
+
+    output = BytesIO()
+    workbook.save(output)
+    output.seek(0)
+
+    filename_parts = ['bookings']
+    if filter_start_raw:
+        filename_parts.append(f'from_{filter_start_raw}')
+    if filter_end_raw:
+        filename_parts.append(f'to_{filter_end_raw}')
+    if room_number_raw:
+        filename_parts.append(f'room_{room_number_raw}')
+    filename = '_'.join(filename_parts) + '.xlsx'
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     )
 
 
