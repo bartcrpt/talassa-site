@@ -1242,18 +1242,14 @@ def is_room_available(room_id, check_in, check_out, exclude_booking_id=None):
 
 
 def get_admin_booking_room_options(booking):
-    room_type_slug = legacy_room_service.get_room_type_slug(booking.room)
     candidate_rooms_query = Room.query
-
-    if room_type_slug:
-        candidate_rooms_query = candidate_rooms_query.filter(Room.room_type_slug == room_type_slug)
-    else:
-        candidate_rooms_query = candidate_rooms_query.filter(Room.id == booking.room_id)
-
     candidate_rooms = candidate_rooms_query.order_by(Room.number.asc()).all()
     available_rooms = []
+    required_capacity = max(booking.guests or 0, (booking.adults or 0) + (booking.children or 0) + (booking.children_under_five or 0))
 
     for room in candidate_rooms:
+        if room.id != booking.room_id and get_room_max_capacity(room) < required_capacity:
+            continue
         if room.id == booking.room_id or is_room_available(
             room.id,
             booking.check_in,
@@ -4481,7 +4477,7 @@ def admin_edit_booking(booking_id):
         allowed_room_ids = {room.id for room in available_room_options}
 
         if selected_room_id not in allowed_room_ids:
-            flash('Можно выбрать только свободный физический номер того же вида.', 'error')
+            flash('Можно выбрать только свободный физический номер, подходящий по вместимости.', 'error')
             return render_template(
                 'admin/edit_booking.html',
                 booking=booking,
@@ -4503,7 +4499,27 @@ def admin_edit_booking(booking_id):
                 selected_room_id=selected_room_id,
             )
 
+        selected_room = next((room for room in available_room_options if room.id == selected_room_id), None)
+        if not selected_room:
+            flash('Не удалось определить выбранный номер. Обновите страницу и попробуйте снова.', 'error')
+            return render_template(
+                'admin/edit_booking.html',
+                booking=booking,
+                available_room_options=available_room_options,
+                selected_room_id=selected_room_id,
+            )
+
+        total_info = calculate_room_total_price(
+            selected_room,
+            booking.check_in,
+            booking.check_out,
+            booking.adults or booking.guests or 0,
+            booking.children or 0,
+            booking.children_under_five or 0,
+        )
+
         booking.room_id = selected_room_id
+        booking.total_price = total_info['total']
         booking.status = request.form['status']
         booking.special_requests = request.form.get('special_requests', '')
 

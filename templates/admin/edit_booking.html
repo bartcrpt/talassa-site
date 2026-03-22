@@ -54,12 +54,12 @@
                                     <select class="form-select" id="room_id" name="room_id" required>
                                         {% for room_option in available_room_options %}
                                         <option value="{{ room_option.id }}" {{ 'selected' if room_option.id == selected_room_id }}>
-                                            № {{ room_option.number }}{% if room_option.id == booking.room_id %} (текущий){% endif %}
+                                            № {{ room_option.number }} • {{ get_room_display_name(room_option) }}{% if room_option.id == booking.room_id %} (текущий){% endif %}
                                         </option>
                                         {% endfor %}
                                     </select>
                                     <div class="form-text">
-                                        Можно выбрать только свободный физический номер того же вида номера.
+                                        Можно выбрать любой свободный физический номер, который подходит по вместимости для текущего состава гостей.
                                     </div>
                                 </div>
 
