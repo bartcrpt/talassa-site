@@ -3213,8 +3213,28 @@ def book_room(room_id, got_check_in=None, got_check_out=None, got_adults=2, got_
         children = int(request.form['children'])
         children_under_five = int(request.form['children_under_five'])
         special_requests = request.form.get('special_requests', '')
+        first_name = request.form.get('first_name', '').strip()
+        last_name = request.form.get('last_name', '').strip()
+        email = request.form.get('email', '').strip()
 
         total_guests = adults + children
+
+        if not first_name:
+            flash('Пожалуйста, укажите имя.', 'error')
+            return render_booking_page(room)
+
+        if not last_name:
+            flash('Пожалуйста, укажите фамилию.', 'error')
+            return render_booking_page(room)
+
+        if email:
+            existing_user = User.query.filter(User.email == email, User.id != current_user.id).first()
+            if existing_user:
+                flash('Пользователь с таким email уже существует.', 'error')
+                return render_booking_page(room)
+            if '@' not in email or '.' not in email:
+                flash('Введите корректный email адрес.', 'error')
+                return render_booking_page(room)
 
         if check_in <= get_moscow_date():
             flash('Check-in date must be in the future', 'error')
@@ -3241,6 +3261,10 @@ def book_room(room_id, got_check_in=None, got_check_out=None, got_adults=2, got_
 
         total_info = calculate_room_total_price(room, check_in, check_out, adults, children, children_under_five)
         total_price = total_info['total']
+
+        current_user.first_name = first_name
+        current_user.last_name = last_name
+        current_user.email = email if email else None
 
         booking = Booking(
             user_id=current_user.id,
