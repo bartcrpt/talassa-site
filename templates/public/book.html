@@ -98,6 +98,7 @@
                 </label>
                 <button type="submit" class="site-btn site-btn--gold booking-widget-submit">Показать номера</button>
             </form>
+            <p class="form-text mt-3 mb-0">Минимальный срок бронирования — 3 ночи.</p>
         </div>
     </div>
 </section>
@@ -402,6 +403,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const MIN_BOOKING_NIGHTS = 3;
     const widget = document.querySelector('[data-booking-widget]');
     if (!widget) return;
 
@@ -493,7 +495,8 @@ document.addEventListener('DOMContentLoaded', function () {
         elements.checkInLabel.textContent = formatDisplay(state.checkIn);
         elements.checkOutLabel.textContent = formatDisplay(state.checkOut);
         if (state.checkIn && state.checkOut) {
-            elements.modalSelection.textContent = `${formatDisplay(state.checkIn)} - ${formatDisplay(state.checkOut)}`;
+            const nights = Math.round((state.checkOut - state.checkIn) / (24 * 60 * 60 * 1000));
+            elements.modalSelection.textContent = `${formatDisplay(state.checkIn)} - ${formatDisplay(state.checkOut)} · ${nights} ${guestWord(nights, ['ночь', 'ночи', 'ночей'])}`;
         } else if (state.checkIn) {
             elements.modalSelection.textContent = `Заезд: ${formatDisplay(state.checkIn)}`;
         } else {
@@ -512,9 +515,12 @@ document.addEventListener('DOMContentLoaded', function () {
     function openCalendar(field) {
         state.activeField = field;
         if (field === 'check_out') {
-            state.viewDate = state.checkOut || state.checkIn || minDate;
+            const minCheckout = state.checkIn
+                ? new Date(state.checkIn.getTime() + MIN_BOOKING_NIGHTS * 24 * 60 * 60 * 1000)
+                : null;
+            state.viewDate = state.checkOut || minCheckout || state.checkIn || minDate;
             elements.modalTitle.textContent = 'Выберите дату выезда';
-            elements.modalSubtitle.textContent = 'Месяц открывается по дате заезда, чтобы продолжить выбор в том же периоде.';
+            elements.modalSubtitle.textContent = `Дата выезда должна быть минимум через ${MIN_BOOKING_NIGHTS} ночи после заезда.`;
         } else {
             state.viewDate = state.checkIn || minDate;
             elements.modalTitle.textContent = 'Выберите дату заезда';
@@ -546,7 +552,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const current = new Date(start);
             current.setDate(start.getDate() + i);
             const muted = current.getMonth() !== month;
-            const disabled = isBeforeMin(current) || (state.activeField === 'check_out' && state.checkIn && current <= state.checkIn);
+            const minCheckout = state.checkIn
+                ? new Date(state.checkIn.getTime() + MIN_BOOKING_NIGHTS * 24 * 60 * 60 * 1000)
+                : null;
+            const disabled = isBeforeMin(current) || (state.activeField === 'check_out' && minCheckout && current < minCheckout);
             const selected = sameDate(current, state.activeField === 'check_out' ? state.checkOut : state.checkIn);
             const inRange = state.checkIn && state.checkOut && current > state.checkIn && current < state.checkOut;
             const classes = ['booking-calendar-grid__day'];
@@ -564,14 +573,18 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!selected) return;
         if (state.activeField === 'check_in') {
             state.checkIn = selected;
-            if (state.checkOut && state.checkOut <= selected) {
+            const minCheckout = new Date(selected.getTime() + MIN_BOOKING_NIGHTS * 24 * 60 * 60 * 1000);
+            if (state.checkOut && state.checkOut < minCheckout) {
                 state.checkOut = null;
             }
             syncDateValues();
             closeCalendar();
             return;
         }
-        if (state.checkIn && selected <= state.checkIn) return;
+        if (state.checkIn) {
+            const minCheckout = new Date(state.checkIn.getTime() + MIN_BOOKING_NIGHTS * 24 * 60 * 60 * 1000);
+            if (selected < minCheckout) return;
+        }
         state.checkOut = selected;
         syncDateValues();
         closeCalendar();
@@ -647,6 +660,20 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!event.target.closest('[data-booking-guests]')) {
             elements.guestsPanel.hidden = true;
             elements.guestsToggle.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    widget.addEventListener('submit', function (event) {
+        if (!state.checkIn || !state.checkOut) {
+            event.preventDefault();
+            alert('Пожалуйста, выберите даты заезда и выезда.');
+            return;
+        }
+
+        const nights = Math.round((state.checkOut - state.checkIn) / (24 * 60 * 60 * 1000));
+        if (nights < MIN_BOOKING_NIGHTS) {
+            event.preventDefault();
+            alert(`Минимальный срок бронирования — ${MIN_BOOKING_NIGHTS} ночи.`);
         }
     });
 
@@ -768,6 +795,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 {% endblock %}
+
 
 
 

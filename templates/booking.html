@@ -70,6 +70,7 @@
                                        value="{{ check_out or '' }}" required>
                             </div>
                         </div>
+                        <p class="form-text mb-3">Минимальный срок бронирования — 3 ночи.</p>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="first_name" class="form-label">Имя *</label>
@@ -279,6 +280,7 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const MIN_BOOKING_NIGHTS = 3;
     // Date Range Calendar
     class DateRangeCalendar {
         constructor(containerId, options = {}) {
@@ -337,7 +339,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 for (let day = 0; day < 7; day++) {
                     const dateStr = currentDate.toISOString().split('T')[0];
                     const isCurrentMonth = currentDate.getMonth() === month;
-                    const isDisabled = currentDate < this.minDate;
+                    const minCheckoutDate = this.selectedStart && !this.selectedEnd
+                        ? new Date(this.selectedStart.getTime() + (MIN_BOOKING_NIGHTS - 1) * 86400000)
+                        : null;
+                    const isDisabled = currentDate < this.minDate || (!!minCheckoutDate && currentDate < minCheckoutDate);
                     const isSelected = this.isDateSelected(currentDate);
                     const isInRange = this.isDateInRange(currentDate);
                     const isToday = this.isToday(currentDate);
@@ -411,7 +416,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.selectedStart = new Date(date.getTime() + 86400000);
             } else {
                 // Selected date is after start, make it the end
-                this.selectedEnd = new Date(date.getTime() + 86400000);
+                const minEndDate = new Date(this.selectedStart.getTime() + (MIN_BOOKING_NIGHTS - 1) * 86400000);
+                this.selectedEnd = new Date((date < minEndDate ? minEndDate : date).getTime() + 86400000);
             }
 
             this.render();
@@ -660,7 +666,7 @@ async function calculatePrice() {
         const children = parseInt(document.getElementById('booking_children').value) || 0;
         const childrenUnderFive = parseInt(document.getElementById('booking_children_under_five').value) || 0;
 
-        if (nights > 0) {
+        if (nights >= MIN_BOOKING_NIGHTS) {
             totalPriceEl.innerHTML = 'Расчёт стоимости...';
             try {
                 const response = await fetch('/calcPrice', {
@@ -705,7 +711,7 @@ async function calculatePrice() {
                 totalPriceEl.innerHTML = 'Произошла ошибка';
             }
         } else {
-            totalPriceEl.innerHTML = 'Неверные даты';
+            totalPriceEl.innerHTML = `Минимум ${MIN_BOOKING_NIGHTS} ночи`;
         }
     } else {
         totalPriceEl.innerHTML = 'Выберите даты';
@@ -884,6 +890,13 @@ function validateBookingForm(event) {
 
     if (checkInDate >= checkOutDate) {
         alert('Дата выезда должна быть позже даты заезда');
+        event.preventDefault();
+        return false;
+    }
+
+    const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+    if (nights < MIN_BOOKING_NIGHTS) {
+        alert(`Минимальный срок бронирования — ${MIN_BOOKING_NIGHTS} ночи`);
         event.preventDefault();
         return false;
     }

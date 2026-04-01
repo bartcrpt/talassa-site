@@ -2549,6 +2549,7 @@ def get_dynamic_home_blocks(blocks):
 
 ADMIN_OCCUPANCY_DAY_OPTIONS = (30, 90, 180, 365)
 ADMIN_OCCUPANCY_ACTIVE_STATUSES = {'pending', 'confirmed'}
+MIN_BOOKING_NIGHTS = 3
 WEEKDAY_LABELS_RU = ('Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс')
 MONTH_LABELS_RU_GENITIVE = (
     'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
@@ -3004,6 +3005,8 @@ def book_landing_page():
                     search_error = 'Дата заезда не может быть в прошлом.'
                 elif parsed_check_out <= parsed_check_in:
                     search_error = 'Дата выезда должна быть позже даты заезда.'
+                elif (parsed_check_out - parsed_check_in).days < MIN_BOOKING_NIGHTS:
+                    search_error = f'Минимальный срок бронирования — {MIN_BOOKING_NIGHTS} ночи.'
                 else:
                     selected_range = f'{check_in} - {check_out}'
                     available_rooms = [
@@ -3245,6 +3248,9 @@ def book_room(room_id, got_check_in=None, got_check_out=None, got_adults=2, got_
             return render_booking_page(room)
 
         stay_days = (check_out - check_in).days
+        if stay_days < MIN_BOOKING_NIGHTS:
+            flash(f'Минимальный срок бронирования — {MIN_BOOKING_NIGHTS} ночи.', 'error')
+            return render_booking_page(room)
         if stay_days > 31:
             abort(404)
 
@@ -3356,6 +3362,9 @@ def book_room_combination():
         return redirect(url_for('book_landing_page', check_in=check_in_str, check_out=check_out_str, adults=adults_a + adults_b, children=children_a + children_b, children_under_five=children_under_five))
 
     stay_days = (check_out - check_in).days
+    if stay_days < MIN_BOOKING_NIGHTS:
+        flash(f'Минимальный срок бронирования — {MIN_BOOKING_NIGHTS} ночи.', 'error')
+        return redirect(url_for('book_landing_page', check_in=check_in_str, check_out=check_out_str, adults=adults_a + adults_b, children=children_a + children_b, children_under_five=children_under_five))
     if stay_days > 31:
         abort(404)
 
