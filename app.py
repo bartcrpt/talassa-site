@@ -2114,6 +2114,33 @@ def build_booking_notification_message(user, booking_items, total_price, special
 
     return "\n".join(lines)
 
+def build_booking_cancellation_notification_message(booking):
+    lines = [
+        "Отменена бронь на сайте Таласса",
+        f"Бронь: #{booking.id}",
+        f"Гость: {get_user_display_name(booking.user)}",
+        f"Телефон: {format_phone_for_display(booking.user.phone)}",
+        f"Даты: {booking.check_in.strftime('%d.%m.%Y')} - {booking.check_out.strftime('%d.%m.%Y')}",
+    ]
+
+    if getattr(booking.user, 'email', None):
+        lines.append(f"Email: {booking.user.email}")
+
+    if booking.room:
+        lines.append(f"Номер: {get_room_display_name(booking.room)} ({booking.room.number})")
+
+    lines.append(
+        f"Гости: {booking.adults} взр."
+        + (f", {booking.children} дет." if booking.children else "")
+        + (f", {booking.children_under_five} до 5 лет" if booking.children_under_five else "")
+    )
+    lines.append(f"Стоимость: {format_price_rub(booking.total_price)}")
+
+    if booking.special_requests:
+        lines.append(f"Пожелания: {booking.special_requests}")
+
+    return "\n".join(lines)
+
 def notify_booking_via_telegram(message):
     if not TELEGRAM_GROUP_ID:
         app.logger.warning("TELEGRAM_GROUP_ID is not configured, booking notification skipped")
@@ -3927,6 +3954,7 @@ def delete_booking(booking_id):
     try:
         booking.status = "cancelled"
         db.session.commit()
+        notify_booking_via_telegram(build_booking_cancellation_notification_message(booking))
         flash('Бронирование успешно отменено!', 'success')
     except Exception as e:
         db.session.rollback()
