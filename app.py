@@ -4356,6 +4356,7 @@ def admin_bookings_export():
             filter_end=filter_end,
             room_number=room_number_raw or None,
         )
+        .filter(Booking.status.in_(tuple(ADMIN_OCCUPANCY_ACTIVE_STATUSES)))
         .order_by(Room.number.asc(), Booking.check_in.asc(), Booking.id.asc())
         .all()
     )
