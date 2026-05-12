@@ -4533,9 +4533,17 @@ def admin_edit_booking(booking_id):
     booking = Booking.query.get_or_404(booking_id)
     available_room_options = get_admin_booking_room_options(booking)
     selected_room_id = booking.room_id
+    form_check_in = booking.check_in.strftime('%Y-%m-%d')
+    form_check_out = booking.check_out.strftime('%Y-%m-%d')
+    form_status = booking.status
+    form_special_requests = booking.special_requests or ''
 
     if request.method == 'POST':
         selected_room_id = request.form.get('room_id', type=int) or booking.room_id
+        form_check_in = (request.form.get('check_in') or '').strip()
+        form_check_out = (request.form.get('check_out') or '').strip()
+        form_status = request.form.get('status', booking.status)
+        form_special_requests = request.form.get('special_requests', '')
         allowed_room_ids = {room.id for room in available_room_options}
 
         if selected_room_id not in allowed_room_ids:
@@ -4545,20 +4553,71 @@ def admin_edit_booking(booking_id):
                 booking=booking,
                 available_room_options=available_room_options,
                 selected_room_id=selected_room_id,
+                form_check_in=form_check_in,
+                form_check_out=form_check_out,
+                form_status=form_status,
+                form_special_requests=form_special_requests,
             )
 
-        if not is_room_available(
-            selected_room_id,
-            booking.check_in,
-            booking.check_out,
-            exclude_booking_id=booking.id,
-        ):
-            flash('Выбранный номер уже занят на эти даты. Обновите страницу и попробуйте снова.', 'error')
+        try:
+            new_check_in = datetime.strptime(form_check_in, '%Y-%m-%d').date()
+            new_check_out = datetime.strptime(form_check_out, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Укажите корректные даты заезда и выезда.', 'error')
             return render_template(
                 'admin/edit_booking.html',
                 booking=booking,
                 available_room_options=available_room_options,
                 selected_room_id=selected_room_id,
+                form_check_in=form_check_in,
+                form_check_out=form_check_out,
+                form_status=form_status,
+                form_special_requests=form_special_requests,
+            )
+
+        if new_check_out <= new_check_in:
+            flash('Дата выезда должна быть позже даты заезда.', 'error')
+            return render_template(
+                'admin/edit_booking.html',
+                booking=booking,
+                available_room_options=available_room_options,
+                selected_room_id=selected_room_id,
+                form_check_in=form_check_in,
+                form_check_out=form_check_out,
+                form_status=form_status,
+                form_special_requests=form_special_requests,
+            )
+
+        stay_days = (new_check_out - new_check_in).days
+        if stay_days < MIN_BOOKING_NIGHTS:
+            flash(f'Минимальный срок бронирования — {MIN_BOOKING_NIGHTS} ночи.', 'error')
+            return render_template(
+                'admin/edit_booking.html',
+                booking=booking,
+                available_room_options=available_room_options,
+                selected_room_id=selected_room_id,
+                form_check_in=form_check_in,
+                form_check_out=form_check_out,
+                form_status=form_status,
+                form_special_requests=form_special_requests,
+            )
+
+        if not is_room_available(
+            selected_room_id,
+            new_check_in,
+            new_check_out,
+            exclude_booking_id=booking.id,
+        ):
+            flash('Выбранный номер уже занят на новые выбранные даты.', 'error')
+            return render_template(
+                'admin/edit_booking.html',
+                booking=booking,
+                available_room_options=available_room_options,
+                selected_room_id=selected_room_id,
+                form_check_in=form_check_in,
+                form_check_out=form_check_out,
+                form_status=form_status,
+                form_special_requests=form_special_requests,
             )
 
         selected_room = next((room for room in available_room_options if room.id == selected_room_id), None)
@@ -4569,21 +4628,27 @@ def admin_edit_booking(booking_id):
                 booking=booking,
                 available_room_options=available_room_options,
                 selected_room_id=selected_room_id,
+                form_check_in=form_check_in,
+                form_check_out=form_check_out,
+                form_status=form_status,
+                form_special_requests=form_special_requests,
             )
 
         total_info = calculate_room_total_price(
             selected_room,
-            booking.check_in,
-            booking.check_out,
+            new_check_in,
+            new_check_out,
             booking.adults or booking.guests or 0,
             booking.children or 0,
             booking.children_under_five or 0,
         )
 
         booking.room_id = selected_room_id
+        booking.check_in = new_check_in
+        booking.check_out = new_check_out
         booking.total_price = total_info['total']
-        booking.status = request.form['status']
-        booking.special_requests = request.form.get('special_requests', '')
+        booking.status = form_status
+        booking.special_requests = form_special_requests
 
         db.session.commit()
         flash('Бронирование успешно обновлено!', 'success')
@@ -4594,6 +4659,10 @@ def admin_edit_booking(booking_id):
         booking=booking,
         available_room_options=available_room_options,
         selected_room_id=selected_room_id,
+        form_check_in=form_check_in,
+        form_check_out=form_check_out,
+        form_status=form_status,
+        form_special_requests=form_special_requests,
     )
 
 @app.route('/admin/news')

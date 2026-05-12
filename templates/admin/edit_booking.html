@@ -49,6 +49,22 @@
                             </div>
                             
                             <form method="POST">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="check_in" class="form-label">Дата заезда *</label>
+                                        <input type="date" class="form-control" id="check_in" name="check_in"
+                                               value="{{ form_check_in }}" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="check_out" class="form-label">Дата выезда *</label>
+                                        <input type="date" class="form-control" id="check_out" name="check_out"
+                                               value="{{ form_check_out }}" required>
+                                    </div>
+                                </div>
+                                <div class="form-text mb-3">
+                                    При смене дат стоимость пересчитается автоматически. Если выбранный номер занят на новый период, сохранить изменения не получится.
+                                </div>
+
                                 <div class="mb-3">
                                     <label for="room_id" class="form-label">Физический номер *</label>
                                     <select class="form-select" id="room_id" name="room_id" required>
@@ -66,17 +82,17 @@
                                 <div class="mb-3">
                                     <label for="status" class="form-label">Статус бронирования *</label>
                                     <select class="form-select" id="status" name="status" required>
-                                        <option value="confirmed" {{ 'selected' if booking.status == 'confirmed' }}>Подтверждено</option>
-                                        <option value="cancelled" {{ 'selected' if booking.status == 'cancelled' }}>Отменено</option>
-                                        <option value="completed" {{ 'selected' if booking.status == 'completed' }}>Завершено</option>
-                                        <option value="pending" {{ 'selected' if booking.status == 'pending' }}>Ожидает подтверждения</option>
+                                        <option value="confirmed" {{ 'selected' if form_status == 'confirmed' }}>Подтверждено</option>
+                                        <option value="cancelled" {{ 'selected' if form_status == 'cancelled' }}>Отменено</option>
+                                        <option value="completed" {{ 'selected' if form_status == 'completed' }}>Завершено</option>
+                                        <option value="pending" {{ 'selected' if form_status == 'pending' }}>Ожидает подтверждения</option>
                                     </select>
                                 </div>
                                 
                                 <div class="mb-3">
                                     <label for="special_requests" class="form-label">Особые пожелания</label>
                                     <textarea class="form-control wysiwyg-editor-simple" id="special_requests" name="special_requests" 
-                                              rows="4" placeholder="Особые пожелания гостя...">{{ booking.special_requests or '' }}</textarea>
+                                              rows="4" placeholder="Особые пожелания гостя...">{{ form_special_requests }}</textarea>
                                 </div>
                                 
                                 <div class="card bg-light mb-3">
