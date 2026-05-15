@@ -4063,6 +4063,8 @@ def admin_rooms():
         room.display_name = get_room_display_name(room)
         room.display_category = get_room_display_category(room)
         room.preview_payload = build_booking_result_data(room, total_info=None, book_url='').get('preview_payload')
+        room.photo_count = len(room.photos) if room.photos else len(get_room_photo_items(room))
+        room.uses_default_photos = not bool(room.photos) and room.photo_count > 0
 
     return render_template('admin/rooms.html', rooms=rooms)
 
@@ -4158,6 +4160,9 @@ def admin_room_photos(room_id):
         abort(403)
 
     room = Room.query.get_or_404(room_id)
+    default_photo_items = []
+    if not room.photos:
+        default_photo_items = get_room_photo_items(room)
 
     if request.method == 'POST':
         files = request.files.getlist('photos')
@@ -4183,7 +4188,13 @@ def admin_room_photos(room_id):
         flash('Photos uploaded successfully!', 'success')
         return redirect(url_for('admin_room_photos', room_id=room_id))
 
-    return render_template('admin/room_photos.html', room=room)
+    effective_photo_count = len(room.photos) if room.photos else len(default_photo_items)
+    return render_template(
+        'admin/room_photos.html',
+        room=room,
+        default_photo_items=default_photo_items,
+        effective_photo_count=effective_photo_count,
+    )
 
 @app.route('/admin/rooms/<int:room_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -4192,6 +4203,8 @@ def admin_edit_room(room_id):
         abort(403)
 
     room = Room.query.get_or_404(room_id)
+    room.effective_photo_count = len(room.photos) if room.photos else len(get_room_photo_items(room))
+    room.uses_default_photos = not bool(room.photos) and room.effective_photo_count > 0
 
     if request.method == 'POST':
 
@@ -4242,6 +4255,8 @@ def admin_edit_room(room_id):
     categories = Category.query.all()
     room_type_options = get_room_type_options()
     room_type_autofill_data = get_room_type_autofill_data()
+    room.effective_photo_count = len(room.photos) if room.photos else len(get_room_photo_items(room))
+    room.uses_default_photos = not bool(room.photos) and room.effective_photo_count > 0
     return render_template(
         'admin/edit_room.html',
         room=room,

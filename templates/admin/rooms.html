@@ -56,7 +56,11 @@
                                             {{ 'Доступен' if room.is_available else 'Недоступен' }}
                                         </span>
                                     </td>
-                                    <td><span class="admin-chip">{{ room.photos|length }} фото</span></td>
+                                    <td>
+                                        <span class="admin-chip">
+                                            {{ room.photo_count }} фото{% if room.uses_default_photos %} по умолчанию{% endif %}
+                                        </span>
+                                    </td>
                                     <td>
                                         <div class="admin-action-group">
                                             <button type="button" class="btn btn-outline-secondary admin-btn admin-btn--icon" title="Просмотр" data-admin-room-preview='{{ room.preview_payload|tojson|forceescape }}'>
