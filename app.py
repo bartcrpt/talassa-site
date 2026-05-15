@@ -12,7 +12,6 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, date, timedelta
 from io import BytesIO
 import os
-import shutil
 import uuid
 from PIL import Image
 import re
@@ -1777,6 +1776,9 @@ def ensure_rooms_page_blocks_exist():
 
 def get_room_main_photo(room):
     if not room.photos:
+        next_room = get_next_room_by_room(room)
+        if next_room:
+            return next_room.get('heroImage') or next((image for image in next_room.get('images', []) if image), '/static/site/images/gallery/photo_2.jpg')
         return '/static/site/images/gallery/photo_2.jpg'
 
     main_photo = next((photo for photo in room.photos if photo.is_main), None)
@@ -1786,7 +1788,20 @@ def get_room_main_photo(room):
 
 def get_room_photo_items(room):
     if not room.photos:
+        next_room = get_next_room_by_room(room)
         fallback_name = get_room_display_name(room)
+        if next_room:
+            default_images = [image for image in (next_room.get('images') or []) if image]
+            if not default_images and next_room.get('heroImage'):
+                default_images = [next_room.get('heroImage')]
+            if default_images:
+                return [
+                    {
+                        'url': image_url,
+                        'alt': f'{fallback_name} - фото {index + 1}',
+                    }
+                    for index, image_url in enumerate(default_images)
+                ]
         return [{'url': '/static/site/images/gallery/photo_2.jpg', 'alt': fallback_name}]
 
     ordered_photos = sorted(room.photos, key=lambda photo: (0 if photo.is_main else 1, photo.id or 0))
@@ -1906,53 +1921,6 @@ def get_room_type_autofill_data():
     return result
 
 
-def resolve_default_room_image_path(image_url):
-    if not image_url or not image_url.startswith('/static/'):
-        return None
-    static_relative_path = image_url[len('/static/'):].replace('/', os.sep)
-    image_path = os.path.join(app.static_folder, static_relative_path)
-    if os.path.isfile(image_path):
-        return image_path
-    return None
-
-
-def attach_default_room_type_photos(room, room_type_slug, replace_existing=False):
-    if not room_type_slug:
-        return 0
-
-    room_type = get_room_type_option(room_type_slug)
-    if not room_type:
-        return 0
-
-    existing_photos = list(room.photos or [])
-    if existing_photos and not replace_existing:
-        return 0
-
-    source_images = room_type.get('images') or []
-    if not source_images and room_type.get('heroImage'):
-        source_images = [room_type.get('heroImage')]
-
-    created_count = 0
-    for index, image_url in enumerate(source_images):
-        source_path = resolve_default_room_image_path(image_url)
-        if not source_path:
-            continue
-
-        original_filename = os.path.basename(source_path)
-        filename = f'{uuid.uuid4()}_{secure_filename(original_filename)}'
-        destination_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        shutil.copyfile(source_path, destination_path)
-
-        photo = RoomPhoto(
-            room_id=room.id,
-            filename=filename,
-            original_filename=original_filename,
-            is_main=(not existing_photos and created_count == 0 and index == 0),
-        )
-        db.session.add(photo)
-        created_count += 1
-
-    return created_count
 
 
 def get_room_type_option(room_type_slug):
@@ -4164,8 +4132,6 @@ def admin_add_room():
                     amenities=request.form['amenities']
                 )
                 db.session.add(room)
-                db.session.flush()
-                attach_default_room_type_photos(room, room_type_slug)
 
             db.session.commit()
             flash(f'Успешно добавлено {len(rooms_data)} комнат(ы)!', 'success')
@@ -4266,8 +4232,6 @@ def admin_edit_room(room_id):
         room.description = request.form['description']
         room.amenities = request.form['amenities']
         room.is_available = 'is_available' in request.form
-        db.session.flush()
-        attach_default_room_type_photos(room, room_type_slug)
 
         db.session.commit()
         flash('Номер успешно обновлен!', 'success')
