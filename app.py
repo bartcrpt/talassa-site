@@ -12,6 +12,7 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, date, timedelta
 from io import BytesIO
 import os
+import shutil
 import uuid
 from PIL import Image
 import re
@@ -1886,7 +1887,11 @@ def get_room_type_autofill_data():
                 prices[field_name] = item.get('price')
 
         extra_bed = (room.get('extraBed') or '').lower()
+        default_images = room.get('images') or []
+        if not default_images and room.get('heroImage'):
+            default_images = [room.get('heroImage')]
         result[slug] = {
+            'name': room.get('name'),
             'category': room.get('category'),
             'capacity': room.get('capacity', {}).get('standard') or room.get('capacity', {}).get('max') or 2,
             'description': room.get('description') or '',
@@ -1894,9 +1899,60 @@ def get_room_type_autofill_data():
             'prices': prices,
             'has_small_sofa': 'односпаль' in extra_bed,
             'has_large_sofa': 'двуспаль' in extra_bed,
+            'images': default_images,
+            'hero_image': room.get('heroImage'),
         }
 
     return result
+
+
+def resolve_default_room_image_path(image_url):
+    if not image_url or not image_url.startswith('/static/'):
+        return None
+    static_relative_path = image_url[len('/static/'):].replace('/', os.sep)
+    image_path = os.path.join(app.static_folder, static_relative_path)
+    if os.path.isfile(image_path):
+        return image_path
+    return None
+
+
+def attach_default_room_type_photos(room, room_type_slug, replace_existing=False):
+    if not room_type_slug:
+        return 0
+
+    room_type = get_room_type_option(room_type_slug)
+    if not room_type:
+        return 0
+
+    existing_photos = list(room.photos or [])
+    if existing_photos and not replace_existing:
+        return 0
+
+    source_images = room_type.get('images') or []
+    if not source_images and room_type.get('heroImage'):
+        source_images = [room_type.get('heroImage')]
+
+    created_count = 0
+    for index, image_url in enumerate(source_images):
+        source_path = resolve_default_room_image_path(image_url)
+        if not source_path:
+            continue
+
+        original_filename = os.path.basename(source_path)
+        filename = f'{uuid.uuid4()}_{secure_filename(original_filename)}'
+        destination_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        shutil.copyfile(source_path, destination_path)
+
+        photo = RoomPhoto(
+            room_id=room.id,
+            filename=filename,
+            original_filename=original_filename,
+            is_main=(not existing_photos and created_count == 0 and index == 0),
+        )
+        db.session.add(photo)
+        created_count += 1
+
+    return created_count
 
 
 def get_room_type_option(room_type_slug):
@@ -4108,6 +4164,8 @@ def admin_add_room():
                     amenities=request.form['amenities']
                 )
                 db.session.add(room)
+                db.session.flush()
+                attach_default_room_type_photos(room, room_type_slug)
 
             db.session.commit()
             flash(f'Успешно добавлено {len(rooms_data)} комнат(ы)!', 'success')
@@ -4208,6 +4266,8 @@ def admin_edit_room(room_id):
         room.description = request.form['description']
         room.amenities = request.form['amenities']
         room.is_available = 'is_available' in request.form
+        db.session.flush()
+        attach_default_room_type_photos(room, room_type_slug)
 
         db.session.commit()
         flash('Номер успешно обновлен!', 'success')

@@ -63,6 +63,16 @@
                                             </select>
                                             <div class="form-text">Контент публичной страницы номера будет подтягиваться из выбранного вида.</div>
                                         </div>
+                                        <div class="card border-0 bg-light mb-3 d-none" id="room-type-photo-preview-card">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <h6 class="card-title mb-0">Стандартные фото вида номера</h6>
+                                                    <small class="text-muted" id="room-type-photo-preview-title"></small>
+                                                </div>
+                                                <p class="text-muted small mb-3">Эти фотографии автоматически прикрепятся к новому физическому номеру, если у него ещё нет своих фото.</p>
+                                                <div class="row g-2" id="room-type-photo-preview-grid"></div>
+                                            </div>
+                                        </div>
                                         <div>
                                             <label>Дополнительное спальное место</label>
                                         </div>
@@ -247,6 +257,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const capacityInput = document.getElementById('capacity');
     const smallSofaCheckbox = document.querySelector('input[name="has_small_sofa"]');
     const largeSofaCheckbox = document.querySelector('input[name="has_large_sofa"]');
+    const photoPreviewCard = document.getElementById('room-type-photo-preview-card');
+    const photoPreviewGrid = document.getElementById('room-type-photo-preview-grid');
+    const photoPreviewTitle = document.getElementById('room-type-photo-preview-title');
 
     const setTinyMceValue = (fieldId, value) => {
         const editor = window.tinymce ? window.tinymce.get(fieldId) : null;
@@ -258,9 +271,34 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
+    const renderRoomTypePhotos = (payload) => {
+        if (!photoPreviewCard || !photoPreviewGrid || !photoPreviewTitle) return;
+
+        const images = Array.isArray(payload?.images) ? payload.images.filter(Boolean) : [];
+        if (!images.length) {
+            photoPreviewCard.classList.add('d-none');
+            photoPreviewGrid.innerHTML = '';
+            photoPreviewTitle.textContent = '';
+            return;
+        }
+
+        photoPreviewTitle.textContent = payload?.name || '';
+        photoPreviewGrid.innerHTML = images.map((imageUrl, index) => `
+            <div class="col-6 col-md-4">
+                <a href="${imageUrl}" target="_blank" rel="noopener noreferrer" class="d-block text-decoration-none">
+                    <img src="${imageUrl}" alt="${payload?.name || 'Фото номера'} ${index + 1}" class="img-fluid rounded shadow-sm" style="aspect-ratio: 4 / 3; object-fit: cover;">
+                </a>
+            </div>
+        `).join('');
+        photoPreviewCard.classList.remove('d-none');
+    };
+
     const applyRoomTypeAutofill = () => {
         const payload = roomTypeAutofillData[roomTypeSelect.value];
-        if (!payload) return;
+        if (!payload) {
+            renderRoomTypePhotos(null);
+            return;
+        }
 
         if (categorySelect) {
             const matchingOption = Array.from(categorySelect.options).find((option) => option.text.trim() === payload.category);
@@ -289,10 +327,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (largeSofaCheckbox) {
             largeSofaCheckbox.checked = !!payload.has_large_sofa;
         }
+
+        renderRoomTypePhotos(payload);
     };
 
     if (roomTypeSelect) {
         roomTypeSelect.addEventListener('change', applyRoomTypeAutofill);
+        if (roomTypeSelect.value) {
+            renderRoomTypePhotos(roomTypeAutofillData[roomTypeSelect.value]);
+        }
     }
 
     // Initialize TinyMCE for description
