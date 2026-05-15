@@ -457,5 +457,115 @@
       "firstFloor": true,
       "kitchen": true
     }
-  }]
-
+  },
+  {
+    "id": "standart_korpus_b",
+    "slug": "standart-korpus-b",
+    "name": "Стандарт в корпусе B",
+    "category": "Стандарт",
+    "description":
+      "Уютный номер в натуральных тонах с общим балконом, откуда открывается живописный вид на Чёрное море и горы. Пространство оформлено в современном стиле с удобной мебелью и вниманием к деталям от ванной комнаты до штор, чтобы Ваш отдых был максимально комфортным. Прямой вид на море - просыпайтесь под шум прибоя и наслаждайтесь морским пейзажем. Звукоизоляция и удобные кровати гарантируют спокойный сон. Номера располагаются в двухэтажном здании без лифта на втором этаже.",
+    "shortDescription":
+      "Уютный номер с общим балконом и видом на Чёрное море и горы в корпусе B.",
+    "area": 20,
+    "capacity": { "standard": 2, "max": 2 },
+    "extraBed": null,
+    "extraGuestsMax": 0,
+    "prices": [
+      { "month": "Январь", "price": 3600 },
+      { "month": "Февраль", "price": 3600 },
+      { "month": "Март", "price": 3600 },
+      { "month": "Апрель", "price": 3600 },
+      { "month": "Май", "price": 4500 },
+      { "month": "Июнь", "price": 7000 },
+      { "month": "Июль", "price": 9000 },
+      { "month": "Август", "price": 9500 },
+      { "month": "Сентябрь", "price": 8000 },
+      { "month": "Октябрь", "price": 5200 },
+      { "month": "Ноябрь", "price": 3600 },
+      { "month": "Декабрь", "price": 3600 }
+    ],
+    "minPrice": 3600,
+    "maxPrice": 9500,
+    "amenities": [
+      "Сплит-система",
+      "Wi-Fi",
+      "Телевизор",
+      "Сейф",
+      "Диван",
+      "Чайник"
+    ],
+    "meals": "Завтраки включены (с июня по октябрь)",
+    "images": [
+      "/static/site/images/rooms/standart_korpus_b/standart_korpus_b_1.jpg",
+      "/static/site/images/rooms/standart_korpus_b/standart_korpus_b_2.jpg",
+      "/static/site/images/rooms/standart_korpus_b/standart_korpus_b_3.jpg",
+      "/static/site/images/rooms/standart_korpus_b/standart_korpus_b_4.jpg"
+    ],
+    "heroImage": "/static/site/images/rooms/standart_korpus_b/standart_korpus_b_1.jpg",
+    "features": {
+      "seaView": true,
+      "balcony": true,
+      "terrace": false,
+      "accessible": false,
+      "firstFloor": false,
+      "kitchen": false
+    }
+  },
+  {
+    "id": "deluxe_korpus_b",
+    "slug": "deluxe-korpus-b",
+    "name": "Deluxe в корпусе B",
+    "category": "Deluxe",
+    "description":
+      "Красивый и с особым вкусом оформленный номер в натуральных тонах с общим балконом и панорамным видом на море из широких окон. У вас может создаться впечатление, что вы спите на пляже в палатке с уютнейшей обстановкой и мягкой кроватью. Пространство оформлено в современном стиле с удобной мебелью и вниманием к деталям от ванной комнаты до штор, чтобы Ваш отдых был максимально комфортным. Прямой вид на море - просыпайтесь под шум прибоя и наслаждайтесь морским пейзажем. Звукоизоляция и удобные кровати гарантируют спокойный сон. Номер располагается в двухэтажном здании без лифта на втором этаже.",
+    "shortDescription":
+      "Deluxe в корпусе B с общим балконом и панорамным видом на море из широких окон.",
+    "area": 20,
+    "capacity": { "standard": 2, "max": 2 },
+    "extraBed": null,
+    "extraGuestsMax": 0,
+    "prices": [
+      { "month": "Январь", "price": 3600 },
+      { "month": "Февраль", "price": 3600 },
+      { "month": "Март", "price": 3600 },
+      { "month": "Апрель", "price": 3600 },
+      { "month": "Май", "price": 5000 },
+      { "month": "Июнь", "price": 7500 },
+      { "month": "Июль", "price": 9800 },
+      { "month": "Август", "price": 10300 },
+      { "month": "Сентябрь", "price": 8700 },
+      { "month": "Октябрь", "price": 5500 },
+      { "month": "Ноябрь", "price": 3600 },
+      { "month": "Декабрь", "price": 3600 }
+    ],
+    "minPrice": 3600,
+    "maxPrice": 10300,
+    "amenities": [
+      "Сплит-система",
+      "Wi-Fi",
+      "Телевизор",
+      "Сейф",
+      "Кресло",
+      "Чайник"
+    ],
+    "meals": "Завтраки включены (с июня по октябрь)",
+    "images": [
+      "/static/site/images/rooms/deluxe_korpus_b/deluxe_korpus_b_1.jpg",
+      "/static/site/images/rooms/deluxe_korpus_b/deluxe_korpus_b_2.jpg",
+      "/static/site/images/rooms/deluxe_korpus_b/deluxe_korpus_b_3.jpg",
+      "/static/site/images/rooms/deluxe_korpus_b/deluxe_korpus_b_4.jpg",
+      "/static/site/images/rooms/deluxe_korpus_b/deluxe_korpus_b_5.jpg",
+      "/static/site/images/rooms/deluxe_korpus_b/deluxe_korpus_b_6.jpg"
+    ],
+    "heroImage": "/static/site/images/rooms/deluxe_korpus_b/deluxe_korpus_b_1.jpg",
+    "features": {
+      "seaView": true,
+      "balcony": true,
+      "terrace": false,
+      "accessible": false,
+      "firstFloor": false,
+      "kitchen": false
+    }
+  }
+]
