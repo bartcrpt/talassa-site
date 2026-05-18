@@ -1225,7 +1225,7 @@ def format_phone_for_storage(phone):
 
     return phone  # Возвращаем как есть, если не удалось отформатировать
 
-def is_room_available(room_id, check_in, check_out, exclude_booking_id=None):
+def is_room_available(room_id, check_in, check_out, exclude_booking_id=None, exclude_booking_ids=None):
     conflicting_bookings = Booking.query.filter(
         Booking.room_id == room_id,
         Booking.status.in_(['pending', 'confirmed']),
@@ -1237,15 +1237,24 @@ def is_room_available(room_id, check_in, check_out, exclude_booking_id=None):
     )
     if exclude_booking_id is not None:
         conflicting_bookings = conflicting_bookings.filter(Booking.id != exclude_booking_id)
+    if exclude_booking_ids:
+        conflicting_bookings = conflicting_bookings.filter(Booking.id.notin_(tuple(exclude_booking_ids)))
     conflicting_bookings = conflicting_bookings.first()
     return conflicting_bookings is None
+
+
+def get_booking_required_capacity(booking):
+    return max(
+        booking.guests or 0,
+        (booking.adults or 0) + (booking.children or 0) + (booking.children_under_five or 0),
+    )
 
 
 def get_admin_booking_room_options(booking):
     candidate_rooms_query = Room.query
     candidate_rooms = candidate_rooms_query.order_by(Room.number.asc()).all()
     available_rooms = []
-    required_capacity = max(booking.guests or 0, (booking.adults or 0) + (booking.children or 0) + (booking.children_under_five or 0))
+    required_capacity = get_booking_required_capacity(booking)
 
     for room in candidate_rooms:
         if room.id != booking.room_id and get_room_max_capacity(room) < required_capacity:
@@ -1262,6 +1271,52 @@ def get_admin_booking_room_options(booking):
         available_rooms.insert(0, booking.room)
 
     return available_rooms
+
+
+def get_admin_booking_swap_candidates(booking):
+    booking_required_capacity = get_booking_required_capacity(booking)
+    overlapping_bookings = (
+        Booking.query
+        .join(Room)
+        .join(User)
+        .filter(
+            Booking.id != booking.id,
+            Booking.status.in_(['pending', 'confirmed']),
+            Booking.check_out > booking.check_in,
+            Booking.check_in < booking.check_out,
+        )
+        .order_by(Booking.check_in.asc(), Room.number.asc(), Booking.id.asc())
+        .all()
+    )
+
+    swap_candidates = []
+    for candidate in overlapping_bookings:
+        candidate_required_capacity = get_booking_required_capacity(candidate)
+
+        if get_room_max_capacity(candidate.room) < booking_required_capacity:
+            continue
+        if get_room_max_capacity(booking.room) < candidate_required_capacity:
+            continue
+
+        excluded_ids = [booking.id, candidate.id]
+        if not is_room_available(
+            candidate.room_id,
+            booking.check_in,
+            booking.check_out,
+            exclude_booking_ids=excluded_ids,
+        ):
+            continue
+        if not is_room_available(
+            booking.room_id,
+            candidate.check_in,
+            candidate.check_out,
+            exclude_booking_ids=excluded_ids,
+        ):
+            continue
+
+        swap_candidates.append(candidate)
+
+    return swap_candidates
 
 def format_phone_for_display(phone):
     """Форматирует телефон для отображения в шаблонах"""
@@ -4571,6 +4626,7 @@ def admin_edit_booking(booking_id):
 
     booking = Booking.query.get_or_404(booking_id)
     available_room_options = get_admin_booking_room_options(booking)
+    swap_candidates = get_admin_booking_swap_candidates(booking)
     selected_room_id = booking.room_id
     form_check_in = booking.check_in.strftime('%Y-%m-%d')
     form_check_out = booking.check_out.strftime('%Y-%m-%d')
@@ -4591,6 +4647,7 @@ def admin_edit_booking(booking_id):
                 'admin/edit_booking.html',
                 booking=booking,
                 available_room_options=available_room_options,
+                swap_candidates=swap_candidates,
                 selected_room_id=selected_room_id,
                 form_check_in=form_check_in,
                 form_check_out=form_check_out,
@@ -4607,6 +4664,7 @@ def admin_edit_booking(booking_id):
                 'admin/edit_booking.html',
                 booking=booking,
                 available_room_options=available_room_options,
+                swap_candidates=swap_candidates,
                 selected_room_id=selected_room_id,
                 form_check_in=form_check_in,
                 form_check_out=form_check_out,
@@ -4620,6 +4678,7 @@ def admin_edit_booking(booking_id):
                 'admin/edit_booking.html',
                 booking=booking,
                 available_room_options=available_room_options,
+                swap_candidates=swap_candidates,
                 selected_room_id=selected_room_id,
                 form_check_in=form_check_in,
                 form_check_out=form_check_out,
@@ -4634,6 +4693,7 @@ def admin_edit_booking(booking_id):
                 'admin/edit_booking.html',
                 booking=booking,
                 available_room_options=available_room_options,
+                swap_candidates=swap_candidates,
                 selected_room_id=selected_room_id,
                 form_check_in=form_check_in,
                 form_check_out=form_check_out,
@@ -4652,6 +4712,7 @@ def admin_edit_booking(booking_id):
                 'admin/edit_booking.html',
                 booking=booking,
                 available_room_options=available_room_options,
+                swap_candidates=swap_candidates,
                 selected_room_id=selected_room_id,
                 form_check_in=form_check_in,
                 form_check_out=form_check_out,
@@ -4666,6 +4727,7 @@ def admin_edit_booking(booking_id):
                 'admin/edit_booking.html',
                 booking=booking,
                 available_room_options=available_room_options,
+                swap_candidates=swap_candidates,
                 selected_room_id=selected_room_id,
                 form_check_in=form_check_in,
                 form_check_out=form_check_out,
@@ -4697,12 +4759,70 @@ def admin_edit_booking(booking_id):
         'admin/edit_booking.html',
         booking=booking,
         available_room_options=available_room_options,
+        swap_candidates=swap_candidates,
         selected_room_id=selected_room_id,
         form_check_in=form_check_in,
         form_check_out=form_check_out,
         form_status=form_status,
         form_special_requests=form_special_requests,
     )
+
+
+@app.route('/admin/bookings/<int:booking_id>/swap-room', methods=['POST'])
+@login_required
+def admin_swap_booking_room(booking_id):
+    if not current_user.is_admin:
+        abort(403)
+
+    booking = Booking.query.get_or_404(booking_id)
+    target_booking_id = request.form.get('target_booking_id', type=int)
+    if not target_booking_id:
+        flash('Выберите бронь, с которой нужно обменять номер.', 'error')
+        return redirect(url_for('admin_edit_booking', booking_id=booking.id))
+
+    target_booking = Booking.query.get_or_404(target_booking_id)
+    if target_booking.id == booking.id:
+        flash('Нельзя обменять бронь саму с собой.', 'error')
+        return redirect(url_for('admin_edit_booking', booking_id=booking.id))
+
+    swap_candidates = get_admin_booking_swap_candidates(booking)
+    allowed_candidate_ids = {candidate.id for candidate in swap_candidates}
+    if target_booking.id not in allowed_candidate_ids:
+        flash('Эти брони нельзя безопасно обменять местами. Проверьте даты, вместимость и конфликты с другими бронями.', 'error')
+        return redirect(url_for('admin_edit_booking', booking_id=booking.id))
+
+    current_room = booking.room
+    target_room = target_booking.room
+
+    booking_total_info = calculate_room_total_price(
+        target_room,
+        booking.check_in,
+        booking.check_out,
+        booking.adults or booking.guests or 0,
+        booking.children or 0,
+        booking.children_under_five or 0,
+    )
+    target_total_info = calculate_room_total_price(
+        current_room,
+        target_booking.check_in,
+        target_booking.check_out,
+        target_booking.adults or target_booking.guests or 0,
+        target_booking.children or 0,
+        target_booking.children_under_five or 0,
+    )
+
+    booking.room_id = target_room.id
+    booking.total_price = booking_total_info['total']
+    target_booking.room_id = current_room.id
+    target_booking.total_price = target_total_info['total']
+
+    db.session.commit()
+    flash(
+        f'Брони #{booking.id} и #{target_booking.id} успешно обменяны номерами: '
+        f'№ {current_room.number} ↔ № {target_room.number}.',
+        'success',
+    )
+    return redirect(url_for('admin_bookings'))
 
 @app.route('/admin/news')
 @login_required

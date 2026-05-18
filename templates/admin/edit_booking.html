@@ -76,6 +76,7 @@
                                     </select>
                                     <div class="form-text">
                                         Можно выбрать любой свободный физический номер, который подходит по вместимости для текущего состава гостей.
+                                        Если нужный номер сейчас занят другой бронью на пересекающиеся даты, используйте обмен номеров ниже.
                                     </div>
                                 </div>
 
@@ -121,6 +122,52 @@
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm mt-4">
+                        <div class="card-body p-4">
+                            <h5 class="mb-3">Обменять номер с другой бронью</h5>
+                            <p class="text-muted mb-3">
+                                Используйте этот сценарий, когда нужно поменять две брони местами без промежуточной ошибки занятости.
+                                Даты не меняются, система просто обменяет физические номера между двумя бронированиями одним сохранением.
+                            </p>
+
+                            {% if swap_candidates %}
+                            <form method="POST" action="{{ url_for('admin_swap_booking_room', booking_id=booking.id) }}">
+                                <div class="mb-3">
+                                    <label for="target_booking_id" class="form-label">Бронь для обмена *</label>
+                                    <select class="form-select" id="target_booking_id" name="target_booking_id" required>
+                                        <option value="">Выберите бронь</option>
+                                        {% for candidate in swap_candidates %}
+                                        <option value="{{ candidate.id }}">
+                                            #{{ candidate.id }} • № {{ candidate.room.number }} • {{ candidate.user.first_name }} {{ candidate.user.last_name }} •
+                                            {{ candidate.check_in.strftime('%d.%m.%Y') }} - {{ candidate.check_out.strftime('%d.%m.%Y') }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="card bg-light mb-3">
+                                    <div class="card-body">
+                                        <p class="mb-1"><strong>Текущая бронь:</strong> #{{ booking.id }} • № {{ booking.room.number }} • {{ booking.check_in.strftime('%d.%m.%Y') }} - {{ booking.check_out.strftime('%d.%m.%Y') }}</p>
+                                        <p class="mb-0"><strong>После обмена:</strong> у обеих броней поменяются только физические номера, остальные параметры останутся без изменений.</p>
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button type="submit" class="btn btn-outline-primary">
+                                        <i class="bi bi-arrow-left-right"></i> Обменять номера
+                                    </button>
+                                </div>
+                            </form>
+                            {% else %}
+                            <div class="alert alert-light border mb-0">
+                                Сейчас нет безопасных кандидатов для обмена.
+                                Они появятся, если найдётся другая активная бронь с пересекающимися датами,
+                                для которой комнаты можно поменять местами без конфликтов и с учётом вместимости.
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
