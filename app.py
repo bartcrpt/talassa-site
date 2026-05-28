@@ -24,6 +24,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font
 
 from send_msg import send_tg_message, send_sms_message
+from services.booking_rules import should_reject_short_stay
 from services.rooms import LegacyRoomService
 
 load_dotenv()  # This loads variables from .env into os.environ
@@ -3111,7 +3112,7 @@ def book_landing_page():
                     search_error = 'Дата заезда не может быть в прошлом.'
                 elif parsed_check_out <= parsed_check_in:
                     search_error = 'Дата выезда должна быть позже даты заезда.'
-                elif (parsed_check_out - parsed_check_in).days < MIN_BOOKING_NIGHTS:
+                elif should_reject_short_stay((parsed_check_out - parsed_check_in).days, MIN_BOOKING_NIGHTS):
                     search_error = f'Минимальный срок бронирования — {MIN_BOOKING_NIGHTS} ночи.'
                 else:
                     selected_range = f'{check_in} - {check_out}'
@@ -3354,7 +3355,7 @@ def book_room(room_id, got_check_in=None, got_check_out=None, got_adults=2, got_
             return render_booking_page(room)
 
         stay_days = (check_out - check_in).days
-        if stay_days < MIN_BOOKING_NIGHTS:
+        if should_reject_short_stay(stay_days, MIN_BOOKING_NIGHTS):
             flash(f'Минимальный срок бронирования — {MIN_BOOKING_NIGHTS} ночи.', 'error')
             return render_booking_page(room)
         if stay_days > 31:
@@ -3468,7 +3469,7 @@ def book_room_combination():
         return redirect(url_for('book_landing_page', check_in=check_in_str, check_out=check_out_str, adults=adults_a + adults_b, children=children_a + children_b, children_under_five=children_under_five))
 
     stay_days = (check_out - check_in).days
-    if stay_days < MIN_BOOKING_NIGHTS:
+    if should_reject_short_stay(stay_days, MIN_BOOKING_NIGHTS):
         flash(f'Минимальный срок бронирования — {MIN_BOOKING_NIGHTS} ночи.', 'error')
         return redirect(url_for('book_landing_page', check_in=check_in_str, check_out=check_out_str, adults=adults_a + adults_b, children=children_a + children_b, children_under_five=children_under_five))
     if stay_days > 31:
@@ -4687,7 +4688,7 @@ def admin_edit_booking(booking_id):
             )
 
         stay_days = (new_check_out - new_check_in).days
-        if stay_days < MIN_BOOKING_NIGHTS:
+        if should_reject_short_stay(stay_days, MIN_BOOKING_NIGHTS, allow_short_stay=True):
             flash(f'Минимальный срок бронирования — {MIN_BOOKING_NIGHTS} ночи.', 'error')
             return render_template(
                 'admin/edit_booking.html',
