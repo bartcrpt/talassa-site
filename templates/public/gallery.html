@@ -31,6 +31,7 @@
                     >
                         {% if is_video %}
                             <video src="{{ image.src }}" muted playsinline preload="metadata" aria-label="{{ image.alt }}"></video>
+                            <span class="gallery-masonry__play" aria-hidden="true"></span>
                         {% else %}
                             <img src="{{ image.src }}" alt="{{ image.alt }}">
                         {% endif %}
