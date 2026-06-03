@@ -20,17 +20,22 @@
                 data-lightbox-items="{{ gallery_images|tojson|forceescape }}"
             >
                 {% for image in gallery_images %}
+                    {% set is_video = image.type == 'video' %}
                     <button
                         type="button"
-                        class="gallery-masonry__item"
+                        class="gallery-masonry__item{% if is_video %} gallery-masonry__item--video{% endif %}"
                         data-lightbox-trigger
                         data-lightbox-source="public-gallery"
                         data-lightbox-index="{{ loop.index0 }}"
-                        aria-label="Открыть фото {{ loop.index }}"
+                        aria-label="Открыть {{ 'видео' if is_video else 'фото' }} {{ loop.index }}"
                     >
-                        <img src="{{ image.src }}" alt="{{ image.alt }}">
+                        {% if is_video %}
+                            <video src="{{ image.src }}" muted playsinline preload="metadata" aria-label="{{ image.alt }}"></video>
+                        {% else %}
+                            <img src="{{ image.src }}" alt="{{ image.alt }}">
+                        {% endif %}
                         <span class="gallery-masonry__overlay">
-                            <span>{{ loop.index }} / {{ gallery_images|length }}</span>
+                            <span>{% if is_video %}Видео{% else %}{{ loop.index }} / {{ gallery_images|length }}{% endif %}</span>
                         </span>
                     </button>
                 {% endfor %}

@@ -25,6 +25,7 @@ from openpyxl.styles import Font
 
 from send_msg import send_tg_message, send_sms_message
 from services.booking_rules import should_reject_short_stay
+from services.gallery_media import gallery_media_type, gallery_sort_key
 from services.rooms import LegacyRoomService
 
 load_dotenv()  # This loads variables from .env into os.environ
@@ -2416,20 +2417,17 @@ def get_public_gallery_images():
     if not os.path.isdir(gallery_dir):
         return []
 
-    def sort_key(filename):
-        match = re.search(r'(\d+)', filename)
-        return (int(match.group(1)) if match else 9999, filename)
-
     items = []
-    allowed_extensions = {'.jpg', '.jpeg', '.png', '.webp'}
-    for index, filename in enumerate(sorted(os.listdir(gallery_dir), key=sort_key), start=1):
-        suffix = os.path.splitext(filename)[1].lower()
-        if suffix not in allowed_extensions:
+    for index, filename in enumerate(sorted(os.listdir(gallery_dir), key=gallery_sort_key), start=1):
+        media_type = gallery_media_type(filename)
+        if not media_type:
             continue
+        media_label = 'видео' if media_type == 'video' else 'фото'
         items.append({
             'src': url_for('static', filename=f'site/images/gallery/{filename}'),
-            'alt': f'Таласса Hotel & Spa - фото {index}',
+            'alt': f'Таласса Hotel & Spa - {media_label} {index}',
             'filename': filename,
+            'type': media_type,
         })
     return items
 

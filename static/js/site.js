@@ -65,12 +65,13 @@ function initSiteLightbox() {
   }
 
   const image = root.querySelector('[data-site-lightbox-image]');
+  const video = root.querySelector('[data-site-lightbox-video]');
   const counter = root.querySelector('[data-site-lightbox-counter]');
   const closeButton = root.querySelector('[data-site-lightbox-close]');
   const prevButton = root.querySelector('[data-site-lightbox-prev]');
   const nextButton = root.querySelector('[data-site-lightbox-next]');
 
-  if (!image || !counter || !closeButton || !prevButton || !nextButton) {
+  if (!image || !video || !counter || !closeButton || !prevButton || !nextButton) {
     return;
   }
 
@@ -92,6 +93,25 @@ function initSiteLightbox() {
     }
   });
 
+  const isVideoItem = (item) => {
+    const source = (item.src || item.url || '').toLowerCase();
+    return item.type === 'video' || source.endsWith('.mp4');
+  };
+
+  const resetVideo = () => {
+    video.pause();
+    video.removeAttribute('src');
+    video.removeAttribute('aria-label');
+    video.hidden = true;
+    video.load();
+  };
+
+  const resetImage = () => {
+    image.removeAttribute('src');
+    image.alt = '';
+    image.hidden = true;
+  };
+
   const render = () => {
     const items = galleryMap.get(currentSource) || [];
     const currentItem = items[currentIndex];
@@ -99,8 +119,23 @@ function initSiteLightbox() {
       return;
     }
 
-    image.src = currentItem.src || currentItem.url || '';
-    image.alt = currentItem.alt || '';
+    const source = currentItem.src || currentItem.url || '';
+    const alt = currentItem.alt || '';
+
+    if (isVideoItem(currentItem)) {
+      resetImage();
+      video.pause();
+      video.src = source;
+      video.setAttribute('aria-label', alt);
+      video.hidden = false;
+      video.load();
+    } else {
+      resetVideo();
+      image.src = source;
+      image.alt = alt;
+      image.hidden = false;
+    }
+
     counter.textContent = `${currentIndex + 1} / ${items.length}`;
   };
 
@@ -117,6 +152,7 @@ function initSiteLightbox() {
   };
 
   const close = () => {
+    resetVideo();
     root.hidden = true;
     document.body.classList.remove('site-lightbox-open');
   };
