@@ -3226,14 +3226,14 @@ body {
   justify-content: center;
   max-width: calc(100% - 32px);
   padding: 9px 14px 9px 18px;
-  border: 1px solid rgba(243, 239, 230, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.54);
   border-radius: 999px;
-  background: rgba(8, 15, 22, 0.46);
-  color: #f4d79a;
-  box-shadow: 0 16px 40px rgba(8, 15, 22, 0.28);
-  text-shadow: 0 1px 14px rgba(8, 15, 22, 0.72);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(243, 239, 230, 0.78);
+  color: var(--sea);
+  box-shadow: 0 16px 40px rgba(8, 15, 22, 0.18);
+  text-shadow: none;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .hero .hero__tagline,
