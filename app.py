@@ -162,7 +162,7 @@ HOME_PAGE_DEFAULT_BLOCKS = {
         'title': 'Таласса Hotel & Spa',
         'subtitle': 'Талассотерапия у Чёрного моря',
         'body': 'Море зовет',
-        'image_url': '/static/site/images/gallery/photo_7.jpg',
+        'image_url': '/static/site/images/gallery/photo_23.jpg',
         'button_label': 'Забронировать',
         'button_url': '/book',
         'payload': {

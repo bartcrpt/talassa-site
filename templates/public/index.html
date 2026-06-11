@@ -10,7 +10,7 @@
 {% set faq_block = blocks.get('faq') %}
 {% set cta = blocks.get('cta') %}
 
-<section class="hero" style="background-image: linear-gradient(rgba(49, 78, 111, 0.38), rgba(49, 78, 111, 0.60)), url('{{ hero.image_url if hero and hero.image_url else '/static/site/images/gallery/photo_7.jpg' }}');">
+<section class="hero" style="background-image: linear-gradient(180deg, rgba(8, 15, 22, 0.50) 0%, rgba(49, 78, 111, 0.36) 42%, rgba(49, 78, 111, 0.70) 100%), linear-gradient(90deg, rgba(8, 15, 22, 0.34) 0%, rgba(8, 15, 22, 0.10) 48%, rgba(8, 15, 22, 0.26) 100%), url('{{ hero.image_url if hero and hero.image_url else '/static/site/images/gallery/photo_7.jpg' }}');">
     <div class="hero__content site-container">
         <p class="hero__eyebrow">{{ hero.payload.get('eyebrow') if hero and hero.payload and hero.payload.get('eyebrow') else 'Абхазия • Чёрное море' }}</p>
         <img src="{{ url_for('static', filename='site/images/logo.png') }}" alt="Таласса Hotel & Spa" class="hero__logo">
