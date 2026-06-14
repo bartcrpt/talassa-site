@@ -72,26 +72,28 @@
                 {% endif %}
 
                 <div class="room-detail-next__facts">
-                    <div>
+                    <div class="room-detail-next__fact">
                         <p>Гостей</p>
                         <strong>до {{ max_capacity }}*</strong>
                     </div>
                     {% if area_label %}
-                        <div>
+                        <div class="room-detail-next__fact">
                             <p>Площадь</p>
                             <strong>{{ area_label }}</strong>
                         </div>
                     {% endif %}
                     {% if extra_bed %}
-                        <div>
+                        <div class="room-detail-next__fact">
                             <p>Доп. место</p>
                             <strong>{{ extra_bed }}</strong>
                         </div>
                     {% endif %}
-                </div>
-
-                <div class="room-detail-next__meals">
-                    <p><strong>Питание:</strong> {{ meals_text }}</p>
+                    {% if meals_text %}
+                        <div class="room-detail-next__fact room-detail-next__fact--meals">
+                            <p>Питание</p>
+                            <strong>{{ meals_text|replace('Питание:', '')|trim }}</strong>
+                        </div>
+                    {% endif %}
                 </div>
 
                 <a href="{{ book_url }}" class="site-btn site-btn--gold room-detail-next__cta">Забронировать</a>
